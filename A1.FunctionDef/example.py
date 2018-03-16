@@ -13,6 +13,3 @@ def decoratorEx(someFunc):
 @decoratorEx
 def foo():
     pass
-
-
-print("hello world")
