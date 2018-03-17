@@ -10,7 +10,7 @@ class testValueAssign(unittest.TestCase):
         """
         astTree = ast.parse("b = 2")
         lvnTest = lvn()
-        lvnTest.assignValueNumber(astTree)
+        lvnTest.lvnOptimize(astTree)
         self.assertEqual(lvnTest.valueDict['b'], 0)
         self.assertEqual(len(lvnTest.valueDict), 1)
 
@@ -29,7 +29,7 @@ class testValueAssign(unittest.TestCase):
         """
         astTree = ast.parse("b = 2\nc = 3\na = b + c\n")
         lvnTest = lvn()
-        lvnTest.assignValueNumber(astTree)
+        lvnTest.lvnOptimize(astTree)
         self.assertEqual(lvnTest.valueDict['b'], 0)
         self.assertEqual(lvnTest.valueDict['c'], 1)
         self.assertEqual(lvnTest.valueDict['a'], 2)
@@ -54,7 +54,7 @@ class testValueAssign(unittest.TestCase):
         astTree = ast.parse("b = 2\nc = 3\nb = 4\n")
 
         lvnTest = lvn()
-        lvnTest.assignValueNumber(astTree)
+        lvnTest.lvnOptimize(astTree)
         self.assertEqual(lvnTest.valueDict['b'], 2)
         self.assertEqual(lvnTest.valueDict['c'], 1)
         self.assertEqual(len(lvnTest.valueDict), 2)
@@ -79,7 +79,7 @@ class testValueAssign(unittest.TestCase):
         astTree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
         print(astor.to_source(astTree))
         lvnTest = lvn()
-        optimizedTree = lvnTest.assignValueNumber(astTree)
+        optimizedTree = lvnTest.lvnOptimize(astTree)
         self.assertEqual(lvnTest.valueDict['b'], 0)
         self.assertEqual(lvnTest.valueDict['c'], 1)
         self.assertEqual(lvnTest.valueDict['a'], 2)
