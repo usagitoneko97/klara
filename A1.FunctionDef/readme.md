@@ -74,3 +74,31 @@ def printFuncName(bodyList, indentation=""):
 if __name__ == "__main__":
     main()
 ```
+
+## Additional
+### Get the parent of ast node
+Assume that we want to print out the parent function def, we will want to find out the parent of the child node. (obviously there is other ways of printing the parent function def but let us assume that this is the only way)
+Due to no attribute on a node that can link to parent node, we have to create it ourself by visiting all the node to manually link them. *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*
+```python
+for node in ast.walk(root):
+    for child in ast.iter_child_nodes(node):
+        child.parent = node
+```
+We can then use the attribute `parent`
+```python
+if isinstance(node.parent, ast.FunctionDef):
+    # it has a parent of type FunctionDef
+    parentName = "(parent : " + node.parent.name + ")"
+```
+The result
+```python
+>>> 1:0 decoratorEx
+>>> 6:4    wrapper  (parent : decoratorEx)
+>>> 7:8        someFunc  (parent : wrapper)
+>>> 13:0 foo
+```
+
+## Reference
+1. https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python
+2. [official python ast doc](https://docs.python.org/2/library/ast.html)
+3. [greentreesnakes enhanced python ast doc](http://greentreesnakes.readthedocs.io/en/latest/index.html)
