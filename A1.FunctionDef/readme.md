@@ -27,12 +27,12 @@ and the ast representation as below:
 
 ![astView](https://github.com/usagitoneko97/python-ast/blob/master/A1.FunctionDef/resources/astViewer.svg)
 
-The aim is to print out all the function def's name, including the sub function with the correct indentation. Example output:
+The aim is to print out all the function def's name, respective lineno and column offset, including the sub function with the correct indentation. Example output:
 ```python
->>> decoratorEx
->>>     wrapper
->>>         someFunc
->>> foo
+>>> 1:0 decoratorEx
+>>> 6:4    wrapper
+>>> 7:8        someFunc
+>>> 13:0 foo
 ```
 
 ## The program
@@ -67,7 +67,8 @@ def main():
 def printFuncName(bodyList, indentation=""):
     for node in bodyList:
         if isinstance(node, ast.FunctionDef):
-            print(indentation + node.name)
+            print("{}:{} {}".format(node.lineno, node.col_offset,
+                                    indentation + node.name))
             printFuncName(node.body, indentation + "    ")
 
 if __name__ == "__main__":

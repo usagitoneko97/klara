@@ -14,7 +14,8 @@ def printFuncName(bodyList, indentation=""):
     """
     for node in bodyList:
         if isinstance(node, ast.FunctionDef):
-            print(indentation + node.name)
+            print("{}:{} {}".format(node.lineno, node.col_offset,
+                                    indentation + node.name))
             printFuncName(node.body, indentation + "    ")
 
 if __name__ == "__main__":
