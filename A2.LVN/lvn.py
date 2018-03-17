@@ -3,6 +3,7 @@ import ast
 class lvn:
     def __init__(self):
         self.valueDict = dict()
+        self.lvnDict = dict()
         self.currentVal = 0
     def assignValueNumber(self, asTree):
         for assignNode in self.getAssignClass(asTree):
@@ -13,6 +14,12 @@ class lvn:
                 queryString += assignNode.value.op.__class__.__name__
                 queryString += str(self.addToValueDict(assignNode.value.right.id))
 
+                if queryString not in self.lvnDict:
+                    # number 3 is dummy
+                    self.lvnDict[queryString] = 3
+                else:
+                    # it's in, replace the BinOp node with name
+                    pass
                 self.valueDict[assignNode.targets[0].id] = self.currentVal
                 self.currentVal += 1
 

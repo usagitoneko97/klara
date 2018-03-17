@@ -33,6 +33,7 @@ class testValueAssign(unittest.TestCase):
         self.assertEqual(lvnTest.valueDict['c'], 1)
         self.assertEqual(lvnTest.valueDict['a'], 2)
         self.assertEqual(len(lvnTest.valueDict), 3)
+        self.assertTrue('0Add1' in lvnTest.lvnDict)
 
     def test_valueAssignToVar_updateVal(self):
         """
