@@ -108,3 +108,6 @@ def lvnOptimize(asTree)
 ```
 
 The full python source code can be found [here](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/lvn.py)
+
+## References
+- Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, inc, pp.420-428.
