@@ -1,24 +1,49 @@
-# Local value numbering
-consider the following code
+# Introduction to Local Value Numbering (LVN)
+Consider the following statements
 ```python
 a = b + c
 d = a - b
 e = b + c
 ```
-The expression `b + c` is redundant in 3rd line of the assignment since `b + c` is already computed at the first assignment and no intervening operation redefines the arguments. The compiler should rewrite this block so `b + c` only have to compute once. 
+The expression `b + c` is redundant in 3rd line of the assignment since `b + c` is already computed in the first assignment and no intervening operation redefines the arguments. The compiler should rewrite this block so `b + c` only have to compute once. 
 ```python
 a = b + c
 d = a - d
 e = a
 ```
-One of the techniques is Local Value Numbering. 
+One of the techniques is **Local Value Numbering**. 
 
 ## The algorithm
-Let's consider the example above. In the first operation, the variables on the right hand side will get the value number first, either previously defined, or assigning new value number. 
+This algorithm is able to solve the problem mention above. But there is a limitation. .....
+
+example (indirect substitution) that this algorithm will not be able to solve
+a = b + c
+d = b
+e = d + c
+
+a = b + c
+d = b
+e = a
+
+
+a = c + 5 * y ^ 7
+b = 5 * y
+d = c + 5 * y ^ 7
+
+However, Static Single Assignment (SSA) [1][2] can solve this. (More research/exploration needed here.)
 
 ![lvnFirst](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnFirst.svg)
 
-Lvn then construct the textual string **"0 + 1"** as a hash key to perform lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value to `"a"`. The final step for one expression is create an entry for variable at the left side. *Keep in mind that variable(s) at the left hand side will always be assign a new value number.* That is, lvn create an entry for `"a"` and assign new value number namely `2`. 
+Let's consider the example in the introduction. The algorithm parses through the expresssion and enumerate each variable, and adds it into a Python `dictionary`. Variables already added will not be added again. The dictionary is used for searching purpose later.
+
+
+~~In the first operation, the variables on the right-hand side will get the value number first, either previously defined, or assigning new value number.~~
+
+
+
+
+
+LVN then constructs the textual string **"0 + 1"** as a hash key to perform lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value to `"a"`. The final step for one expression is to create an entry for variable at the left-hand side. *Keep in mind that variable(s) at the left-hand side will always be assigned a new value number.* That is, LVN creates an entry for `"a"` and assign new value number namely `2`. 
 
 Moving on the second expression, lvn will perform the same step as above. 
 
