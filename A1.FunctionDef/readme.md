@@ -77,8 +77,7 @@ if __name__ == "__main__":
 
 ## Additional
 ### Get the parent of ast node
-Assume that we want to print out the parent function def, we will want to find out the parent of the child node. (obviously there is other ways of printing the parent function def but let us assume that this is the only way)
-Due to no attribute on a node that can link to parent node, we have to create it ourself by visiting all the node to manually link them. *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*
+Suppose we wanted to find the parent of the current node. But there is no attribute on the node that links back to its parent. If it is needed, the node can be augmented with that information. The following code shows how *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*:
 ```python
 for node in ast.walk(root):
     for child in ast.iter_child_nodes(node):
