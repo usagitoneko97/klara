@@ -1,18 +1,20 @@
 import unittest
-from lvn import lvn
+from lvn import Lvn
 import ast
 import astor
-class testValueAssign(unittest.TestCase):
+
+
+class TestValueAssign(unittest.TestCase):
     def test_valueAssignToVar_1_stmt(self):
         """
         example:
             b = 2
         """
-        astTree = ast.parse("b = 2")
-        lvnTest = lvn()
-        lvnTest.lvnOptimize(astTree)
-        self.assertEqual(lvnTest.valueDict['b'], 0)
-        self.assertEqual(len(lvnTest.valueDict), 1)
+        ast_tree = ast.parse("b = 2")
+        lvn_test = Lvn()
+        lvn_test.lvn_optimize(ast_tree)
+        self.assertEqual(lvn_test.value_dict['b'], 0)
+        self.assertEqual(len(lvn_test.value_dict), 1)
 
     def test_valueAssignToVar_0_1(self):
         """
@@ -27,14 +29,14 @@ class testValueAssign(unittest.TestCase):
             |   |   |
             2   0   1
         """
-        astTree = ast.parse("b = 2\nc = 3\na = b + c\n")
-        lvnTest = lvn()
-        lvnTest.lvnOptimize(astTree)
-        self.assertEqual(lvnTest.valueDict['b'], 0)
-        self.assertEqual(lvnTest.valueDict['c'], 1)
-        self.assertEqual(lvnTest.valueDict['a'], 2)
-        self.assertEqual(len(lvnTest.valueDict), 3)
-        self.assertTrue('0Add1' in lvnTest.lvnDict)
+        ast_tree = ast.parse("b = 2\nc = 3\na = b + c\n")
+        lvn_test = Lvn()
+        lvn_test.lvn_optimize(ast_tree)
+        self.assertEqual(lvn_test.value_dict['b'], 0)
+        self.assertEqual(lvn_test.value_dict['c'], 1)
+        self.assertEqual(lvn_test.value_dict['a'], 2)
+        self.assertEqual(len(lvn_test.value_dict), 3)
+        self.assertTrue('0Add1' in lvn_test.lvnDict)
 
     def test_valueAssignToVar_updateVal(self):
         """
@@ -51,13 +53,13 @@ class testValueAssign(unittest.TestCase):
             |
             2
         """
-        astTree = ast.parse("b = 2\nc = 3\nb = 4\n")
+        ast_tree = ast.parse("b = 2\nc = 3\nb = 4\n")
 
-        lvnTest = lvn()
-        lvnTest.lvnOptimize(astTree)
-        self.assertEqual(lvnTest.valueDict['b'], 2)
-        self.assertEqual(lvnTest.valueDict['c'], 1)
-        self.assertEqual(len(lvnTest.valueDict), 2)
+        lvn_test = Lvn()
+        lvn_test.lvn_optimize(ast_tree)
+        self.assertEqual(lvn_test.value_dict['b'], 2)
+        self.assertEqual(lvn_test.value_dict['c'], 1)
+        self.assertEqual(len(lvn_test.value_dict), 2)
 
     def test_valueAssignToVar_expect_replace_b_add_c_with_a(self):
         """
@@ -76,19 +78,19 @@ class testValueAssign(unittest.TestCase):
             3   0   1
         """
         print("------start of 1st optimization test--------")
-        astTree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
-        print(astor.to_source(astTree))
-        lvnTest = lvn()
-        optimizedTree = lvnTest.lvnOptimize(astTree)
-        self.assertEqual(lvnTest.valueDict['b'], 0)
-        self.assertEqual(lvnTest.valueDict['c'], 1)
-        self.assertEqual(lvnTest.valueDict['a'], 2)
-        self.assertEqual(lvnTest.valueDict['d'], 3)
-        self.assertEqual(len(lvnTest.valueDict), 4)
-        self.assertTrue('0Add1' in lvnTest.lvnDict)
-        self.assertTrue(isinstance(optimizedTree.body[3].value, ast.Name))
-        self.assertEqual(optimizedTree.body[3].value.id, "a")
-        source = astor.to_source(optimizedTree)
+        ast_tree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
+        print(astor.to_source(ast_tree))
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+        self.assertEqual(lvn_test.value_dict['b'], 0)
+        self.assertEqual(lvn_test.value_dict['c'], 1)
+        self.assertEqual(lvn_test.value_dict['a'], 2)
+        self.assertEqual(lvn_test.value_dict['d'], 3)
+        self.assertEqual(len(lvn_test.value_dict), 4)
+        self.assertTrue('0Add1' in lvn_test.lvnDict)
+        self.assertTrue(isinstance(optimized_tree.body[3].value, ast.Name))
+        self.assertEqual(optimized_tree.body[3].value.id, "a")
+        source = astor.to_source(optimized_tree)
         print(source)
         # check the ast
 
