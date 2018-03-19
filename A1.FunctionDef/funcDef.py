@@ -1,15 +1,15 @@
 import ast
 
 def main():
-    testContent = open("example.py").read()
-    asTree = ast.parse(testContent, filename="temp.py")
-    asTree = linkParentNode(asTree)
+    test_content = open("example.py").read()
+    asTree = ast.parse(test_content, filename="temp.py")
+    asTree = link_parent_node(asTree)
 
-    printFuncName(asTree.body)
+    print_func_name(asTree.body)
 
 
 
-def linkParentNode(root):
+def link_parent_node(root):
     """
     visit all the node to link them to their parent
     :param root: the asTree root
@@ -21,21 +21,21 @@ def linkParentNode(root):
 
     return root
 
-def printFuncName(bodyList, indentation=""):
+def print_func_name(body_list, indentation=""):
     """
     print all the name of the function def, including sub function
     :param body: a list of the body
     :param indentation: internal use for recursive
     """
-    for node in bodyList:
+    for node in body_list:
         if isinstance(node, ast.FunctionDef):
-            parentName = ""
+            parent_name = ""
             if isinstance(node.parent, ast.FunctionDef):
                 # it has a parent
-                parentName = "(parent : " + node.parent.name + ")"
+                parent_name = "(parent : " + node.parent.name + ")"
             print("{}:{} {} {}".format(node.lineno, node.col_offset,
-                                    indentation + node.name, parentName))
-            printFuncName(node.body, indentation + "    ")
+                                    indentation + node.name, parent_name))
+            print_func_name(node.body, indentation + "    ")
 
 if __name__ == "__main__":
     main()

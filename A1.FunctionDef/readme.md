@@ -4,24 +4,24 @@
 Given the python code, *example.py*:
 
 ```python
-def decoratorEx(someFunc):
+def decorator_ex(some_func):
     """
     this is a decorator example
     """
 
     def wrapper():
-        def someFunc():
+        def some_func():
             pass
         pass
 
     return wrapper
 
-@decoratorEx
+@decorator_ex
 def foo():
     pass
 
-someStatement = 1 + 2
-anotherStatement = someStatement
+some_statement = 1 + 2
+anotherStatement = some_statement
 ```
 and the ast representation as below:
 
@@ -29,9 +29,9 @@ and the ast representation as below:
 
 The aim is to print out all the function def's name, respective lineno and column offset, including the sub function with the correct indentation. Example output:
 ```python
->>> 1:0 decoratorEx
+>>> 1:0 decorator_ex
 >>> 6:4    wrapper
->>> 7:8        someFunc
+>>> 7:8        some_func
 >>> 13:0 foo
 ```
 
@@ -39,37 +39,37 @@ The aim is to print out all the function def's name, respective lineno and colum
 Before doing our analysis, we need to parse and build our ast based on *example.py*.
 ```python
 # read the content of the example.py
-testContent = open("example.py").read()
+test_content = open("example.py").read()
 # build the ast
-asTree = ast.parse(testContent, filename="temp.py")
+as_tree = ast.parse(test_content, filename="temp.py")
 ```
 Let us start by printing only the parent function. It was simply done by iterate through the **list of the body** and locate only the `ast.FunctionDef` instance. 
 ```python
-for node in asTree.body:
+for node in as_tree.body:
     if isinstance(node, ast.FunctionDef):
         print(node.name)
 ```
 To print also the sub function, the obvious and easiest way is to recursive call itself whenever the body is in `ast.FunctionDef` type.
 ```python
-def printFuncName(bodyList):
+def print_func_name(bodyList):
     for node in bodyList:
         if isinstance(node, ast.FunctionDef):
             print(node.name)
-            printFuncName(node.body)
+            print_func_name(node.body)
 ```
-The final part is to add in the *indentation* of the sub function. It can be done easily by defining another parameter in the `printFuncName` function. The full working python code is shown below:
+The final part is to add in the *indentation* of the sub function. It can be done easily by defining another parameter in the `print_func_name` function. The full working python code is shown below:
 ```python
 def main():
-    testContent = open("example.py").read()
-    asTree = ast.parse(testContent, filename="temp.py")
-    printFuncName(asTree.body)
+    test_content = open("example.py").read()
+    as_tree = ast.parse(test_content, filename="temp.py")
+    print_func_name(as_tree.body)
 
-def printFuncName(bodyList, indentation=""):
+def print_func_name(bodyList, indentation=""):
     for node in bodyList:
         if isinstance(node, ast.FunctionDef):
             print("{}:{} {}".format(node.lineno, node.col_offset,
                                     indentation + node.name))
-            printFuncName(node.body, indentation + "    ")
+            print_func_name(node.body, indentation + "    ")
 
 if __name__ == "__main__":
     main()
@@ -91,9 +91,9 @@ if isinstance(node.parent, ast.FunctionDef):
 ```
 The result
 ```python
->>> 1:0 decoratorEx
->>> 6:4    wrapper  (parent : decoratorEx)
->>> 7:8        someFunc  (parent : wrapper)
+>>> 1:0 decorator_ex
+>>> 6:4    wrapper  (parent : decorator_ex)
+>>> 7:8        some_func  (parent : wrapper)
 >>> 13:0 foo
 ```
 

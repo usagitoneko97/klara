@@ -28,7 +28,7 @@ To start building the ast, it's recommended to use [pyastviewer](https://github.
 
 ![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A3.reversingAst/resources/astviewer.svg)
 
-### introduction to build an ast
+### Introduction to build an ast
 [Documentation](https://greentreesnakes.readthedocs.io/en/latest/nodes.html) here describe every class in details.
 
 Assume we want to build a complete source code with just a **expression** and a **statement** :
