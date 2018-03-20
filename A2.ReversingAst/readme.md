@@ -1,5 +1,5 @@
 # Reversing ast
-The aim is to build an ast from scratch, a string of python code can then be generated from ast, and finally execute it. 
+The aim is to build an ast from scratch, a string of Python code can then be generated from ast, and finally execute it. 
 
 ## Run the program
 
@@ -10,7 +10,7 @@ $ python reverseAst.py
 
 ## Building an ast
 
-### Introduction to build an ast
+### Introduction to building an ast
 [Documentation](https://greentreesnakes.readthedocs.io/en/latest/nodes.html) here describe every class in details.
 
 Suppose we want to build a complete source code with just a **expression** and a **statement** :
@@ -22,9 +22,9 @@ The class of a variable is called `Name` that have attributes `id` and `ctx`.
 
 The attributes `id` is referring to the var name while `ctx` can be one of the following types:
 
-- Load : is used when var is meant to be loaded. *eg.* :  *yield a*
-- Store : is used when var is updated to a new value: *eg : a = 3*
-- Del : is used when var is meant to be deleted. *eg : del a*
+- Load: is used when var is meant to be loaded. *eg.* :  *yield a*
+- Store: is used when var is updated to a new value: * eg: a = 3*
+- Del: is used when var is meant to be deleted. * eg: del a*
 
 ```python
 # This represent variable *a*
@@ -43,11 +43,11 @@ a_eq_3 = ast.Assign(targets=[var_a], value=val_3)
 print_a = ast.Expr(value=printCall)
 ```
  
-To make this tree complete, the whole thing has to wrap inside a class called `Module`. Module represents every line of statement or expression and is the highest hierachy in an ast. 
+To make this tree complete, the whole thing has to wrap inside a class called `Module`. A module represents every line of statement or expression and is the highest hierarchy in an ast. 
 ```python
 as_tree = ast.Module(body=[a_eq_3, print_a])
 ```
-This step below is to assign the line number and the column offset for each node. Eventhough it's optional to do that but it's still preferably to do so.
+This step below is to assign the line number and the column offset for each node. Even though it's optional to do that but it's still prefer to do so.
 ```python
 ast.fix_missing_locations(as_tree)
 ```
@@ -56,13 +56,13 @@ The final step is to convert the ast into python source code and execute it. [as
 program_string = astor.to_source(as_tree)
 exec(program_string)
 ```
-The console should displayed following if all the steps is perform correctly. 
+The console should display following if all the steps are perform correctly. 
 ```python
 >>> 3
 ```
 ---
-### Building ast for a fibonacci series
-Consider the python code that generates fibonacci series below
+### Building ast for a Fibonacci series
+Consider the python code that generates Fibonacci series below
 ```python
 def fib():
     a = 0
@@ -77,7 +77,7 @@ for i in fib():
         break
 ```
 
-To start building the ast, it's recommended to use [pyastviewer](https://github.com/titusjan/astviewer) to get an idea how the hierachy of the ast looks like. 
+To start building the ast, it's recommended to use [pyastviewer](https://github.com/titusjan/astviewer) to get an idea how the hierarchy of the ast looks like. 
 
 ![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A3.reversingAst/resources/astviewer.svg)
 
@@ -135,7 +135,7 @@ fib_def = ast.FunctionDef(name="fib",
                           returns=None)
 ```
 
-Building the *for loop* will be using the same techniques describe above. 
+Building the *for loop* will be using the same techniques described above. 
 
 After **def fib()** and the **for loop** has been build, the ast can be completed, printed, and executed by:
 
@@ -146,4 +146,21 @@ print(astor.to_source(as_tree))
 
 program_string = astor.to_source(as_tree)
 exec(program_string)
+```
+
+Upon executing, console should shows
+```python
+>>> 0
+>>> 1
+>>> 1
+>>> 2
+>>> 3
+>>> 5
+>>> 8
+>>> 13
+>>> 21
+>>> 34
+>>> 55
+>>> 89
+>>> 144
 ```

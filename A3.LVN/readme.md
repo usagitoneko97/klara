@@ -5,7 +5,7 @@ a = b + c
 d = a - b
 e = b + c
 ```
-The expression `b + c` is redundant in 3rd line of the assignment since `b + c` is already computed in the first assignment and no intervening operation redefines the arguments. The compiler should rewrite this block so `b + c` only have to compute once. 
+The expression `b + c` is redundant in the 3rd line of the assignment since `b + c` is already computed in the first assignment and no intervening operation redefines the arguments. The compiler should rewrite this block so `b + c` only have to compute once. 
 ```python
 a = b + c
 d = a - d
@@ -34,7 +34,7 @@ However, Static Single Assignment (SSA) [1][2] can solve this. (More research/ex
 
 ![lvnFirst](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnFirst.svg)
 
-Let's consider the example in the introduction. The algorithm parses through the expresssion and enumerate each variable, and adds it into a Python `dictionary`. Variables already added will not be added again. The dictionary is used for searching purpose later.
+Consider the example in the introduction. The algorithm parses through the expression and enumerate each variable, and adds it to a Python `dictionary`. Variables already added will not be added again. The dictionary is used for searching purpose later.
 
 
 ~~In the first operation, the variables on the right-hand side will get the value number first, either previously defined, or assigning new value number.~~
@@ -43,28 +43,28 @@ Let's consider the example in the introduction. The algorithm parses through the
 
 
 
-LVN then constructs the textual string **"0 + 1"** as a hash key to perform lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value to `"a"`. The final step for one expression is to create an entry for variable at the left-hand side. *Keep in mind that variable(s) at the left-hand side will always be assigned a new value number.* That is, LVN creates an entry for `"a"` and assign new value number namely `2`. 
+LVN then constructs the textual string **"0 + 1"** as a hash key to perform a lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value to `"a"`. The final step for one expression is to create an entry for the variable at the left-hand side. *Keep in mind that variable(s) at the left-hand side will always be assigned a new value number.* That is, LVN creates an entry for `"a"` and assigns new value number namely `2`. 
 
-Moving on the second expression, lvn will perform the same step as above. 
+Moving on the second expression, LVN will perform the same step as above. 
 
 ![lvnSecond](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnSecond.svg)
 
-Because of textual string `"2 - 3"` is not found in the hash map, it will perform the exact step as above. 
+Because of textual string `"2 - 3"` is not found in the hashmap, it will perform the exact step as above. 
 
 On the third expression, 
 
 ![lvnThird](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnThird.svg)
 
-Now because of string `"0 + 1"` is found in the hash, lvn will replace the expression on the right with result of `"0 + 1"`, namely a.
+Now because of string `"0 + 1"` is found in the hash, LVN will replace the expression on the right with the result of `"0 + 1"`, namely a.
 
 ![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnReplaced.svg)
 
 ## The python implementation
-To get started easily, consider only assignment of binary operation, (`binOp` in python ast)
+To get started easily, consider the only assignment of binary operation, (`binOp` in python ast)
 ### Data structure and local variable used
-For the sake of simplicity, we will used **2 hash map** (dictionary in python), 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`. We also need a local variable to keep track of the current assigned value number. 
+For the sake of simplicity, we will use **2 hash map** (dictionary in python), 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`. We also need a local variable to keep track of the currently assigned value number. 
 
-### Dealing with abstract syntax tree
+### Dealing with an abstract syntax tree
 There is 3 ast node that we should look out for. 
 
 ---
@@ -72,8 +72,8 @@ There is 3 ast node that we should look out for.
 `Assign` is basically any assignment of variables. And is the parent node of the remaining 2 nodes. 
 
 **Attr** :  
-- `Targets` - is a list of of node representing the left hand side variable(s)
-- `value` - is a single node on the right hand side. For our example, it could be either *BinOp* or *Name*.  
+- `Targets` - is a list of node representing the left-hand side variable(s)
+- `value` - is a single node on the right-hand side. For our example, it could be either *BinOp* or *Name*.  
 Eg.
 ```python
 a = b + c
@@ -135,4 +135,4 @@ def lvnOptimize(asTree)
 The full python source code can be found [here](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/lvn.py)
 
 ## References
-- Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, inc, pp.420-428.
+- Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.420-428.

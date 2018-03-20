@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
 ## Additional
 ### Get the parent of ast node
-Suppose we wanted to find the parent function that associate with that sub function. But there is no attribute on the node that links back to its parent. If it is needed, the node can be augmented with that information. The following code shows how *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*:
+Suppose we wanted to find the parent function that associates with that subfunction. But there is no attribute on the node that links back to its parent. If it is needed, the node can be augmented with that information. The following code shows how *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*:
 ```python
 for node in ast.walk(root):
     for child in ast.iter_child_nodes(node):
