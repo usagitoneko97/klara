@@ -9,24 +9,6 @@ $ python reverseAst.py
 ```
 
 ## Building an ast
-Consider the python code that generates fibonacci series below
-```python
-def fib():
-    a = 0
-    b = 1
-    while True:            # First iteration:
-        yield a            # yield 0 to start with and then
-        a, b = b, a + b    # a will now be 1, and b will also be 1, (0 + 1)
-
-for i in fib():
-    print(i)
-    if i > 100:
-        break
-```
-
-To start building the ast, it's recommended to use [pyastviewer](https://github.com/titusjan/astviewer) to get an idea how the hierachy of the ast looks like. 
-
-![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A3.reversingAst/resources/astviewer.svg)
 
 ### Introduction to build an ast
 [Documentation](https://greentreesnakes.readthedocs.io/en/latest/nodes.html) here describe every class in details.
@@ -80,3 +62,88 @@ The console should displayed following if all the steps is perform correctly.
 ```
 ---
 ### Building ast for a fibonacci series
+Consider the python code that generates fibonacci series below
+```python
+def fib():
+    a = 0
+    b = 1
+    while True:            # First iteration:
+        yield a            # yield 0 to start with and then
+        a, b = b, a + b    # a will now be 1, and b will also be 1, (0 + 1)
+
+for i in fib():
+    print(i)
+    if i > 100:
+        break
+```
+
+To start building the ast, it's recommended to use [pyastviewer](https://github.com/titusjan/astviewer) to get an idea how the hierachy of the ast looks like. 
+
+![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A3.reversingAst/resources/astviewer.svg)
+
+To get an idea how to start, it's often good to build the statement or expression inside a function or a for/while loop etc.. 1 by 1. For example, assume **def fib()** is to be build, **a = 0**, **b = 1**, **yield a**, **a, b= b, a+b** has to be build first.
+```python
+# a = 0
+a_eq_0 = ast.Assign(targets=[ast.Name(id="a", ctx=ast.Store())],
+                    value=ast.Num(0))
+# b = 0
+b_eq_1 = ast.Assign(targets=[ast.Name(id="b", ctx=ast.Store())],
+                    value=ast.Num(1))
+
+# yield a
+yield_a = ast.Expr(value=ast.Yield(ast.Name(id="a", ctx=ast.Load())))
+
+# a, b = b, a + b
+# a, b
+left_target = [ast.Tuple(elts=[ast.Name(id="a", ctx=ast.Store()),
+                                ast.Name(id="b", ctx=ast.Store())],
+                            ctx=ast.Load())]
+
+# b, a + b
+right_value = ast.Tuple(elts=[ast.Name(id="b", ctx=ast.Store()),
+                                ast.BinOp(left=ast.Name(id="a", ctx=ast.Load()),
+                                            op=ast.Add(),
+                                            right=ast.Name(id="b", ctx=ast.Load()))],
+                        ctx=ast.Load())
+
+# a, b = b, a + b
+assign1 = ast.Assign(targets=left_target, value=right_value)
+```
+
+After that, **yield a**, **a, b= b, a+b** is added inside a while loop class. 
+```python
+while_body = [yield_a, assign1]
+whileLoop = ast.While(test=ast.NameConstant(value=True),
+                        body=while_body,
+                        orelse=[])
+
+```
+
+Then **a = 0**, **b = 1** along with the whole while loop is added inside a FunctionDef class.
+```python
+fib_def = ast.FunctionDef(name="fib",
+                          args=ast.arguments(args=[],
+                                             vararg=None,
+                                             kwonlyargs=[],
+                                             kw_defaults=[],
+                                             kwarg=None,
+                                             defaults=[]),
+                          body=[a_eq_0,
+                                b_eq_1,
+                                whileLoop],
+                          decorator_list=[],
+                          returns=None)
+```
+
+Building the *for loop* will be using the same techniques describe above. 
+
+After **def fib()** and the **for loop** has been build, the ast can be completed, printed, and executed by:
+
+```python
+as_tree = ast.Module(body=[fib_def, for_i])
+ast.fix_missing_locations(as_tree)
+print(astor.to_source(as_tree))
+
+program_string = astor.to_source(as_tree)
+exec(program_string)
+```
