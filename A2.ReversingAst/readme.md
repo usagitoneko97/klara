@@ -4,7 +4,7 @@ The aim is to build an ast from scratch, a string of Python code can then be gen
 ## Run the program
 
 ```sh
-$ cd A3.reversingAst
+$ cd A2.ReversingAst
 $ python reverseAst.py
 ```
 
@@ -79,7 +79,7 @@ for i in fib():
 
 To start building the ast, it's recommended to use [pyastviewer](https://github.com/titusjan/astviewer) to get an idea how the hierarchy of the ast looks like. 
 
-![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A3.reversingAst/resources/astviewer.svg)
+![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A2.ReversingAst/resources/astviewer.svg)
 
 To get an idea how to start, it's often good to build the statement or expression inside a function or a for/while loop etc.. 1 by 1. For example, assume **def fib()** is to be build, **a = 0**, **b = 1**, **yield a**, **a, b= b, a+b** has to be build first.
 ```python

@@ -40,20 +40,20 @@ However, Static Single Assignment (SSA) [1][2] can solve this. (More research/ex
 
 Consider the example in the introduction. The algorithm parses through the expression and enumerate each variable, and adds it to a Python `dictionary`. *Keep in mind that variable(s) at the left-hand side will always be assigned after the right-hand side has been assigned a new value number.*Variables already added will not be added again. The dictionary is used for searching purpose later. The following diagrams show how it's enumerated. 
 
-![lvnFirst](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnFirst.svg)
+![lvnFirst](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnFirst.svg)
 
-![lvnSecond](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnSecond.svg)
+![lvnSecond](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnSecond.svg)
 
 
-![lvnThird](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnThird.svg)
+![lvnThird](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThird.svg)
 
 LVN then constructs the textual string on the first statement **"0 + 1"** as a hash key to perform a lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value number correspond to `"a"`.
 
-![lvnFirstHash](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnFirstHash.svg)
+![lvnFirstHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnFirstHash.svg)
 
 Because of textual string `"2 - 3"` is not found in the hashmap, it will also insert into the dictionary. 
 
-![lvnSecondHash](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnSecondHash.svg)
+![lvnSecondHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnSecondHash.svg)
 
 
 On the third expression, 
@@ -61,9 +61,9 @@ On the third expression,
 
 Now because of string `"0 + 1"` is found in the hash, LVN will replace the expression on the right with the result of `"0 + 1"`, namely a.
 
-![lvnThirdHash](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnThirdHash.svg)
+![lvnThirdHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThirdHash.svg)
 
-![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnReplaced.svg)
+![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnReplaced.svg)
 
 ## Problems in LVN
 ### Choice of names
@@ -85,7 +85,7 @@ But the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from 
 
 One way to solve this efficiently is by using `Static Single Assignment (SSA)`. After transforming the code to SSA form, 
 
-![ssaExampel](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/ssaExample.svg)
+![ssaExampel](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/ssaExample.svg)
 
 With these new names defined, LVN can then produces the desired result. To be exact, `"x + y"` in the 4th assignment is now replaced by a<sub>0</sub>. An implementation will then map the a<sub>1</sub> to the original `a` and then declares a new temporary variable to hold a<sub>0</sub>
 
@@ -169,7 +169,7 @@ def lvnOptimize(asTree)
     return asTree
 ```
 
-The full python source code can be found [here](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/lvn.py)
+The full python source code can be found [here](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/lvn.py)
 
 ## Extending LVN
 
@@ -182,7 +182,7 @@ LVN can apply identities to simplify the code. For example. `a * 1` and `a` shou
 
 More example is shown below
 
-![Algebraic identities](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/algebraicId.png.svg)
+![Algebraic identities](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/algebraicId.png)
 
 
 ## References
