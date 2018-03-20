@@ -60,7 +60,7 @@ Now because of string `"0 + 1"` is found in the hash, lvn will replace the expre
 ![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A2.LVN/resources/lvnReplaced.svg)
 
 ## The python implementation
-To get started easily, we only care about assignment of binary operation, (`binOp` in python ast)
+To get started easily, consider only assignment of binary operation, (`binOp` in python ast)
 ### Data structure and local variable used
 For the sake of simplicity, we will used **2 hash map** (dictionary in python), 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`. We also need a local variable to keep track of the current assigned value number. 
 

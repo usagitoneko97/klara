@@ -36,14 +36,14 @@ The aim is to print out all the function def's name, respective lineno and colum
 ```
 
 ## The program
-Before doing our analysis, we need to parse and build our ast based on *example.py*.
+Before doing our analysis, an ast has to be parsed and build that based on *example.py*. 
 ```python
 # read the content of the example.py
 test_content = open("example.py").read()
 # build the ast
 as_tree = ast.parse(test_content, filename="temp.py")
 ```
-Let us start by printing only the parent function. It was simply done by iterate through the **list of the body** and locate only the `ast.FunctionDef` instance. 
+To print only the parent function, it was simply done by iterate through the **list of the body** and locate only the `ast.FunctionDef` instance. 
 ```python
 for node in as_tree.body:
     if isinstance(node, ast.FunctionDef):
@@ -77,18 +77,20 @@ if __name__ == "__main__":
 
 ## Additional
 ### Get the parent of ast node
-Suppose we wanted to find the parent of the current node. But there is no attribute on the node that links back to its parent. If it is needed, the node can be augmented with that information. The following code shows how *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*:
+Suppose we wanted to find the parent function that associate with that sub function. But there is no attribute on the node that links back to its parent. If it is needed, the node can be augmented with that information. The following code shows how *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*:
 ```python
 for node in ast.walk(root):
     for child in ast.iter_child_nodes(node):
         child.parent = node
 ```
-We can then use the attribute `parent`
+
+Attribute `parent` then can be used by:
 ```python
 if isinstance(node.parent, ast.FunctionDef):
     # it has a parent of type FunctionDef
     parentName = "(parent : " + node.parent.name + ")"
 ```
+
 The result
 ```python
 >>> 1:0 decorator_ex

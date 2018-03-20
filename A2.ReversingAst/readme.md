@@ -13,7 +13,7 @@ $ python reverseAst.py
 ### Introduction to build an ast
 [Documentation](https://greentreesnakes.readthedocs.io/en/latest/nodes.html) here describe every class in details.
 
-Assume we want to build a complete source code with just a **expression** and a **statement** :
+Suppose we want to build a complete source code with just a **expression** and a **statement** :
 ```python
 a = 3 #statement
 print(a) #expression

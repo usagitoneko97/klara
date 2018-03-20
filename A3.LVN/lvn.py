@@ -3,7 +3,7 @@ import ast
 
 class Lvn:
     def __init__(self):
-        self.value_dict = dict()
+
         self.lvnDict = dict()
         self.current_val = 0
 
@@ -18,9 +18,9 @@ class Lvn:
             if isinstance(assign_node.value, ast.BinOp):
                 # form a string in form of "<valueNumber1><operator><valueNumber2>
                 query_string = ""
-                query_string += str(self._add_to_value_dict(assign_node.value.left.id))
+                query_string += str(self._add_to_lvn_dict(assign_node.value.left.id))
                 query_string += assign_node.value.op.__class__.__name__
-                query_string += str(self._add_to_value_dict(assign_node.value.right.id))
+                query_string += str(self._add_to_lvn_dict(assign_node.value.right.id))
 
                 if query_string not in self.lvnDict:
                     self.lvnDict[query_string] = assign_node.targets[0].id
@@ -32,7 +32,7 @@ class Lvn:
                     assign_node.value = name_node
 
             # always assign new value number to left hand side
-            self.value_dict[assign_node.targets[0].id] = self.current_val
+            self.lvnDict[assign_node.targets[0].id] = self.current_val
             self.current_val += 1
 
         return as_tree
@@ -43,9 +43,9 @@ class Lvn:
             if isinstance(as_tree.body[i], ast.Assign):
                 yield as_tree.body[i]
 
-    def _add_to_value_dict(self, string):
-        if string not in self.value_dict:
-            self.value_dict[string] = self.current_val
+    def _add_to_lvn_dict(self, string):
+        if string not in self.lvnDict:
+            self.lvnDict[string] = self.current_val
             self.current_val += 1
 
-        return self.value_dict[string]
+        return self.lvnDict[string]
