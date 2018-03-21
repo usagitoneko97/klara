@@ -1,4 +1,4 @@
-# Introduction to Local Value Numbering (LVN)
+# 1. Introduction to Local Value Numbering (LVN)
 Consider the following statements
 ```python
 a = b + c
@@ -13,32 +13,33 @@ e = a
 ```
 One of the techniques is **Local Value Numbering**. 
 
-## The algorithm
+## 1.1 The algorithm
 
-### Assumption
-The algorithm can only accept simple expression with a maximum of 3 variables and at most 1 operator (excluding `equal` operator), which is known as **Three-Address Code** (TAC) [give a link]. E.g.,
+### 1.1.1 Assumption
+The algorithm can only accept simple expression with a maximum of 3 variables and at most 1 operator (excluding `equal` operator), which is known as **Three-Address Code** [(TAC)](https://en.wikipedia.org/wiki/Three-address_code). E.g.,
 ```
 a = b + c * d              # Not acceptable
 e = f + g                  # Acceptable
 ```
 
 However, this does not make the algorithm **useless** because the complex expression can be broken down into several simpler TAC for ease of analysis. E.g.,
-```
+```python
 # a = b + c * d becomes:
 z = c * d                  # z is a temporal variable
 a = b + z
 ```
 Also compiler optimization often emits machine code, which matches the TAC form. E.g.,
-```
+```python
 # a = b + c * d              ARM code 
 z = c * d                  # MUL R0, R1, R2         ; Assuming R0 = z, R1 = c, R2 = d
 a = b + z                  # ADD R3, R4, R0         ; Assuming R3 = a, R4 = b
 ```
 
-### Limitations
-This algorithm is able to solve the problem mention above. But there is a limitation. .....
+### 1.1.2 Limitations
+#### 1.1.2.1 Indirect substitution
+This algorithm is able to solve the problem mention above. But there is a limitation.
 
-example (indirect substitution) that this algorithm will not be able to solve
+Example below shows that this algorithm will not able to solve
 ```python
 # [Code 1]
 # Input
@@ -56,46 +57,8 @@ a = b + c
 d = b
 e = a
 ```
-```python
-# [Code 2]
-a = c + 5 * y ^ 7
-b = 5 * y
-d = c + 5 * y ^ 7
-```
-However, Static Single Assignment (SSA) [1][2] can solve this. (More research/exploration needed here.)
 
-
-### Algorithm in details
-
-Consider the example in the introduction. The algorithm parses through the expression and enumerate each variable, and adds it to a Python `dictionary`. *Keep in mind that variable(s) at the left-hand side will always be assigned after the right-hand side has been assigned a new value number.*Variables already added will not be added again. The dictionary is used for searching purpose later. The following diagrams show how it's enumerated. 
-
-![lvnFirst](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnFirst.svg)
-
-![lvnSecond](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnSecond.svg)
-
-
-![lvnThird](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThird.svg)
-
-LVN then constructs the textual string on the first statement **"0 + 1"** as a hash key to perform a lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value number correspond to `"a"`.
-
-![lvnFirstHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnFirstHash.svg)
-
-Because of textual string `"2 - 3"` is not found in the hashmap, it will also insert into the dictionary. 
-
-![lvnSecondHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnSecondHash.svg)
-
-
-On the third expression, 
-
-
-Now because of string `"0 + 1"` is found in the hash, LVN will replace the expression on the right with the result of `"0 + 1"`, namely a.
-
-![lvnThirdHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThirdHash.svg)
-
-![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnReplaced.svg)
-
-## Problems in LVN
-### Choice of names
+#### 1.1.2.2 Problems when redefining occurs
 Consider the code below:
 ```python
 # code                expected result
@@ -105,7 +68,7 @@ b = x + y            # b = a
 a = 17               # Redefining `a` as 17                
 c = x + y            # c = b since that c != a = 17
 ```
-~~With the understanding on the section above, the second statement will be substituted by a.~~
+
 but LVN produces the following non-optimized result though correct:
 
 ```python
@@ -115,29 +78,106 @@ a = 17
 c = x + y            # Fail to optimize this statement
 ```
 
-But the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number 2 anymore. 
+This happens due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
 
-One way to solve this efficiently is by using `Static Single Assignment (SSA)`. After transforming the code to SSA form, 
+One way to solve this efficiently is by using `Static Single Assignment (SSA)`. 
+
+In brief, SSA requires that each variable is assigned exactly once. For example, 
+
+> x = 1   --->  x<sub>0</sub> = 1
+
+> x = 2   --->  x<sub>1</sub> = 2
+
+> y = 3   --->  y<sub>0</sub> = 3
+
+After transforming the code in the beginning section to SSA form, 
 
 ![ssaExampel](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/ssaExample.svg)
 
+After LVN, 
+>  a<sub>0</sub> = x<sub>0</sub> + y<sub>0</sub> 
+
+>  b<sub>0</sub> = a<sub>0</sub> 
+
+>  a<sub>1</sub> = 17 
+
+>  c<sub>1</sub> = a<sub>0</sub> 
+
 With these new names defined, LVN can then produces the desired result. To be exact, `"x + y"` in the 4th assignment is now replaced by a<sub>0</sub>. An implementation will then map the a<sub>1</sub> to the original `a` and then declares a new temporary variable to hold a<sub>0</sub>
 
-> temp = x + y                        
-> b = temp             
+> a<sub>0</sub> = x + y                        
+> b = a<sub>0</sub>             
 > a = 17                
-> c = temp   
+> c = a<sub>0</sub>   
+
+### 1.1.3 Algorithm in details
+
+Consider the example in the introduction.
+```python
+a = b + c
+d = a - b
+e = b + c
+``` 
+The algorithm parses through the expression and enumerate each variable, and adds it to a Python `dictionary`. *Keep in mind that variable(s) at the left-hand side will always be assigned after the right-hand side has been assigned a new value number.*Variables already added will not be added again. The dictionary is used for searching purpose later. The following diagrams show how it's enumerated. 
+
+![lvnThird](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThird.svg)
+
+Enumerated variables Table
+| Key | Value |   
+| :--:| :---: |   
+| "b" |   0   |   
+| "c" |   1   |   
+| "a" |   2   |   
+| "d" |   3   |   
+| "e" |   4   |   
+
+Right-hand side expressions Table
+| Key     | Value |
+| :--:    | :---: |
+| "0 + 1" |   2   |
+| "2 - 0" |   3   |
+LVN then constructs the textual string on every expression on the right-hand side. E.g, **"0 + 1"** as a hash key to perform a lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value number correspond to `"a"`.
+
+![lvnFirstHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnFirstHash.svg)
+
+Right-hand side expressions Table
+| Key     | Value |
+| :--:    | :---: |
+| "0 + 1" |   2   |
+
+Because of textual string `"2 - 0"` is not found in the hashmap, it will also insert into the dictionary. 
+
+![lvnSecondHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnSecondHash.svg)
+
+Right-hand side expressions Table
+| Key     | Value |
+| :--:    | :---: |
+| "0 + 1" |   2   |
+| "2 - 0" |   3   |
 
 
-## The python implementation
+On the third expression, 
+
+
+Now because of string `"0 + 1"` is found in the hash, LVN will replace a variable that correspond to the Value Number of result of `"0 + 1"`, namely a that correspond with the Value Number 2. 
+
+![lvnThirdHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThirdHash.svg)
+
+![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnReplaced.svg)
+
+
+## 1.2 The python implementation
+In the real implementation, parsing AST 2 times like the explanation above is not required. Instead, the 2 steps (which is enumerating variables and substituting the expression on RHS) in [1.1.3] can happens concurently without having to parse ast 2 times. 
+
 To get started easily, consider the only assignment of binary operation, (`binOp` in python ast)
-### Data structure and local variable used
-For the sake of simplicity, **2 hash map** (dictionary in python) will be used, 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`. We also need a local variable to keep track of the currently assigned value number. 
 
-### Dealing with an abstract syntax tree
+### 1.2.1 Data structure used
+For the sake of simplicity, **2 hash map** (dictionary in python) will be used, 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`.
+
+### 1.2.2 Dealing with an abstract syntax tree
 Details on dealing with ast can be found [here](https://github.com/usagitoneko97/python-ast/tree/master/A2.ReversingAst)
 
-There is 3 ast node that is important for this assignment.
+But in brief, there is 3 ast node that is important for this assignment.
 
 ---
 
@@ -176,7 +216,7 @@ c
 d
 ```
 
-### Pseudocode
+### 1.2.3 Pseudocode
 ```python
 def lvnOptimize(asTree)
     for assignNode in getAssignNodeClass(asTree):
@@ -205,19 +245,44 @@ def lvnOptimize(asTree)
 
 The full python source code can be found [here](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/lvn.py)
 
-## Extending LVN
+## 1.3 Extending LVN
 
 **Note**: Features in this section here is still not implemented in `lvn.py`
-### Commutative operations
+### 1.3.1 Commutative operations
 Operation such as `x + y` and `y + x` may produce different key *eg. "0 + 1" or "1 + 0" even though they both meant the same thing. One way to solve this is to sort the operands by ordering their **Value Number**. 
 
-### Algebraic identities
+### 1.3.2 Algebraic identities
 LVN can apply identities to simplify the code. For example. `a * 1` and `a` should have the same value number. 
 
 More example is shown below
 
 ![Algebraic identities](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/algebraicId.png)
 
+## 1.4 Testing and running
+### 1.4.1 Dependencies
+[Astor](http://astor.readthedocs.io/en/latest/) is used to transform an ast to python readable source code. Install by,
+```sh
+pip install astor
+```
+### 1.4.2 Run the test
+Run the unittest by
+```bash
+python -m unittest test_lvn.py
+```
+### 1.4.3 Using the lvn module
+```python
+import ast
+from lvn import Lvn
+import astor
+# create a tree
+ast_tree = ast.parse("b = 2")
+# initialize the test
+lvn_test = Lvn()
+optimized_tree = lvn_test.lvn_optimize(ast_tree)
+# optional : transform ast to python code for viewing purpose
+source = astor.to_source(optimized_tree)
+print(source)
+```
 
-## References
+## 1.5 References
 - Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.420-428.
