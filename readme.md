@@ -21,6 +21,6 @@ print(astor.to_source(astTree))
 # Examples 
 1. [printing of function name in ast](https://github.com/usagitoneko97/python-ast/tree/master/A1.FunctionDef)
 
-2. [Reversing the ast](https://github.com/usagitoneko97/python-ast/tree/master/A2.ReversingAst)
+2. [Ast to python code](https://github.com/usagitoneko97/python-ast/tree/master/A2.Ast2Py)
 
 3. [Local Value Numbering](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN)

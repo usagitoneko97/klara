@@ -4,7 +4,7 @@ The aim is to build an ast from scratch, a string of Python code can then be gen
 ## Run the program
 
 ```sh
-$ cd A2.ReversingAst
+$ cd A2.Ast2Py
 $ python reverseAst.py
 ```
 
@@ -51,7 +51,7 @@ This step below is to assign the line number and the column offset for each node
 ```python
 ast.fix_missing_locations(as_tree)
 ```
-The final step is to convert the ast into python source code and execute it. [astor](http://astor.readthedocs.io/en/latest/) is a library that can perform the job.
+The final step is to convert the ast into python source code and execute it. [astor](http://astor.readthedocs.io/en/latest/) is a python library that can perform the job.
 ```python
 program_string = astor.to_source(as_tree)
 exec(program_string)
@@ -79,7 +79,7 @@ for i in fib():
 
 To start building the ast, it's recommended to use [pyastviewer](https://github.com/titusjan/astviewer) to get an idea how the hierarchy of the ast looks like. 
 
-![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A2.ReversingAst/resources/astviewer.svg)
+![astviewer](https://github.com/usagitoneko97/python-ast/blob/master/A2.Ast2Py/resources/astviewer.svg)
 
 To get an idea how to start, it's often good to build the statement or expression inside a function or a for/while loop etc.. 1 by 1. For example, assume **def fib()** is to be build, **a = 0**, **b = 1**, **yield a**, **a, b= b, a+b** has to be build first.
 ```python
