@@ -1,6 +1,6 @@
-# printing of function name in ast
+# 1. printing of function name in ast
 
-## objective
+## 1.1 objective
 Given the python code, *example.py*:
 
 ```python
@@ -35,7 +35,7 @@ The aim is to print out all the function def's name, respective lineno and colum
 >>> 13:0 foo
 ```
 
-## The program
+## 1.2 The program
 Before doing our analysis, an ast has to be parsed and build that based on *example.py*. 
 ```python
 # read the content of the example.py
@@ -75,8 +75,8 @@ if __name__ == "__main__":
     main()
 ```
 
-## Additional
-### Get the parent of ast node
+## 1.3 Additional
+### 1.3.1 Get the parent of ast node
 Suppose we wanted to find the parent function that associates with that subfunction. But there is no attribute on the node that links back to its parent. If it is needed, the node can be augmented with that information. The following code shows how *[[1]](https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python)*:
 ```python
 for node in ast.walk(root):
@@ -99,7 +99,7 @@ The result
 >>> 13:0 foo
 ```
 
-## Reference
+## 1.4 Reference
 1. https://stackoverflow.com/questions/34570992/getting-parent-of-ast-node-in-python
 2. [official python ast doc](https://docs.python.org/2/library/ast.html)
 3. [greentreesnakes enhanced python ast doc](http://greentreesnakes.readthedocs.io/en/latest/index.html)

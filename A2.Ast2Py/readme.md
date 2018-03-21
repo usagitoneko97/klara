@@ -1,16 +1,16 @@
-# Reversing ast
+# 1. Ast to Python Code
 The aim is to build an ast from scratch, a string of Python code can then be generated from ast, and finally execute it. 
 
-## Run the program
+## 1.2 Run the program
 
 ```sh
 $ cd A2.Ast2Py
-$ python reverseAst.py
+$ python reverse_ast.py
 ```
 
-## Building an ast
+## 1.3 Building an ast
 
-### Introduction to building an ast
+### 1.3.1 Introduction to building an ast
 [Documentation](https://greentreesnakes.readthedocs.io/en/latest/nodes.html) here describe every class in details.
 
 Suppose we want to build a complete source code with just a **expression** and a **statement** :
@@ -61,7 +61,7 @@ The console should display following if all the steps are perform correctly.
 >>> 3
 ```
 ---
-### Building ast for a Fibonacci series
+### 1.3.2 Building ast for a Fibonacci series
 Consider the python code that generates Fibonacci series below
 ```python
 def fib():

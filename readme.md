@@ -14,13 +14,13 @@ To simplify the process of exploring the whole ast, [astviewer](https://github.c
 
 Example usage:
 ```python
-astTree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
-print(astor.to_source(astTree))
+ast_tree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
+print(astor.to_source(ast_tree))
 ```
 
 # Examples 
-1. [printing of function name in ast](https://github.com/usagitoneko97/python-ast/tree/master/A1.FunctionDef)
+1. [Printing of Function Name in Ast](https://github.com/usagitoneko97/python-ast/tree/master/A1.FunctionDef)
 
-2. [Ast to python code](https://github.com/usagitoneko97/python-ast/tree/master/A2.Ast2Py)
+2. [Ast to Python code](https://github.com/usagitoneko97/python-ast/tree/master/A2.Ast2Py)
 
 3. [Local Value Numbering](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN)
