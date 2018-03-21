@@ -151,7 +151,7 @@ Right-hand side expressions Table
 | Key     | Value |
 | :--:    | :---: |
 | "0 + 1" |   2   |
-| "2 - 0" |   3   |
+| "2 - 0" |   4   |
 
 
 On the third expression, 
