@@ -272,7 +272,13 @@ import ast
 from lvn import Lvn
 import astor
 # create a tree
-ast_tree = ast.parse("b = 2")
+'''
+b = 3
+c = 3
+a = b + c
+d = b + c
+'''
+ast_tree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
 # initialize the test
 lvn_test = Lvn()
 optimized_tree = lvn_test.lvn_optimize(ast_tree)
