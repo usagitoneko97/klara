@@ -118,11 +118,12 @@ a = b + c
 d = a - b
 e = b + c
 ``` 
-The algorithm parses through the expression and enumerate each variable, and adds it to a Python `dictionary`. *Keep in mind that variable(s) at the left-hand side will always be assigned after the right-hand side has been assigned a new value number.*Variables already added will not be added again. The dictionary is used for searching purpose later. The following diagrams show how it's enumerated. 
+The algorithm parses through the expression and enumerate each variable, and adds it to a Python `dictionary`. *Keep in mind that variable(s) at the left-hand side will always be assigned after the right-hand side has been assigned a new value number.* Variables already added will not be added again. The dictionary is used for searching purpose later. The following diagrams show how it's enumerated. 
 
 ![lvnThird](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThird.svg)
 
 Enumerated variables Table
+
 | Key | Value |   
 | :--:| :---: |   
 | "b" |   0   |   
@@ -131,16 +132,12 @@ Enumerated variables Table
 | "d" |   3   |   
 | "e" |   4   |   
 
-Right-hand side expressions Table
-| Key     | Value |
-| :--:    | :---: |
-| "0 + 1" |   2   |
-| "2 - 0" |   3   |
 LVN then constructs the textual string on every expression on the right-hand side. E.g, **"0 + 1"** as a hash key to perform a lookup. It will fail since there is no previous insertion. LVN then creates an entry of **"0 + 1"** and assigns the value number correspond to `"a"`.
 
 ![lvnFirstHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnFirstHash.svg)
 
 Right-hand side expressions Table
+
 | Key     | Value |
 | :--:    | :---: |
 | "0 + 1" |   2   |
@@ -150,6 +147,7 @@ Because of textual string `"2 - 0"` is not found in the hashmap, it will also in
 ![lvnSecondHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnSecondHash.svg)
 
 Right-hand side expressions Table
+
 | Key     | Value |
 | :--:    | :---: |
 | "0 + 1" |   2   |
@@ -158,8 +156,7 @@ Right-hand side expressions Table
 
 On the third expression, 
 
-
-Now because of string `"0 + 1"` is found in the hash, LVN will replace a variable that correspond to the Value Number of result of `"0 + 1"`, namely a that correspond with the Value Number 2. 
+Now because of string `"0 + 1"` is found in the hash, LVN will replace a variable that corresponds to the Value Number of the result of `"0 + 1"`, namely a that correspond with the Value Number 2. 
 
 ![lvnThirdHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThirdHash.svg)
 
@@ -167,7 +164,7 @@ Now because of string `"0 + 1"` is found in the hash, LVN will replace a variabl
 
 
 ## 1.2 The python implementation
-In the real implementation, parsing AST 2 times like the explanation above is not required. Instead, the 2 steps (which is enumerating variables and substituting the expression on RHS) in [1.1.3] can happens concurently without having to parse ast 2 times. 
+In the real implementation, parsing AST 2 times like the explanation [above](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) is not required. Instead, the 2 steps (which is enumerating variables and substituting the expression on RHS) in [1.1.3](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) can happen concurrently without having to parse ast 2 times. 
 
 To get started easily, consider the only assignment of binary operation, (`binOp` in python ast)
 
@@ -230,7 +227,7 @@ def lvnOptimize(asTree)
                         valNumRight
 
         if queryString not in lvnDict:
-            #add entry of querystring in lvn Dict with the value of lhs var name
+            #add entry of querystring in LVN Dict with the value of lhs var name
         else:
             # It is in, replaces the binop with a single variable
             construct Name Node with id = variable corresponds to the value number
