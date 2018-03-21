@@ -15,20 +15,49 @@ One of the techniques is **Local Value Numbering**.
 
 ## The algorithm
 
-### Limitation
+### Assumption
+The algorithm can only accept simple expression with a maximum of 3 variables and at most 1 operator (excluding `equal` operator), which is known as **Three-Address Code** (TAC) [give a link]. E.g.,
+```
+a = b + c * d              # Not acceptable
+e = f + g                  # Acceptable
+```
+
+However, this does not make the algorithm **useless** because the complex expression can be broken down into several simpler TAC for ease of analysis. E.g.,
+```
+# a = b + c * d becomes:
+z = c * d                  # z is a temporal variable
+a = b + z
+```
+Also compiler optimization often emits machine code, which matches the TAC form. E.g.,
+```
+# a = b + c * d              ARM code 
+z = c * d                  # MUL R0, R1, R2         ; Assuming R0 = z, R1 = c, R2 = d
+a = b + z                  # ADD R3, R4, R0         ; Assuming R3 = a, R4 = b
+```
+
+### Limitations
 This algorithm is able to solve the problem mention above. But there is a limitation. .....
 
 example (indirect substitution) that this algorithm will not be able to solve
 ```python
+# [Code 1]
+# Input
 a = b + c
 d = b
 e = d + c
 
+# LVN output
+a = b + c
+d = b
+e = d + c            # Fail to substitute
+
+# Expected output
 a = b + c
 d = b
 e = a
 ```
 ```python
+# [Code 2]
 a = c + 5 * y ^ 7
 b = 5 * y
 d = c + 5 * y ^ 7
@@ -67,18 +96,23 @@ Now because of string `"0 + 1"` is found in the hash, LVN will replace the expre
 
 ## Problems in LVN
 ### Choice of names
-Consider code below:
+Consider the code below:
 ```python
-a = x + y                        
-b = x + y             
-a = 17                
-c = x + y             
+# code                expected result
+# -------------------------------------
+a = x + y                       
+b = x + y            # b = a   
+a = 17               # Redefining `a` as 17                
+c = x + y            # c = b since that c != a = 17
 ```
-With the understanding on the section above, the second statement will be substituted by a. 
+~~With the understanding on the section above, the second statement will be substituted by a.~~
+but LVN produces the following non-optimized result though correct:
 
 ```python
 a = x + y
 b = a
+a = 17
+c = x + y            # Fail to optimize this statement
 ```
 
 But the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number 2 anymore. 
