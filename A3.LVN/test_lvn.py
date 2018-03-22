@@ -140,8 +140,8 @@ class TestValueAssign(unittest.TestCase):
     def test_valueAssignToVar_commutative_minus_operation(self):
         """
                 input:            expected output
-                a = x + y         a = x + y
-                b = y + x         b = a
+                a = x - y         a = x - y
+                b = y - x         b = y - x
                 """
         print("------start of 4th optimization test--------")
         ast_tree = ast.parse("x = 2\ny = 3\na = x - y\nb=y - x")
@@ -155,5 +155,28 @@ class TestValueAssign(unittest.TestCase):
 
         self.assertTrue('0Sub1' in lvn_test.lvnDict)
         self.assertTrue(not isinstance(optimized_tree.body[3].value, ast.Name))
+        source = astor.to_source(optimized_tree)
+        print(source)
+
+    def test_problems_redefining(self):
+        """
+                        input:            expected output
+                        a = x + y         a = x + y
+                        b = x + y         b = a
+                        a = 17            a = 17
+                        c = x + y         c = b
+                        """
+        print("------start of 4th optimization test--------")
+        ast_tree = ast.parse("x = 2\ny = 3\na = x + y\nb=x + y\na = 17\nc = x + y")
+        print(astor.to_source(ast_tree))
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+        # self.assertEqual(lvn_test.value_number_dict['x'], 0)
+        # self.assertEqual(lvn_test.value_number_dict['y'], 1)
+        # self.assertEqual(lvn_test.value_number_dict['a'], 2)
+        # self.assertEqual(lvn_test.value_number_dict['b'], 3)
+        #
+        # self.assertTrue('0Sub1' in lvn_test.lvnDict)
+        # self.assertTrue(not isinstance(optimized_tree.body[3].value, ast.Name))
         source = astor.to_source(optimized_tree)
         print(source)
