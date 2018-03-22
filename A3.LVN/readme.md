@@ -20,6 +20,7 @@ The algorithm can only accept simple expression with a maximum of 3 variables an
 ```
 a = b + c * d              # Not acceptable
 e = f + g                  # Acceptable
+h = i                      # Acceptable 
 ```
 
 However, this does not make the algorithm **useless** because the complex expression can be broken down into several simpler TAC for ease of analysis. E.g.,

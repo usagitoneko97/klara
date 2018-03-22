@@ -39,8 +39,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="163.56259"
-     inkscape:cy="99.588163"
+     inkscape:cx="51.419733"
+     inkscape:cy="78.873877"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
@@ -221,13 +221,42 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:16.25px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="-15"
-       y="162.79366"
+       x="-15.714286"
+       y="78.150795"
        id="text4207"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4209"
-         x="-15"
-         y="162.79366">3</tspan></text>
+         x="-15.714286"
+         y="78.150795">3</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#007100;stroke-width:1.8;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="m 13.293449,92.018764 c -27.857143,1.428572 -22.5,-8.214286 -22.5,-8.214286"
+       id="path4161"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-8.1351223"
+       y="73.447342"
+       id="text4163"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4165"
+         x="-8.1351223"
+         y="73.447342" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:16.25px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-13.272758"
+       y="162.57684"
+       id="text4207-3"
+       sodipodi:linespacing="125%"
+       inkscape:transform-center-x="6.7857143"
+       inkscape:transform-center-y="-1.4285714"><tspan
+         sodipodi:role="line"
+         id="tspan4209-6"
+         x="-13.272758"
+         y="162.57684">4</tspan></text>
   </g>
 </svg>
