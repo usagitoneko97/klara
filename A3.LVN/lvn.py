@@ -25,7 +25,11 @@ class Lvn:
                 # ordering the value number in ascending order
                 query_string_list = [self._add_to_lvn_dict(assign_node.value.left.id),
                                      self._add_to_lvn_dict(assign_node.value.right.id)]
-                query_string_list.sort()
+                if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
+
+                    # only sort when its + or * since it can interchange
+                    query_string_list.sort()
+
                 query_string = str(query_string_list[0])
                 query_string += assign_node.value.op.__class__.__name__
                 query_string += str(query_string_list[1])
@@ -36,7 +40,6 @@ class Lvn:
                     # it's in, replace the BinOp node with name
                     if self.lvnDict[query_string] in self.value_number_dict.values():
                         # value number has an associated variable
-
                         name_node = ast.Name()
                         name_node.id = list(self.value_number_dict.keys())[list(self.value_number_dict.values()).index(self.lvnDict[query_string])]
                         name_node.ctx = ast.Store()
