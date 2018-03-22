@@ -143,7 +143,7 @@ class TestValueAssign(unittest.TestCase):
                 a = x + y         a = x + y
                 b = y + x         b = a
                 """
-        print("------start of 3rd optimization test--------")
+        print("------start of 4th optimization test--------")
         ast_tree = ast.parse("x = 2\ny = 3\na = x - y\nb=y - x")
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()

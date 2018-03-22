@@ -245,7 +245,6 @@ The full python source code can be found [here](https://github.com/usagitoneko97
 
 ## 1.3 Extending LVN
 
-**Note**: Features in this section here is still not implemented in `lvn.py`
 ### 1.3.1 Commutative operations
 Operation such as `x + y` and `y + x` may produce different key *eg. "0 + 1" or "1 + 0" even though they both meant the same thing. One way to solve this is to sort the operands by ordering their **Value Number**. 
 
