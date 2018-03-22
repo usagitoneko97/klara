@@ -114,3 +114,25 @@ class TestValueAssign(unittest.TestCase):
         source = astor.to_source(optimized_tree)
         print(source)
         # check the ast
+
+    def test_valueAssignToVar_commutative(self):
+        """
+        input:            expected output
+        a = x + y         a = x + y
+        b = y + x         b = a
+        """
+        print("------start of 3rd optimization test--------")
+        ast_tree = ast.parse("x = 2\ny = 3\na = x + y\nb=y+x")
+        print(astor.to_source(ast_tree))
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+        self.assertEqual(lvn_test.value_number_dict['x'], 0)
+        self.assertEqual(lvn_test.value_number_dict['y'], 1)
+        self.assertEqual(lvn_test.value_number_dict['a'], 2)
+        self.assertEqual(lvn_test.value_number_dict['b'], 3)
+
+        self.assertTrue('0Add1' in lvn_test.lvnDict)
+        self.assertTrue(isinstance(optimized_tree.body[3].value, ast.Name))
+        self.assertEqual(optimized_tree.body[3].value.id, "a")
+        source = astor.to_source(optimized_tree)
+        print(source)

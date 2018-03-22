@@ -22,10 +22,13 @@ class Lvn:
             # check if its normal assignment or bin op
             if isinstance(assign_node.value, ast.BinOp):
                 # form a string in form of "<valueNumber1><operator><valueNumber2>
-                query_string = ""
-                query_string += str(self._add_to_lvn_dict(assign_node.value.left.id))
+                # ordering the value number in ascending order
+                query_string_list = [self._add_to_lvn_dict(assign_node.value.left.id),
+                                     self._add_to_lvn_dict(assign_node.value.right.id)]
+                query_string_list.sort()
+                query_string = str(query_string_list[0])
                 query_string += assign_node.value.op.__class__.__name__
-                query_string += str(self._add_to_lvn_dict(assign_node.value.right.id))
+                query_string += str(query_string_list[1])
                 if query_string not in self.lvnDict:
                     # assign the value number to the hash key ("0Add1 : 2)
                     self.lvnDict[query_string] = self.value_number_dict[assign_node.targets[0].id]
