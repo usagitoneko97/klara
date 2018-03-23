@@ -6,6 +6,8 @@ import astor
 import textwrap
 
 ms = textwrap.dedent
+
+
 class TestValueAssign(unittest.TestCase):
     def assert_source_generated(self, as_tree, source_string):
         generated_string = astor.to_source(as_tree)
@@ -161,6 +163,53 @@ class TestValueAssign(unittest.TestCase):
             b = y - x
             """))
 
+    def test_alg_identities_a_add_0(self):
+        ast_tree = ast.parse(ms("""\
+            b = a + 0
+            c = 0 + a""")
+        )
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'a': 0, '0': 1, 'b': 2, 'c': 3}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+
+        self.assert_source_generated(optimized_tree, ms("""\
+            b = a
+            c = a
+            """))
+
+    def test_alg_identities_a_min_a_0(self):
+        ast_tree = ast.parse(ms("""\
+                    b = a - 0""")
+                             )
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'a': 0, '0': 1, 'b': 2}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+
+        self.assert_source_generated(optimized_tree, ms("""\
+                    b = a
+                    """))
+
+    def test_alg_identities_a_mult_0_0(self):
+        ast_tree = ast.parse(ms("""\
+                    b = a * 0""")
+                             )
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'a': 0, '0': 1, 'b': 2}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+
+        self.assert_source_generated(optimized_tree, ms("""\
+                    b = 0
+                    """))
+
     def test_alg_identities_a_add_a_2a(self):
         ast_tree = ast.parse(ms("""\
             a = 1
@@ -170,8 +219,8 @@ class TestValueAssign(unittest.TestCase):
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
 
-        expected_value_dict = {'a': 0, 'b': 1, '2': 2, 'c': 3}
-        expected_assign_dict = {'0Add0': 1, '0Mult2': 3}
+        expected_value_dict = {'a': 0, 'b': 1, 'c': 3, '2': 2}
+        expected_assign_dict = {'0Add0': 1}
 
         self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
