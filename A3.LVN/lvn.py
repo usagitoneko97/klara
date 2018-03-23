@@ -7,7 +7,7 @@ class Lvn:
         self.lvnDict = dict()
         self.value_number_dict = dict()
         self.current_val = 0
-        
+
 
     def lvn_optimize(self, as_tree):
         """

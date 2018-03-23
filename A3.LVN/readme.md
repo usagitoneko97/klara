@@ -135,7 +135,9 @@ Now because of string `"0 + 1"` is found in the hash, LVN will replace a variabl
 
 ## 1.1.4 Details and solution for problems when redefining occurs.
 
-Continuing on section [1.1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#1122-problems-when-redefining-occurs), technically, the 4th statement failed to substitute is due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
+![problemRedefinedValNum](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/problemRedefinedValNum.svg)
+
+Continuing on section [1.1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#1122-problems-when-redefining-occurs), technically, diagram above shows the 4th statement failed to substitute is due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
 
 One way to solve this efficiently is by using `Static Single Assignment (SSA)`. 
 
@@ -266,7 +268,7 @@ More example is shown below
 ```sh
 pip install astor
 ```
-### 1.4.2 Run the test
+### 1.4.2 Running the test
 Run the unittest by
 ```bash
 python -m unittest test_lvn.py
@@ -280,16 +282,23 @@ import textwrap
 # create a tree
 
 ast_tree = ast.parse(textwrap.dedent("""\
-                                    b = 2
-                                    c = 3
-                                    a = b + c
-                                    d = b + c"""))
+                                     b = 2
+                                     c = 3
+                                     a = b + c
+                                     d = b + c"""))
 # initialize the test
 lvn_test = Lvn()
 optimized_tree = lvn_test.lvn_optimize(ast_tree)
 # optional : transform ast to python code for viewing purpose
 source = astor.to_source(optimized_tree)
 print(source)
+```
+Resulting output stream: 
+```python
+>>> b = 2
+>>> c = 3
+>>> a = b + c
+>>> d = a
 ```
 
 ## 1.5 References
