@@ -1,6 +1,5 @@
 import ast
 
-
 class Lvn:
     def __init__(self):
 
