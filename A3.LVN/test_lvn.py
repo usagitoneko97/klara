@@ -3,6 +3,8 @@ from lvn import Lvn
 import ast
 import astor
 
+import textwrap
+
 
 class TestValueAssign(unittest.TestCase):
     def test_valueAssignToVar_1_stmt(self):
@@ -28,7 +30,10 @@ class TestValueAssign(unittest.TestCase):
             |   |   |
             2   0   1
         """
-        ast_tree = ast.parse("b = 2\nc = 3\na = b + c\n")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                b = 2
+                                c = 3
+                                a = b + c"""))
         lvn_test = Lvn()
         lvn_test.lvn_optimize(ast_tree)
         self.assertEqual(lvn_test.value_number_dict['b'], 0)
@@ -51,7 +56,10 @@ class TestValueAssign(unittest.TestCase):
             |
             2
         """
-        ast_tree = ast.parse("b = 2\nc = 3\nb = 4\n")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                b = 2
+                                c = 3
+                                b = 4"""))
 
         lvn_test = Lvn()
         lvn_test.lvn_optimize(ast_tree)
@@ -75,7 +83,11 @@ class TestValueAssign(unittest.TestCase):
             3   0   1
         """
         print("------start of 1st optimization test--------")
-        ast_tree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                    b = 2
+                                    c = 3
+                                    a = b + c
+                                    d=b+c"""))
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -100,7 +112,13 @@ class TestValueAssign(unittest.TestCase):
            c = x + y                            c = x + y  -- not updated
         """
         print("------start of 2nd optimization test--------")
-        ast_tree = ast.parse("x = 2\ny = 3\na = x + y\nb=x+y\na=17\nc=x+y")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                 x = 2
+                                 y = 3
+                                 a = x + y
+                                 b=x+y
+                                 a=17
+                                 c=x+y"""))
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -122,7 +140,11 @@ class TestValueAssign(unittest.TestCase):
         b = y + x         b = a
         """
         print("------start of 3rd optimization test--------")
-        ast_tree = ast.parse("x = 2\ny = 3\na = x * y\nb=y * x")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                x = 2
+                                y = 3
+                                a = x * y
+                                b=y * x"""))
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -144,7 +166,12 @@ class TestValueAssign(unittest.TestCase):
                 b = y - x         b = y - x
                 """
         print("------start of 4th optimization test--------")
-        ast_tree = ast.parse("x = 2\ny = 3\na = x - y\nb=y - x")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                x = 2
+                                y = 3
+                                a = x - y
+                                b= y - x""")
+        )
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -166,8 +193,14 @@ class TestValueAssign(unittest.TestCase):
                         a = 17            a = 17
                         c = x + y         c = b
                         """
-        print("------start of 4th optimization test--------")
-        ast_tree = ast.parse("x = 2\ny = 3\na = x + y\nb=x + y\na = 17\nc = x + y")
+        print("------start of 5th optimization test--------")
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                x = 2
+                                y = 3
+                                a = x + y
+                                b=x + y
+                                a = 17
+                                c = x + y"""))
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)

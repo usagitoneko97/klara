@@ -271,14 +271,14 @@ python -m unittest test_lvn.py
 import ast
 from lvn import Lvn
 import astor
+import textwrap
 # create a tree
-'''
-b = 3
-c = 3
-a = b + c
-d = b + c
-'''
-ast_tree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
+
+ast_tree = ast.parse(textwrap.dedent("""\
+                                    b = 2
+                                    c = 3
+                                    a = b + c
+                                    d = b + c"""))
 # initialize the test
 lvn_test = Lvn()
 optimized_tree = lvn_test.lvn_optimize(ast_tree)
