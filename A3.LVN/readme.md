@@ -79,37 +79,7 @@ a = 17
 c = x + y            # Fail to optimize this statement
 ```
 
-This happens due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
-
-One way to solve this efficiently is by using `Static Single Assignment (SSA)`. 
-
-In brief, SSA requires that each variable is assigned exactly once. For example, 
-
-> x = 1   --->  x<sub>0</sub> = 1
-
-> x = 2   --->  x<sub>1</sub> = 2
-
-> y = 3   --->  y<sub>0</sub> = 3
-
-After transforming the code in the beginning section to SSA form, 
-
-![ssaExampel](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/ssaExample.svg)
-
-After LVN, 
->  a<sub>0</sub> = x<sub>0</sub> + y<sub>0</sub> 
-
->  b<sub>0</sub> = a<sub>0</sub> 
-
->  a<sub>1</sub> = 17 
-
->  c<sub>1</sub> = a<sub>0</sub> 
-
-With these new names defined, LVN can then produces the desired result. To be exact, `"x + y"` in the 4th assignment is now replaced by a<sub>0</sub>. An implementation will then map the a<sub>1</sub> to the original `a` and then declares a new temporary variable to hold a<sub>0</sub>
-
-> a<sub>0</sub> = x + y                        
-> b = a<sub>0</sub>             
-> a = 17                
-> c = a<sub>0</sub>   
+To describe it briefly, what LVN will do is trying to replace the 4th statement from `c = x + y` to `c = a`, but it failed since a is then redefined in the third statement. Details and a workaround is provided in section [1.1.4](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-Details-and-solution-for-problems-when-redefining-occurs)
 
 ### 1.1.3 Algorithm in details
 
@@ -162,6 +132,40 @@ Now because of string `"0 + 1"` is found in the hash, LVN will replace a variabl
 ![lvnThirdHash](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnThirdHash.svg)
 
 ![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnReplaced.svg)
+
+## 1.1.4 Details and solution for problems when redefining occurs.
+
+Continuing on section [1.1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#1122-Problems-when-redefining-occurs), technically, the 4th statement failed to substitute is due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
+
+One way to solve this efficiently is by using `Static Single Assignment (SSA)`. 
+
+In brief, SSA requires that each variable is assigned exactly once. For example, 
+
+> x = 1   --->  x<sub>0</sub> = 1
+
+> x = 2   --->  x<sub>1</sub> = 2
+
+> y = 3   --->  y<sub>0</sub> = 3
+
+After transforming the code in the beginning section to SSA form, 
+
+![ssaExampel](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/ssaExample.svg)
+
+After LVN, 
+>  a<sub>0</sub> = x<sub>0</sub> + y<sub>0</sub> 
+
+>  b<sub>0</sub> = a<sub>0</sub> 
+
+>  a<sub>1</sub> = 17 
+
+>  c<sub>1</sub> = a<sub>0</sub> 
+
+With these new names defined, LVN can then produces the desired result. To be exact, `"x + y"` in the 4th assignment is now replaced by a<sub>0</sub>. An implementation will then map the a<sub>1</sub> to the original `a` and then declares a new temporary variable to hold a<sub>0</sub>
+
+> a<sub>0</sub> = x + y                        
+> b = a<sub>0</sub>             
+> a = 17                
+> c = a<sub>0</sub>   
 
 
 ## 1.2 The python implementation
@@ -245,6 +249,7 @@ The full python source code can be found [here](https://github.com/usagitoneko97
 
 ## 1.3 Extending LVN
 **Note** : `lvn_optimize` will implement everything below here, but `lvn_optimize_without_extension` will not include algorithm below. 
+
 ### 1.3.1 Commutative operations
 Operation such as `x + y` and `y + x` may produce different key *eg. "0 + 1" or "1 + 0" even though they both meant the same thing. One way to solve this is to sort the operands by ordering their **Value Number**. 
 

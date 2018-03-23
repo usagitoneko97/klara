@@ -7,6 +7,7 @@ class Lvn:
         self.lvnDict = dict()
         self.value_number_dict = dict()
         self.current_val = 0
+        
 
     def lvn_optimize(self, as_tree):
         """
@@ -103,7 +104,6 @@ class Lvn:
             self.value_number_dict[assign_node.targets[0].id] = self.current_val
             self.current_val += 1
         return as_tree
-
 
     @staticmethod
     def _get_assign_class(as_tree):

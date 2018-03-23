@@ -162,6 +162,27 @@ class TestValueAssign(unittest.TestCase):
                                                                      b = y - x
                                                                      """))
 
+    def test_alg_identities_a_add_a_2a(self):
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                             a = 1
+                                             b = a + a
+                                             c = 2 * a""")
+        )
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'a': 0, 'b': 1, '2': 2, 'c': 3}
+        expected_assign_dict = {'0Add0': 1, '0Mult2': 3}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        self.assert_source_generated(optimized_tree, textwrap.dedent("""\
+                                                                     a = 1
+                                                                     b = a + a
+                                                                     c = b
+                                                                     """))
+
     def xtest_problems_redefining(self):
         """
                         input:            expected output
