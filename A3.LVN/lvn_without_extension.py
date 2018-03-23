@@ -1,16 +1,17 @@
 import ast
 
 
-class Lvn:
+class LvnWithoutExtension:
     def __init__(self):
 
         self.lvnDict = dict()
         self.value_number_dict = dict()
         self.current_val = 0
 
-    def lvn_optimize(self, as_tree):
+    def lvn_optimize_without_extension(self, as_tree):
         """
-        perform lvn analysis on the asTree and return an optimized tree
+        perform lvn analysis without extending the lvn (see section 1.3 in readme.md)
+        on the asTree and return an optimized tree
         :param as_tree: the root of the tree
         :return: optimized tree
         """
@@ -33,9 +34,6 @@ class Lvn:
 
                 query_string_list = [self._add_to_lvn_dict(left_str),
                                      self._add_to_lvn_dict(right_str)]
-                if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
-                    # only sort when its + or * since it can interchange
-                    query_string_list.sort()
 
                 query_string = str(query_string_list[0])
                 query_string += assign_node.value.op.__class__.__name__
