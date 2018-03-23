@@ -22,22 +22,10 @@ class TestValueAssign(unittest.TestCase):
         self.assertEqual(lvn_test.value_number_dict['b'], 0)
 
     def test_valueAssignToVar_0_1(self):
-        """
-        example:
-            b = 2
-            |
-            0
-            c = 3
-            |
-            1
-            a = b + c
-            |   |   |
-            2   0   1
-        """
         ast_tree = ast.parse(textwrap.dedent("""\
-                                b = 2
-                                c = 3
-                                a = b + c"""))
+                                             b = 2
+                                             c = 3
+                                             a = b + c"""))
         lvn_test = Lvn()
         lvn_test.lvn_optimize(ast_tree)
 
@@ -49,24 +37,10 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
     def test_valueAssignToVar_updateVal(self):
-        """
-        example:
-            b = 2
-            |
-            0
-
-            c = 3
-            |
-            1
-
-            b = 4
-            |
-            2
-        """
         ast_tree = ast.parse(textwrap.dedent("""\
-                                b = 2
-                                c = 3
-                                b = 4"""))
+                                             b = 2
+                                             c = 3
+                                             b = 4"""))
 
         lvn_test = Lvn()
         lvn_test.lvn_optimize(ast_tree)
@@ -75,26 +49,9 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
 
     def test_valueAssignToVar_expect_replace_b_add_c_with_a(self):
-        """
-        example:
-            b = 2
-            |
-            0
-            c = 3
-            |
-            1
-            a = b + c
-            |   |   |
-            2   0   1
-            d = b + c          d = a
-            |   |   |   ---->
-            3   0   1
-        """
         ast_tree = ast.parse(textwrap.dedent("""\
-                                    b = 2
-                                    c = 3
-                                    a = b + c
-                                    d = b + c"""))
+                                             a = b + c
+                                             d = b + c"""))
 
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -106,28 +63,52 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         self.assert_source_generated(optimized_tree, textwrap.dedent("""\
-                                                                b = 2
-                                                                c = 3
-                                                                a = b + c
-                                                                d = a
-                                                                """))
-        # check the ast
+                                                                     a = b + c
+                                                                     d = a
+                                                                     """))
+
+    def test_optimized_tree_given_var_add_const_expect_not_substituted(self):
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                             a = b + 25
+                                             d = b + 24"""))
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'b': 0, '25': 1, 'a': 2, '24': 3, 'd': 4}
+        expected_assign_dict = {'0Add1': 2, '0Add3': 4}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        self.assert_source_generated(optimized_tree, textwrap.dedent("""\
+                                                                     a = b + 25
+                                                                     d = b + 24
+                                                                     """))
+
+    def test_optimize_tree_given_var_add_const_expect_substituted(self):
+        ast_tree = ast.parse(textwrap.dedent("""\
+                                             a = b + 12
+                                             d = b + 12"""))
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'b': 0, '12': 1, 'a': 2, 'd': 3}
+        expected_assign_dict = {'0Add1': 2}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        self.assert_source_generated(optimized_tree, textwrap.dedent("""\
+                                                                     a = b + 12
+                                                                     d = a
+                                                                     """))
 
     def test_valueAssignToVar_expect_notUpdated(self):
-        """
-        example:
-           a = x + y                            a = x + y
-           b = x + y                     -->>   b = a
-           a = 17                               a = 17
-           c = x + y                            c = x + y  -- not updated
-        """
         ast_tree = ast.parse(textwrap.dedent("""\
-                                 x = 2
-                                 y = 3
-                                 a = x + y
-                                 b = x + y
-                                 a = 17
-                                 c = x + y"""))
+                                             a = x + y
+                                             b = x + y
+                                             a = 17
+                                             c = x + y"""))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
 
@@ -138,26 +119,16 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         self.assert_source_generated(optimized_tree, textwrap.dedent("""\
-                                                                 x = 2
-                                                                 y = 3
-                                                                 a = x + y
-                                                                 b = a
-                                                                 a = 17
-                                                                 c = x + y
-                                                                 """))
-        # check the ast
+                                                                     a = x + y
+                                                                     b = a
+                                                                     a = 17
+                                                                     c = x + y
+                                                                     """))
 
     def test_valueAssignToVar_commutative(self):
-        """
-        input:            expected output
-        a = x + y         a = x + y
-        b = y + x         b = a
-        """
         ast_tree = ast.parse(textwrap.dedent("""\
-                                x = 2
-                                y = 3
-                                a = x * y
-                                b = y * x"""))
+                                             a  = x * y
+                                             b = y * x"""))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
 
@@ -168,24 +139,14 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         self.assert_source_generated(optimized_tree, textwrap.dedent("""\
-                                                                     x = 2
-                                                                     y = 3
                                                                      a = x * y
                                                                      b = a
                                                                      """))
 
     def test_valueAssignToVar_commutative_minus_operation(self):
-        """
-                input:            expected output
-                a = x - y         a = x - y
-                b = y - x         b = y - x
-                """
-
         ast_tree = ast.parse(textwrap.dedent("""\
-                                x = 2
-                                y = 3
-                                a = x - y
-                                b = y - x""")
+                                             a = x - y
+                                             b = y - x""")
         )
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -197,10 +158,8 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         self.assert_source_generated(optimized_tree, textwrap.dedent("""\
-                                                                    x = 2
-                                                                    y = 3
-                                                                    a = x - y
-                                                                    b = y - x
+                                                                     a = x - y
+                                                                     b = y - x
                                                                      """))
 
     def xtest_problems_redefining(self):
@@ -212,12 +171,10 @@ class TestValueAssign(unittest.TestCase):
                         c = x + y         c = b
                         """
         ast_tree = ast.parse(textwrap.dedent("""\
-                                x = 2
-                                y = 3
-                                a = x + y
-                                b = x + y
-                                a = 17
-                                c = x + y"""))
+                                             a = x + y
+                                             b = x + y
+                                             a = 17
+                                             c = x + y"""))
         print(astor.to_source(ast_tree))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -229,8 +186,6 @@ class TestValueAssign(unittest.TestCase):
         # self.assertTrue('0Sub1' in lvn_test.lvnDict)
         # self.assertTrue(not isinstance(optimized_tree.body[3].value, ast.Name))
         self.assert_source_generated(optimized_tree, textwrap.dedent("""\
-                                                                     x = 2
-                                                                     y = 3
                                                                      a = x + y
                                                                      b = a
                                                                      a = 17

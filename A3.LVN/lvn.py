@@ -16,17 +16,24 @@ class Lvn:
         """
         for assign_node in self._get_assign_class(as_tree):
 
-            # always assign new value number to left hand side
-            self.value_number_dict[assign_node.targets[0].id] = self.current_val
-            self.current_val += 1
             # check if its normal assignment or bin op
             if isinstance(assign_node.value, ast.BinOp):
                 # form a string in form of "<valueNumber1><operator><valueNumber2>
                 # ordering the value number in ascending order
-                query_string_list = [self._add_to_lvn_dict(assign_node.value.left.id),
-                                     self._add_to_lvn_dict(assign_node.value.right.id)]
-                if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
 
+                if isinstance(assign_node.value.left, ast.Num):
+                    left_str = str(assign_node.value.left.n)
+                else:
+                    left_str = assign_node.value.left.id
+
+                if isinstance(assign_node.value.right, ast.Num):
+                    right_str = str(assign_node.value.right.n)
+                else:
+                    right_str = assign_node.value.right.id
+
+                query_string_list = [self._add_to_lvn_dict(left_str),
+                                     self._add_to_lvn_dict(right_str)]
+                if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
                     # only sort when its + or * since it can interchange
                     query_string_list.sort()
 
@@ -35,7 +42,7 @@ class Lvn:
                 query_string += str(query_string_list[1])
                 if query_string not in self.lvnDict:
                     # assign the value number to the hash key ("0Add1 : 2)
-                    self.lvnDict[query_string] = self.value_number_dict[assign_node.targets[0].id]
+                    self.lvnDict[query_string] = self.current_val
                 else:
                     # it's in, replace the BinOp node with name
                     if self.lvnDict[query_string] in self.value_number_dict.values():
@@ -45,6 +52,9 @@ class Lvn:
                         name_node.ctx = ast.Store()
                         assign_node.value = name_node
 
+            # always assign new value number to left hand side
+            self.value_number_dict[assign_node.targets[0].id] = self.current_val
+            self.current_val += 1
         return as_tree
 
     @staticmethod
