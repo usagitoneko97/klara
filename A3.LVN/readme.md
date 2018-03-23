@@ -79,7 +79,7 @@ a = 17
 c = x + y            # Fail to optimize this statement
 ```
 
-To describe it briefly, what LVN will do is trying to replace the 4th statement from `c = x + y` to `c = a`, but it failed since a is then redefined in the third statement. Details and a workaround is provided in section [1.1.4](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-Details-and-solution-for-problems-when-redefining-occurs)
+To describe it briefly, what LVN will do is trying to replace the 4th statement from `c = x + y` to `c = a`, but it failed since a is then redefined in the third statement. Details and a workaround is provided in section [1.1.4](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs)
 
 ### 1.1.3 Algorithm in details
 
@@ -135,7 +135,7 @@ Now because of string `"0 + 1"` is found in the hash, LVN will replace a variabl
 
 ## 1.1.4 Details and solution for problems when redefining occurs.
 
-Continuing on section [1.1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#1122-Problems-when-redefining-occurs), technically, the 4th statement failed to substitute is due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
+Continuing on section [1.1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#1122-problems-when-redefining-occurs), technically, the 4th statement failed to substitute is due to the 3rd statement redefined `"a"`, thus modifies value number of `"a"` from **2** to **4** . On the 4th statement, it again discovers that `"x + y"` is redundant, but it cannot substitute with Value Number 2 since `"a"` does not carry Value Number **2** anymore. 
 
 One way to solve this efficiently is by using `Static Single Assignment (SSA)`. 
 
