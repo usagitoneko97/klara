@@ -14,6 +14,41 @@ class Lvn:
         self.alg_identities_dict = {'2Mult#': '#Add#', '#Add#': '#Mult2', "#Add0": "#", "0Add#": "#", '#Sub0': "#",
                                     '#Mult0': '0', '0Mult#': '0'}
 
+    @staticmethod
+    def lvn_ast2arg_expr(assign_node):
+        """
+        :param: assign_node: the whole assign statement in ast form
+        convert ast expression eg., 2 + a to general expression to search on alg identities dict. Eg., 2 + #
+        important points :
+            1. convert variable to general symbol, '#'
+            2. Number will not be converted
+            3. '-'  symbol is used to differentiate between 2 different variables
+        :return: formatted general expression string to search on alg identities dict
+        """
+        if isinstance(assign_node.value, ast.BinOp):
+            if isinstance(assign_node.value.left, ast.Num):
+                # number will not be converted
+                left_operand = str(assign_node.value.left.n)
+            else:
+                # substitute var with '#'
+                left_operand = '#'
+
+            if isinstance(assign_node.value.right, ast.Num):
+                # number will not be converted
+                right_operand = str(assign_node.value.right.n)
+            else:
+                # substitute var with '#'
+                right_operand = '#'
+
+            if left_operand == '#' and right_operand == '#':
+                # check if the variable is same, only then can assign to the same symbol
+                if assign_node.value.left.id != assign_node.value.right.id:
+                    right_operand = '_'
+
+
+        return left_operand + assign_node.value.op.__class__.__name__ + right_operand
+
+
     def lvn_optimize(self, as_tree):
         """
         perform lvn analysis on the asTree and return an optimized tree
@@ -56,10 +91,12 @@ class Lvn:
                                      self._add_to_lvn_dict(right_str)]
 
                 expr_string = left_str_alg + assign_node.value.op.__class__.__name__ + right_str_alg
+                arg_ident_str = self.lvn_ast2arg_expr(assign_node)
 
                 if expr_string in self.alg_identities_dict:
                     # always insert value number for left hand side
                     self.value_number_dict[assign_node.targets[0].id] = self.current_val
+                    self.current_val += 1
                     # 2 cases, - value returned is single variable, then we can replace it,
                     #          - value returned is expr, then we have to find the expr existed or not before replacing
                     if len(self.alg_identities_dict[expr_string]) == 1:
@@ -100,6 +137,7 @@ class Lvn:
                                     list(self.value_number_dict.values()).index(self.lvnDict[query_str])]
                                 name_node.ctx = ast.Store()
                                 assign_node.value = name_node
+
                                 continue
 
                 if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
@@ -124,8 +162,7 @@ class Lvn:
                         assign_node.value = name_node
 
             # always assign new value number to left hand side
-            self.value_number_dict[assign_node.targets[0].id] = self.current_val
-            self.current_val += 1
+
         return as_tree
 
     @staticmethod

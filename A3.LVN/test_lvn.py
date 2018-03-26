@@ -260,3 +260,35 @@ class TestValueAssign(unittest.TestCase):
                                                                      a = 17
                                                                      c = b
                                                                      """))
+
+    def test_lvn_ast2arg_expr_given_a_plus_3(self):
+        as_tree = ast.parse(ms("""\
+                    b = a + 3""")
+                             )
+
+        expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
+        self.assertEqual(expr_str, "#Add3")
+
+    def test_lvn_ast2arg_expr_given_3_plus_3(self):
+        as_tree = ast.parse(ms("""\
+                            b = 3 + 3""")
+                            )
+
+        expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
+        self.assertEqual(expr_str, "3Add3")
+
+    def test_lvn_ast2arg_expr_given_a_plus_a(self):
+        as_tree = ast.parse(ms("""\
+                            b = a + a""")
+                            )
+
+        expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
+        self.assertEqual(expr_str, "#Add#")
+
+    def test_lvn_ast2arg_expr_given_a_plus_c(self):
+        as_tree = ast.parse(ms("""\
+                            b = a + c""")
+                            )
+
+        expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
+        self.assertEqual(expr_str, "#Add_")
