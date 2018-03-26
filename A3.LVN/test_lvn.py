@@ -292,3 +292,11 @@ class TestValueAssign(unittest.TestCase):
 
         expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
         self.assertEqual(expr_str, "#Add_")
+
+    def test_lvn_ast2arg_expr_given_3_add_a_expect_reorder(self):
+        as_tree = ast.parse(ms("""\
+                            b = 3 + a""")
+                            )
+
+        expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
+        self.assertEqual(expr_str, "#Add3")

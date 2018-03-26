@@ -23,12 +23,15 @@ class Lvn:
             1. convert variable to general symbol, '#'
             2. Number will not be converted
             3. '-'  symbol is used to differentiate between 2 different variables
+            4. variable will always appears at the left hand side operand over number to simplify the dictionary
+                entries.
         :return: formatted general expression string to search on alg identities dict
         """
         if isinstance(assign_node.value, ast.BinOp):
             if isinstance(assign_node.value.left, ast.Num):
                 # number will not be converted
                 left_operand = str(assign_node.value.left.n)
+
             else:
                 # substitute var with '#'
                 left_operand = '#'
@@ -45,9 +48,12 @@ class Lvn:
                 if assign_node.value.left.id != assign_node.value.right.id:
                     right_operand = '_'
 
+            # reorder the left and right operand ( 3 + a --> a + 3)
+            if isinstance(assign_node.value.left, ast.Num) and  \
+                isinstance(assign_node.value.right, ast.Name):
+                return right_operand + assign_node.value.op.__class__.__name__ + left_operand
 
         return left_operand + assign_node.value.op.__class__.__name__ + right_operand
-
 
     def lvn_optimize(self, as_tree):
         """
