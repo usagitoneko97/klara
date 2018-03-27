@@ -56,6 +56,84 @@ class Lvn:
 
         return left_operand + assign_node.value.op.__class__.__name__ + right_operand
 
+    def get_operands_on_assign_node(self, assign_node):
+        """
+        return the operands on assign node in string
+        :param assign_node: the assign node in ast
+        :return: left operands, right operands
+        """
+        if isinstance(assign_node.value.left, ast.Num):
+            left_str = str(assign_node.value.left.n)
+        else:
+            left_str = assign_node.value.left.id
+
+        if isinstance(assign_node.value.right, ast.Num):
+            right_str = str(assign_node.value.right.n)
+        else:
+            right_str = assign_node.value.right.id
+
+        return left_str, right_str, assign_node.targets[0].id
+
+    def enumerate_and_store_var_in_dict(self, left_str, right_str, target_str):
+        """
+        enumerate the variable with their respective value number if the variable is not exist in the dict.The target of
+        the assign node will always be enumerated. The current_val will be incremented
+        :param left_str: left operands in string
+        :param right_str: right operands in string
+        :return: a list contain the value number for left and right operands in the order of [left, right]
+        """
+        query_string_list = [self._add_to_lvn_dict(left_str),
+                             self._add_to_lvn_dict(right_str)]
+        self.value_number_dict[target_str] = self.current_val
+        self.current_val += 1
+
+        return query_string_list
+
+    def lvn_optimize_alg_identities(self, arg_ident_str, assign_node):
+        if arg_ident_str in self.alg_identities_dict:
+            # always insert value number for left hand side
+            # 2 cases, - value returned is single variable, then we can replace it,
+            #          - value returned is expr, then we have to find the expr existed or not before replacing
+            if len(self.alg_identities_dict[arg_ident_str]) == 1:
+                # replace it
+                if self.alg_identities_dict[arg_ident_str] == '#':
+                    name_node = ast.Name()
+                    name_node.ctx = ast.Store()
+                    if isinstance(assign_node.value.left, ast.Name):
+                        name_node.id = assign_node.value.left.id
+                    if isinstance(assign_node.value.right, ast.Name):
+                        name_node.id = assign_node.value.right.id
+                    assign_node.value = name_node
+
+                else:
+                    num_node = ast.Num(n=int(self.alg_identities_dict[arg_ident_str]))
+                    assign_node.value = num_node
+
+            else:
+                query_str = self.alg_identities_dict[arg_ident_str]
+
+                if not self.represents_int(left_str):
+                    query_str = query_str[:-1].replace("#", str(self.value_number_dict[left_str])) + query_str[
+                        -1]
+                    query_str = query_str[0] + query_str[1:].replace("#", str(self.value_number_dict[left_str]))
+                else:
+                    query_str = query_str[:-1].replace("#", str(self.value_number_dict[right_str])) + query_str[
+                        -1]
+                    query_str = query_str[0] + query_str[1:].replace("#", str(self.value_number_dict[right_str]))
+
+                if query_str in self.lvnDict:
+                    # assign the value number to the hash key ("0Add1 : 2)
+                    if self.lvnDict[query_str] in self.value_number_dict.values():
+                        # value number has an associated variable
+                        name_node = ast.Name()
+                        name_node.id = list(self.value_number_dict.keys())[
+                            list(self.value_number_dict.values()).index(self.lvnDict[query_str])]
+                        name_node.ctx = ast.Store()
+                        assign_node.value = name_node
+
+        return assign_node
+
+
     def lvn_optimize(self, as_tree):
         """
         perform lvn analysis on the asTree and return an optimized tree
@@ -68,24 +146,14 @@ class Lvn:
             if isinstance(assign_node.value, ast.BinOp):
                 # form a string in form of "<valueNumber1><operator><valueNumber2>
                 # ordering the value number in ascending order
-                if isinstance(assign_node.value.left, ast.Num):
-                    left_str = str(assign_node.value.left.n)
-                else:
-                    left_str = assign_node.value.left.id
+                left_str, right_str, target_str = self.get_operands_on_assign_node(assign_node)
 
-                if isinstance(assign_node.value.right, ast.Num):
-                    right_str = str(assign_node.value.right.n)
-                else:
-                    right_str = assign_node.value.right.id
-
-                query_string_list = [self._add_to_lvn_dict(left_str),
-                                     self._add_to_lvn_dict(right_str)]
+                query_string_list = self.enumerate_and_store_var_in_dict(left_str, right_str, target_str)
 
                 arg_ident_str = self.lvn_ast2arg_expr(assign_node)
 
-                self.value_number_dict[assign_node.targets[0].id] = self.current_val
-                self.current_val += 1
-
+                assign_node = self.lvn_optimize_alg_identities(arg_ident_str, assign_node)
+                '''
                 if arg_ident_str in self.alg_identities_dict:
                     # always insert value number for left hand side
                     # 2 cases, - value returned is single variable, then we can replace it,
@@ -128,7 +196,7 @@ class Lvn:
                                 name_node.ctx = ast.Store()
                                 assign_node.value = name_node
                                 continue
-
+                '''
                 if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
                     # only sort when its + or * since it can interchange
                     query_string_list.sort()
