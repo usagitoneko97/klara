@@ -66,7 +66,8 @@ class TestValueAssign(unittest.TestCase):
 
         self.assert_source_generated(optimized_tree, ms("""\
             a = b + c
-            d = a"""))
+            d = a
+            """))
 
     def test_optimized_tree_given_var_add_const_expect_not_substituted(self):
         ast_tree = ast.parse(ms("""\
@@ -212,9 +213,8 @@ class TestValueAssign(unittest.TestCase):
 
     def test_alg_identities_a_add_a_2a(self):
         ast_tree = ast.parse(ms("""\
-            a = 1
             b = a + a
-            c = 2 * a""")
+            c = a * 2""")
         )
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
@@ -226,7 +226,6 @@ class TestValueAssign(unittest.TestCase):
         self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         self.assert_source_generated(optimized_tree, ms("""\
-            a = 1
             b = a + a
             c = b
             """))
