@@ -49,9 +49,10 @@ class Lvn:
                     right_operand = '_'
 
             # reorder the left and right operand ( 3 + a --> a + 3)
-            if isinstance(assign_node.value.left, ast.Num) and  \
-                isinstance(assign_node.value.right, ast.Name):
-                return right_operand + assign_node.value.op.__class__.__name__ + left_operand
+            if isinstance(assign_node.value.op, ast.Add) or isinstance(assign_node.value.op, ast.Mult):
+                if isinstance(assign_node.value.left, ast.Num) and  \
+                   isinstance(assign_node.value.right, ast.Name):
+                    return right_operand + assign_node.value.op.__class__.__name__ + left_operand
 
         return left_operand + assign_node.value.op.__class__.__name__ + right_operand
 
@@ -67,19 +68,15 @@ class Lvn:
             if isinstance(assign_node.value, ast.BinOp):
                 # form a string in form of "<valueNumber1><operator><valueNumber2>
                 # ordering the value number in ascending order
-                left_str_alg_real = ""
-                right_str_alg_real = ""
                 if isinstance(assign_node.value.left, ast.Num):
                     left_str = str(assign_node.value.left.n)
                 else:
                     left_str = assign_node.value.left.id
-                    left_str_alg_real = left_str
 
                 if isinstance(assign_node.value.right, ast.Num):
                     right_str = str(assign_node.value.right.n)
                 else:
                     right_str = assign_node.value.right.id
-                    right_str_alg_real = right_str
 
                 query_string_list = [self._add_to_lvn_dict(left_str),
                                      self._add_to_lvn_dict(right_str)]
@@ -98,10 +95,10 @@ class Lvn:
                         if self.alg_identities_dict[arg_ident_str] == '#':
                             name_node = ast.Name()
                             name_node.ctx = ast.Store()
-                            if left_str_alg_real != "":
-                                name_node.id = left_str_alg_real
-                            else:
-                                name_node.id = right_str_alg_real
+                            if isinstance(assign_node.value.left, ast.Name):
+                                name_node.id = assign_node.value.left.id
+                            if isinstance(assign_node.value.right, ast.Name):
+                                name_node.id = assign_node.value.right.id
                             assign_node.value = name_node
 
                         else:
@@ -111,16 +108,15 @@ class Lvn:
 
                     else:
                         query_str = self.alg_identities_dict[arg_ident_str]
-                        if right_str_alg_real != "":
-                            if query_str[0] == '#':
-                                query_str = str(query_string_list[1]) + query_str[1:]
-                            if query_str[-1] == '#':
-                                query_str = query_str[:-1] + str(query_string_list[1])
+
+                        if not self.represents_int(left_str):
+                            query_str = query_str[:-1].replace("#", str(self.value_number_dict[left_str])) + query_str[
+                                -1]
+                            query_str = query_str[0] + query_str[1:].replace("#", str(self.value_number_dict[left_str]))
                         else:
-                            if query_str[0] == '#':
-                                query_str = str(query_string_list[0]) + query_str[1:]
-                            if query_str[-1] == '#':
-                                query_str = query_str[:-1] + str(query_string_list[0])
+                            query_str = query_str[:-1].replace("#", str(self.value_number_dict[right_str])) + query_str[
+                                -1]
+                            query_str = query_str[0] + query_str[1:].replace("#", str(self.value_number_dict[right_str]))
 
                         if query_str in self.lvnDict:
                             # assign the value number to the hash key ("0Add1 : 2)
@@ -160,6 +156,14 @@ class Lvn:
             # always assign new value number to left hand side
 
         return as_tree
+
+    @staticmethod
+    def represents_int(s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
 
     @staticmethod
     def _get_assign_class(as_tree):
