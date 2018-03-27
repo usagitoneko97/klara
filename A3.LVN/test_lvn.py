@@ -1,6 +1,5 @@
 import unittest
 from lvn import Lvn
-from tac import Tac
 import ast
 import astor
 
@@ -250,6 +249,22 @@ class TestValueAssign(unittest.TestCase):
                     c = b
                     """))
 
+    def test_alg_identities_a_mult_0_expect_0(self):
+        ast_tree = ast.parse(ms("""\
+                            b = a * 0
+                            """)
+                             )
+        lvn_test = Lvn()
+        optimized_tree = lvn_test.lvn_optimize(ast_tree)
+
+        expected_value_dict = {'a': 0, '0': 1, 'b': 2}
+
+        self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+
+        self.assert_source_generated(optimized_tree, ms("""\
+                            b = 0
+                            """))
+
     def xtest_problems_redefining(self):
         """
                         input:            expected output
@@ -319,12 +334,3 @@ class TestValueAssign(unittest.TestCase):
 
         expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
         self.assertEqual(expr_str, "#Add3")
-
-    def test_tac(self):
-        as_tree = ast.parse(ms("""\
-                            b = 3 + a""")
-                            )
-
-        b_stmt = Tac(as_tree.body[0])
-
-        b_stmt.target = 'd'
