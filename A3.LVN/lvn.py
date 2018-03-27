@@ -1,5 +1,5 @@
 import ast
-
+from tac import Tac
 
 class Lvn:
     def __init__(self):
@@ -57,7 +57,7 @@ class Lvn:
         return left_operand + assign_node.value.op.__class__.__name__ + right_operand
 
     @staticmethod
-    def get_operands_on_assign_node(self, assign_node):
+    def get_operands_on_assign_node(assign_node):
         """
         return the operands on assign node in string
         :param assign_node: the assign node in ast
@@ -203,9 +203,10 @@ class Lvn:
             if isinstance(assign_node.value, ast.BinOp):
                 # form a string in form of "<valueNumber1><operator><valueNumber2>
                 # ordering the value number in ascending order
-                left_str, right_str, target_str = self.get_operands_on_assign_node(assign_node)
+                tac_stmt = Tac(assign_node)
 
-                query_string_list = self.enumerate_and_store_var_in_dict(left_str, right_str, target_str)
+                query_string_list = self.enumerate_and_store_var_in_dict(tac_stmt.left_oprd,
+                                                                         tac_stmt.right_oprd, tac_stmt.target)
 
                 assign_node = self.lvn_optimize_alg_identities(assign_node)
 

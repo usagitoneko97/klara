@@ -1,5 +1,6 @@
 import unittest
 from lvn import Lvn
+from tac import Tac
 import ast
 import astor
 
@@ -318,3 +319,12 @@ class TestValueAssign(unittest.TestCase):
 
         expr_str = Lvn.lvn_ast2arg_expr(as_tree.body[0])
         self.assertEqual(expr_str, "#Add3")
+
+    def test_tac(self):
+        as_tree = ast.parse(ms("""\
+                            b = 3 + a""")
+                            )
+
+        b_stmt = Tac(as_tree.body[0])
+
+        b_stmt.target = 'd'
