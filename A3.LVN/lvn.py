@@ -16,17 +16,7 @@ class Lvn:
 
     @staticmethod
     def lvn_ast2arg_expr(assign_node):
-        """
-        :param: assign_node: the whole assign statement in ast form
-        convert ast expression eg., 2 + a to general expression to search on alg identities dict. Eg., 2 + #
-        important points :
-            1. convert variable to general symbol, '#'
-            2. Number will not be converted
-            3. '-'  symbol is used to differentiate between 2 different variables
-            4. variable will always appears at the left hand side operand over number to simplify the dictionary
-                entries.
-        :return: formatted general expression string to search on alg identities dict
-        """
+
         if isinstance(assign_node.value, ast.BinOp):
             if isinstance(assign_node.value.left, ast.Num):
                 # number will not be converted
@@ -198,6 +188,7 @@ class Lvn:
         :return: optimized tree
         """
         for assign_node in self._get_assign_class(as_tree):
+
 
             # check if its normal assignment or bin op
             if isinstance(assign_node.value, ast.BinOp):

@@ -55,6 +55,19 @@ class SsaSyntax:
         if hash_index != -1:
             return int(self.var_str[hash_index+1:])
 
+    def ssa_get_var(self):
+        """
+        remove trailing #n to get the var
+        :return:
+        """
+        if self.represents_int(self.var_str) is False:
+            hash_index = self.var_str.find('#')
+
+            if hash_index != -1:
+                return self.var_str[:hash_index]
+            else:
+                return self.var_str
+
     def __str__(self):
         return self.var_str
 
@@ -128,3 +141,8 @@ class TacSsa:
             assign_tac.target = str(target_ssa_str)
             assign_tac.left_oprd = str(left_oprd_ssa_str)
             assign_tac.right_oprd = str(right_oprd_ssa_str)
+
+    def convert_ssa_2_tac(self):
+        # TODO : convert ssa to tac
+        for assign_tac in self._tac_list:
+            pass

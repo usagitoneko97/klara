@@ -22,6 +22,28 @@ class TestSsaTac(unittest.TestCase):
             else:
                 self.assert_tac(tac_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], None)
 
+
+    def test_ssa_syntax_annotate_and_get_annotate(self):
+        a_var = SsaSyntax("a")
+        a_var.ssa_annotate(3)
+
+        self.assertEqual(str(a_var), "a#3")
+
+        self.assertEqual(a_var.ssa_get_annotated_num(), 3)
+
+        a_var.ssa_annotate(3)
+        self.assertEqual(str(a_var), "a#3")
+
+
+    def test_ssa_syntax_get_var(self):
+        a_var = SsaSyntax("a_var")
+        a_var.ssa_annotate(3)
+
+        self.assertEqual(str(a_var), "a_var#3")
+
+        self.assertEqual(a_var.ssa_get_var(), "a_var")
+
+
     def test_tac_4_stmt(self):
         as_tree = ast.parse(ms("""\
                             b = 3 + a
@@ -59,16 +81,3 @@ class TestSsaTac(unittest.TestCase):
                              target_list=["b#0", "a#1", "f#0"],
                              left_oprd_list=['c#0', 'e#0', '3'],
                              right_oprd_list=["a#0", "a#0", "b#0"])
-
-    def test_ssa_syntax(self):
-        a_var = SsaSyntax("a")
-        a_var.ssa_annotate(3)
-
-        self.assertEqual(str(a_var), "a#3")
-
-        self.assertEqual(a_var.ssa_get_annotated_num(), 3)
-
-        a_var.ssa_annotate(3)
-        self.assertEqual(str(a_var), "a#3")
-
-
