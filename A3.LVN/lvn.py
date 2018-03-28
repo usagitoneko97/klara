@@ -4,11 +4,25 @@ from tac import Tac
 class Lvn:
     def __init__(self):
 
-        self.lvnDict = dict()
-        self.value_number_dict = dict()
-        self.current_val = 0
-        self.alg_identities_dict = dict()
-        self.build_alg_identities_dict()
+        # self.lvnDict = dict()
+        # self.value_number_dict = dict()
+        # self.current_val = 0
+        # self.alg_identities_dict = dict()
+        # self.build_alg_identities_dict()
+        self.lvn_dict = LvnDict()
+
+    def optimize(self, ssa_code):
+        for ssa in ssa_code:
+            # building the variable dictionary
+            self.lvn_dict.enumerate(ssa)
+            # general_expr_str = self.lvn_dict.get_general_expr(ssa)
+            # expr = self.lvn_dict.get_alg_ident(general_expr_str)
+            # ssa.replace_rhs_expr(expr)
+            simple_expr_str = self.lvn_dict.get_simple_expr(ssa)
+            if simple_expr_str in self.lvn_dict:
+                var_to_replace = self.lvn_dict.get_var(simple_expr_str)
+                ssa.replace_rhs_expr(var_to_replace)
+
 
     def build_alg_identities_dict(self):
         self.alg_identities_dict = {'#Mult2': '#Add#', '#Add#': '#Mult2', "#Add0": "#", "0Add#": "#", '#Sub0': "#",
@@ -249,3 +263,5 @@ class Lvn:
             self.current_val += 1
 
         return self.value_number_dict[string]
+
+

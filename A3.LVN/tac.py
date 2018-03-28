@@ -36,12 +36,11 @@ class SsaCode:
     def get_line_ssa(self, line):
         return self.code_list[line]
 
-
     def add_ssa(self, as_tree):
         for assign_node in as_tree.body:
             assign_ssa = Ssa(assign_node)
             self.update_version(assign_node, assign_ssa)
-            self.code_list.append(assign_ssa
+            self.code_list.append(assign_ssa)
 
     @staticmethod
     def _get_assign_class(as_tree):
@@ -72,3 +71,6 @@ class Ssa:
         if self.target is None:
             return False
         return True
+
+    def replace_rhs_expr(self, left_oprd, operator="", right_oprd=""):
+        pass
