@@ -2,24 +2,28 @@ import ast
 
 
 class SsaCode:
-    def __init__(self, as_tree):
+    def __init__(self, as_tree=None):
         self.code_list = []
         self.var_version_list = dict()
-        self.add_ssa(as_tree)
+        if as_tree is not None:
+            self.add_ssa(as_tree)
 
     def __repr__(self):
         s = ""
         for assign_ssa in self.code_list:
-            s = s + assign_ssa.target + str(assign_ssa.version_number) + '=' \
-                + assign_ssa.left_oprd + assign_ssa.operator \
-                + assign_ssa.right_oprd + '\n'
+            if assign_ssa.operator is None:
+                s = s + assign_ssa.target + ' = ' \
+                    + assign_ssa.left_oprd + '\n'
+            else:
+                s = s + assign_ssa.target + ' = ' \
+                    + assign_ssa.left_oprd + ' ' + assign_ssa.operator \
+                    + ' ' + assign_ssa.right_oprd + '\n'
 
         return s
 
     def __iter__(self):
         for ssa in self.code_list:
             yield ssa
-
 
     def ssa_index_is_assignment(self, index):
         return self.code_list[index].is_assignment()
@@ -55,15 +59,33 @@ class SsaCode:
 
 
 class Ssa:
-    def __init__(self, assign_node):
+    def __init__(self, assign_node=None, lvn_tuple=None):
+        self.target = None
+        self.left_oprd = None
+        self.right_oprd = None
+        self.operator = None
+        if assign_node is not None:
+            self.init_by_ast(assign_node)
+        elif lvn_tuple is not None:
+            self.init_by_tuple(lvn_tuple)
+
+    def init_by_tuple(self, lvn_tuple):
+        self.target = lvn_tuple(0)
+        self.left_oprd = lvn_tuple(1)
+        self.operator = lvn_tuple(2)
+        self.right_oprd = lvn_tuple(3)
+
+    def init_by_ast(self, assign_node):
+        self.target = assign_node.targets[0].id
         if isinstance(assign_node.value, ast.BinOp):
             self.version_number = 0
-            self.target = assign_node.targets[0].id
             self.left_oprd = self.get_var_or_num(assign_node.value.left)
             self.right_oprd = self.get_var_or_num(assign_node.value.right)
             self.operator = assign_node.value.op.__class__.__name__
-        elif isinstance(assign_node.value, ast.Name):
-            self.left_oprd = assign_node.value.id
+        elif isinstance(assign_node.value, ast.Name) or isinstance(assign_node.value, ast.Num):
+            self.left_oprd = self.get_var_or_num(assign_node.value)
+            self.right_oprd = None
+            self.operator = None
 
     @staticmethod
     def get_var_or_num(value):

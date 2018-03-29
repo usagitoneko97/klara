@@ -1,18 +1,42 @@
 import ast
-from tac import Tac
+from tac import Ssa, SsaCode
+from variable_dict import LvnDict
 
 class Lvn:
     def __init__(self):
 
-        # self.lvnDict = dict()
-        # self.value_number_dict = dict()
-        # self.current_val = 0
-        # self.alg_identities_dict = dict()
-        # self.build_alg_identities_dict()
+        self.lvnDict = dict()
+        self.value_number_dict = dict()
+        self.current_val = 0
+        self.alg_identities_dict = dict()
+        self.build_alg_identities_dict()
         self.lvn_dict = LvnDict()
 
     def lvn_code_to_ssa_code(self):
-        pass
+        ssa_code = SsaCode()
+        for lvn_code_tuple in self.lvn_dict.lvn_code_tuples_list:
+            ssa = Ssa()
+            ssa.target = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[0]]
+            if not self.is_constant(lvn_code_tuple):
+                ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
+                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
+                    ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
+            else:
+                ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+
+            ssa_code.code_list.append(ssa)
+
+        return ssa_code
+
+    def get_real_operator(self, string):
+        if string == 'Add':
+            return '+'
+
+    def is_constant(self, lvn_code_tuple):
+        if lvn_code_tuple[4] == 1:
+            return True
+        return False
 
     def optimize(self, ssa_code):
         for ssa in ssa_code:
@@ -21,10 +45,11 @@ class Lvn:
             # general_expr_str = self.lvn_dict.get_general_expr(ssa)
             # expr = self.lvn_dict.get_alg_ident(general_expr_str)
             # ssa.replace_rhs_expr(expr)
-            simple_expr_str = self.lvn_dict.get_simple_expr(ssa)
-            if simple_expr_str in self.lvn_dict:
-                var_to_replace = self.lvn_dict.get_var(simple_expr_str)
-                ssa.replace_rhs_expr(var_to_replace)
+            simple_expr = self.lvn_dict.get_simple_expr(ssa)
+            self.lvn_dict.add_simple_expr(simple_expr)
+
+        ssa_optimized_code = self.lvn_code_to_ssa_code()
+        return ssa_optimized_code
 
     def build_alg_identities_dict(self):
         self.alg_identities_dict = {'#Mult2': '#Add#', '#Add#': '#Mult2', "#Add0": "#", "0Add#": "#", '#Sub0': "#",

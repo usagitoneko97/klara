@@ -4,6 +4,7 @@ import textwrap
 
 from tac import SsaCode
 from variable_dict import LvnDict
+from lvn import Lvn
 ms = textwrap.dedent
 
 
@@ -41,18 +42,58 @@ class TestLvnDict(unittest.TestCase):
 
     def test_value_number_to_var_list(self):
         as_tree = ast.parse(ms("""\
-                               a = x + y
-                               b = x + z
-                               a = 2""")
+               a = x + y
+               b = x + z
+               a = 2""")
+        )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        for ssa in ssa_code:
+            lvn_dict.enumerate(ssa)
+
+        expected_list = ['x', 'y', 'a_2', 'z', 'b', 'a']
+        self.assertListEqual(lvn_dict.variable_dict.val_num_var_list, expected_list)
+
+    def test_get_simple_expr(self):
+        as_tree = ast.parse(ms("""\
+                               a = x + y""")
+                            )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        lvn_dict.enumerate(ssa_code.code_list[0])
+
+        simple_expr = lvn_dict.get_simple_expr(ssa_code.code_list[0])
+        self.assertEqual(str(simple_expr), '0Add1')
+
+
+    def test_build_simple_expr_and_lvn_code_tuple(self):
+        as_tree = ast.parse(ms("""\
+                       a = x + y
+                       b = x + z
+                       a = 2""")
                             )
 
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.append_list(ssa)
+            lvn_dict.enumerate(ssa)
+            simple_expr = lvn_dict.get_simple_expr(ssa)
+            lvn_dict.add_simple_expr(simple_expr)
 
-        expected_list = ['x', 'y', 'a_2', 'z', 'b', 'a']
-        self.assertListEqual(lvn_dict.val_num_var_list, expected_list)
+        # Testing internal data
+        expected_lvn_dict = {'0Add1': 2, '0Add3': 4}
+        self.assertEqual(lvn_dict, expected_lvn_dict)
+
+        expected_lvn_code_tuples = [(2, 0, 'Add', 1, 0),
+                                    (4, 0, 'Add', 3, 0),
+                                    (5, None, None, None, 1)]
+
+        for i in range(len(expected_lvn_code_tuples)):
+            self.assertTupleEqual(lvn_dict.lvn_code_tuples_list[i], expected_lvn_code_tuples[i])
+
+
 
     def test_lvn_code_tuples_to_ssa_code(self):
         """
@@ -61,17 +102,14 @@ class TestLvnDict(unittest.TestCase):
         """
         lvn = Lvn()
 
-        lvn.lvn_dict.lvn_code_tuples = [(2, 0, "+", 1, 0),
-                                        (3, 2, None, None, 1)]
+        lvn.lvn_dict.lvn_code_tuples_list = [(2, 0, "Add", 1, 0),
+                                             (3, 2, None, None, 1)]
 
-        lvn.lvn_dict.val_number_list = ['x', 'y', 'a', 'b']
+        lvn.lvn_dict.variable_dict.val_num_var_list = ['x', 'y', 'a', 'b']
 
         ssa_code = lvn.lvn_code_to_ssa_code()
 
-        self.assertEqual(ssa_code, ms("""
-                                      a = x + y
-                                      b = 2
-                                      """))
+        self.assertEqual(str(ssa_code), ms("""a = x + y\nb = 2\n"""))
 
     def test_optimize_code_with_variable_redefinition_1(self):
         as_tree = ast.parse(ms("""\
@@ -91,9 +129,9 @@ class TestLvnDict(unittest.TestCase):
         # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         # Test the output
-        self.assertEqual(ssa_code, ms("""\
+        self.assertEqual(str(ssa_code), ms("""\
             a_2 = x + y
-            b = a
+            b = a_2
             a = 17
             c = a_2
             """))
@@ -120,8 +158,8 @@ class TestLvnDict(unittest.TestCase):
         # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         # Test the output
-        self.assertEqual(ssa_code, ms("""\
-            a = x + y
+        self.assertEqual(str(ssa_code), ms("""\
+            a = x_0 + y
             b = a
             x = 98
             c = x + y
