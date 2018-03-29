@@ -73,7 +73,58 @@ class TestLvnDict(unittest.TestCase):
                                       b = 2
                                       """))
 
+    def test_optimize_code_with_variable_redefinition_1(self):
+        as_tree = ast.parse(ms("""\
+            a = x + y
+            b = x + y
+            a = 17
+            c = x + y"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
 
+        # # Testing internal data
+        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
+        # expected_assign_dict = {'0Add1': 2}
+        #
+        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
+        # Test the output
+        self.assertEqual(ssa_code, ms("""\
+            a_2 = x + y
+            b = a
+            a = 17
+            c = a_2
+            """))
+
+    def test_optimize_code_with_variable_redefinition_2(self):
+        """
+        x gets redefined at 3rd statement, result in the 4th statement not optimized
+        :return:
+        """
+        as_tree = ast.parse(ms("""\
+            a = x + y
+            b = x + y
+            x = 98
+            c = x + y"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        # # Testing internal data
+        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
+        # expected_assign_dict = {'0Add1': 2}
+        #
+        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        # Test the output
+        self.assertEqual(ssa_code, ms("""\
+            a = x + y
+            b = a
+            x = 98
+            c = x + y
+            """))
 
 
