@@ -11,6 +11,9 @@ class Lvn:
         # self.build_alg_identities_dict()
         self.lvn_dict = LvnDict()
 
+    def lvn_code_to_ssa_code(self):
+        pass
+
     def optimize(self, ssa_code):
         for ssa in ssa_code:
             # building the variable dictionary
@@ -22,7 +25,6 @@ class Lvn:
             if simple_expr_str in self.lvn_dict:
                 var_to_replace = self.lvn_dict.get_var(simple_expr_str)
                 ssa.replace_rhs_expr(var_to_replace)
-
 
     def build_alg_identities_dict(self):
         self.alg_identities_dict = {'#Mult2': '#Add#', '#Add#': '#Mult2', "#Add0": "#", "0Add#": "#", '#Sub0': "#",

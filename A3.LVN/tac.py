@@ -16,6 +16,11 @@ class SsaCode:
 
         return s
 
+    def __iter__(self):
+        for ssa in self.code_list:
+            yield ssa
+
+
     def ssa_index_is_assignment(self, index):
         return self.code_list[index].is_assignment()
 
