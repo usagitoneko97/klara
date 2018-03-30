@@ -1,23 +1,42 @@
+from common import *
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
         self.current_value = 0
         self.val_num_var_list = []
         if ssa_code is not None:
-            self.enumerate(ssa_code)
+            self.enumerate_rhs(ssa_code)
         dict.__init__(self)
 
     def _add_to_variable_dict(self, string):
-        if string not in self.__repr__():
-            self.__setitem__(string, self.current_value)
-            self.val_num_var_list.append(string)
-            self.current_value += 1
+        if not is_num(string):
+            if string not in self.__repr__():
+                self.__setitem__(string, self.current_value)
+                self.val_num_var_list.append(string)
+                self.current_value += 1
 
-    def enumerate(self, ssa):
-        self._add_to_variable_dict(ssa.left_oprd)
+    def enumerate_rhs(self, ssa):
+        if ssa.left_oprd is not None:
+            self._add_to_variable_dict(ssa.left_oprd)
 
         if ssa.right_oprd is not None:
             self._add_to_variable_dict(ssa.right_oprd)
 
+        if ssa.target in self.__repr__():
+            # append _n to the original
+            value_number = self.get(ssa.target)
+            replaced_str = ssa.target + '_' + str(value_number)
+
+            # change the old str to replaced str
+            self.val_num_var_list.remove(ssa.target)
+            self.val_num_var_list.insert(value_number, replaced_str)
+
+            self.__setitem__(replaced_str, value_number)
+            self.__setitem__(ssa.target, self.current_value)
+            self.val_num_var_list.append(ssa.target)
+            self.current_value += 1
+
+
+    def enumerate_lhs(self, ssa):
         if ssa.target in self.__repr__():
             # append _n to the original
             value_number = self.get(ssa.target)
@@ -61,15 +80,54 @@ class LvnDict(dict):
         self.lvn_code_tuples_list = []
         dict.__init__(self)
 
-    def get_simple_expr(self, ssa):
-        left_oprd = self.variable_dict.get(ssa.left_oprd)
-        right_oprd = self.variable_dict.get(ssa.right_oprd)
-        target = self.variable_dict.get(ssa.target)
+    def is_const(self, ssa):
+        if is_num(ssa.left_oprd) and ssa.right_oprd is None:
+            return True
+        return False
 
-        if self.is_int(ssa.left_oprd) and ssa.right_oprd is None:
-            is_constant = 1
+    def is_any_oprd_const(self, ssa):
+        if is_num(ssa.left_oprd) or is_num(ssa.right_oprd):
+            return True
+        return False
+
+    def is_both_oprd_const(self, ssa):
+        if is_num(ssa.left_oprd) and is_num(ssa.right_oprd):
+            return True
+        return False
+
+    def identify_oprd(self, oprd):
+        if oprd is not None:
+            if is_num(oprd):
+                return oprd
+            else:
+                return self.variable_dict.get(oprd)
+
         else:
-            is_constant = 0
+            return None
+
+    def get_simple_expr(self, ssa):
+        is_constant = 0
+        target = self.variable_dict.get(ssa.target)
+        left_oprd, right_oprd = None, None
+
+        '''
+        if self.is_both_oprd_const(ssa):
+            # fold
+            eval()
+        else:
+            pass
+        '''
+
+        if ssa.left_oprd is not None:
+            left_oprd = self.identify_oprd(ssa.left_oprd)
+            if is_num(ssa.left_oprd):
+                is_constant = 1
+
+        if ssa.right_oprd is not None:
+            right_oprd = self.identify_oprd(ssa.right_oprd)
+            if is_num(ssa.right_oprd):
+                is_constant = 2
+
         simple_expr = SimpleExpression(left_oprd, right_oprd, ssa.operator, target, is_constant)
         # simple_expr = str(left_oprd) + ssa.operator + str(right_oprd)
         return simple_expr
@@ -97,16 +155,13 @@ class LvnDict(dict):
         # perform search on dict, use the value returned to search on variable_dict and return
         pass
 
-    def enumerate(self, ssa):
-        self.variable_dict.enumerate(ssa)
+    def enumerate_lhs(self, ssa):
+        self.variable_dict.enumerate_lhs(ssa)
 
-    @staticmethod
-    def is_int(s):
-        try:
-            int(s)
-            return True
-        except ValueError:
-            return False
+    def enumerate_rhs(self, ssa):
+        self.variable_dict.enumerate_rhs(ssa)
+
+
 
 
 class SimpleExpression:

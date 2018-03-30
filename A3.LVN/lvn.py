@@ -23,7 +23,8 @@ class Lvn:
                     ssa.operator = self.get_real_operator(lvn_code_tuple[2])
                     ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
             else:
-                ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+                # ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+                ssa.left_oprd = str(lvn_code_tuple[1])
 
             ssa_code.code_list.append(ssa)
 
@@ -41,11 +42,12 @@ class Lvn:
     def optimize(self, ssa_code):
         for ssa in ssa_code:
             # building the variable dictionary
-            self.lvn_dict.enumerate(ssa)
+            self.lvn_dict.enumerate_rhs(ssa)
             # general_expr_str = self.lvn_dict.get_general_expr(ssa)
             # expr = self.lvn_dict.get_alg_ident(general_expr_str)
             # ssa.replace_rhs_expr(expr)
             simple_expr = self.lvn_dict.get_simple_expr(ssa)
+            #self.lvn_dict.enumerate_lhs(ssa)
             self.lvn_dict.add_simple_expr(simple_expr)
 
         ssa_optimized_code = self.lvn_code_to_ssa_code()

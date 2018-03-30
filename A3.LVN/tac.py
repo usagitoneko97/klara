@@ -82,17 +82,28 @@ class Ssa:
             self.left_oprd = self.get_var_or_num(assign_node.value.left)
             self.right_oprd = self.get_var_or_num(assign_node.value.right)
             self.operator = assign_node.value.op.__class__.__name__
+
         elif isinstance(assign_node.value, ast.Name) or isinstance(assign_node.value, ast.Num):
             self.left_oprd = self.get_var_or_num(assign_node.value)
             self.right_oprd = None
             self.operator = None
+
+        elif isinstance(assign_node.value, ast.UnaryOp):
+            self.left_oprd = None
+            self.right_oprd = self.get_var_or_num(assign_node.value.operand)
+            self.operator = assign_node.value.op.__class__.__name__
+
+        elif isinstance(assign_node.value, ast.Compare):
+            self.left_oprd = self.get_var_or_num(assign_node.value.left)
+            self.right_oprd = self.get_var_or_num(assign_node.value.comparators[0])
+            self.operator = assign_node.value.op.__class__.__name__
 
     @staticmethod
     def get_var_or_num(value):
         if isinstance(value, ast.Name):
             return value.id
         else:
-            return str(value.n)
+            return value.n
 
     def is_assignment(self):
         if self.target is None:

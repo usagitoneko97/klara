@@ -9,6 +9,18 @@ ms = textwrap.dedent
 
 
 class TestLvnDict(unittest.TestCase):
+    def assert_simple_expression_list(self, simple_expression_list, *args):
+        for i in range(len(args)):
+            self.assert_simple_expression(simple_expression_list[i], args[i], "index {}".format(i))
+        pass
+
+    def assert_simple_expression(self, simple_expression, expression_tuple, msg):
+        self.assertEqual(simple_expression.is_constant, expression_tuple[4], "fail at " + msg + ': Operand type')
+        self.assertEqual(simple_expression.target, expression_tuple[0], "fail at " + msg + ': Target')
+        self.assertEqual(simple_expression.left, expression_tuple[1], "fail at " + msg + ': Left operand')
+        self.assertEqual(simple_expression.operator, expression_tuple[2], "fail at " + msg + ': Operator')
+        self.assertEqual(simple_expression.right, expression_tuple[3], "fail at " + msg + ': Right operand')
+
     def assert_ssa(self, ssa, target, left_oprd, right_oprd, operator=None):
         self.assertEqual(ssa.target, target)
         self.assertEqual(ssa.left_oprd, left_oprd)
@@ -23,6 +35,24 @@ class TestLvnDict(unittest.TestCase):
                 self.assert_ssa(ssa_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], operator_list[i])
             else:
                 self.assert_ssa(ssa_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], None)
+
+    def test_is_num(self):
+        self.assertEqual(LvnDict.is_num(3), True)
+        self.assertEqual(LvnDict.is_num(3.023), True)
+        self.assertEqual(LvnDict.is_num("str"), False)
+
+    def test_ssa(self):
+        as_tree = ast.parse(ms("""\
+           a = b + c
+           d = 2 + e
+           f = g + 3
+           h = - 4
+           h = - 
+           i = 1 < 3""")
+        )
+
+        pass
+
 
     def test_enumerate_given_a_update(self):
         as_tree = ast.parse(ms("""\
@@ -57,16 +87,33 @@ class TestLvnDict(unittest.TestCase):
 
     def test_get_simple_expr(self):
         as_tree = ast.parse(ms("""\
-                               a = x + y""")
-                            )
+           a = b + 4    # b = 0, a = 1
+           c = 33 + d   # d = 2, c = 3
+           e = f + g    # f = 4, g = 5, e = 6
+           h = 24       # h = 7
+           i = j        # j = 8, i = 9
+           k = - 38     # k = 10
+           l = - m      # m = 11, l = 12
+           """)
+        )
 
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
-        lvn_dict.enumerate(ssa_code.code_list[0])
+        simple_expr_list = []
+        for ssa in ssa_code:
+            lvn_dict.enumerate(ssa)
+            simple_expr = lvn_dict.get_simple_expr(ssa)
+            simple_expr_list.append((simple_expr))
 
-        simple_expr = lvn_dict.get_simple_expr(ssa_code.code_list[0])
-        self.assertEqual(str(simple_expr), '0Add1')
+        expected_simple_expr_list = [(1, 0, 'Add', 4, 2),
+                                     (3, 33, 'Add', 2, 1),
+                                     (6, 4, 'Add', 5, 0),
+                                     (7, 24, None, None, 1),
+                                     (9, 8, None, None, 0),
+                                     (10, None, 'USub', 38, 2),
+                                     (12, None, 'USub', 11, 0)]
 
+        self.assert_simple_expression_list(simple_expr_list, *expected_simple_expr_list)
 
     def test_build_simple_expr_and_lvn_code_tuple(self):
         as_tree = ast.parse(ms("""\
@@ -78,7 +125,7 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.enumerate(ssa)
+            lvn_dict.enumerate_rhs(ssa)
             simple_expr = lvn_dict.get_simple_expr(ssa)
             lvn_dict.add_simple_expr(simple_expr)
 
@@ -88,7 +135,7 @@ class TestLvnDict(unittest.TestCase):
 
         expected_lvn_code_tuples = [(2, 0, 'Add', 1, 0),
                                     (4, 0, 'Add', 3, 0),
-                                    (5, None, None, None, 1)]
+                                    (5, 2, None, None, 1)]
 
         for i in range(len(expected_lvn_code_tuples)):
             self.assertTupleEqual(lvn_dict.lvn_code_tuples_list[i], expected_lvn_code_tuples[i])
@@ -109,7 +156,7 @@ class TestLvnDict(unittest.TestCase):
 
         ssa_code = lvn.lvn_code_to_ssa_code()
 
-        self.assertEqual(str(ssa_code), ms("""a = x + y\nb = 2\n"""))
+        self.assertEqual(str(ssa_code), ("""a = x + y\nb = 2\n"""))
 
     def test_optimize_code_with_variable_redefinition_1(self):
         as_tree = ast.parse(ms("""\
@@ -120,7 +167,7 @@ class TestLvnDict(unittest.TestCase):
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
-
+        print(lvn_test.lvn_dict.lvn_code_tuples_list)
         # # Testing internal data
         # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
         # expected_assign_dict = {'0Add1': 2}
@@ -165,4 +212,95 @@ class TestLvnDict(unittest.TestCase):
             c = x + y
             """))
 
+    def test_ast(self):
+        as_tree = ast.parse(ms("""\
+            a = 1 < x"""))
+        print(ast.dump(as_tree))
 
+    def test_optimize_code_with_variable_redefinition_3(self):
+        """
+        x gets redefined at 3rd statement, result in the 4th statement not optimized
+        :return:
+        """
+        as_tree = ast.parse(ms("""\
+            c = d + e
+            e = 5
+            d = d + e
+            d = d + e
+            c = d + e
+            c = d + e"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        # # Testing internal data
+        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
+        # expected_assign_dict = {'0Add1': 2}
+        #
+        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        # Test the output
+        print(ssa_code)
+        # self.assertEqual(str(ssa_code), ms("""\
+        #     a = x_0 + y
+        #     b = a
+        #     x = 98
+        #     c = x + y
+        #     """))
+
+    def test_optimize_code_with_variable_redefinition_4(self):
+        """
+        x gets redefined at 3rd statement, result in the 4th statement not optimized
+        :return:
+        """
+        as_tree = ast.parse(ms("""\
+            d = d + e"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        # # Testing internal data
+        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
+        # expected_assign_dict = {'0Add1': 2}
+        #
+        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        # Test the output
+        print(lvn_test.lvn_dict.lvn_code_tuples_list)
+        print(ssa_code)
+        # self.assertEqual(str(ssa_code), ms("""\
+        #     a = x_0 + y
+        #     b = a
+        #     x = 98
+        #     c = x + y
+        #     """))
+
+    def test_optimize_code_with_variable_redefinition_4(self):
+        """
+        x gets redefined at 3rd statement, result in the 4th statement not optimized
+        :return:
+        """
+        as_tree = ast.parse(ms("""\
+            d = d + e"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        # # Testing internal data
+        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
+        # expected_assign_dict = {'0Add1': 2}
+        #
+        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        # Test the output
+        print(lvn_test.lvn_dict.lvn_code_tuples_list)
+        print(ssa_code)
+        # self.assertEqual(str(ssa_code), ms("""\
+        #     a = x_0 + y
+        #     b = a
+        #     x = 98
+        #     c = x + y
+        #     """))
