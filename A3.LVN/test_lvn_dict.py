@@ -66,6 +66,25 @@ class TestLvnDict(unittest.TestCase):
         n = o BitXor 2
         """))
 
+    def test_enumerate_given_multiple_time(self):
+        as_tree = ast.parse(ms("""\
+            a = 3   # a = 0
+            a = 4   # a = 1
+            a = b   # b = 2, a = 3
+            a = c   # c = 4, a = 5
+            a = d   # d = 6, a = 7
+            """)
+        )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        for ssa in ssa_code:
+            lvn_dict.enumerate_rhs(ssa)
+            lvn_dict.enumerate_lhs(ssa)
+
+        expected_value_dict = {'a_0': 0, 'a_1': 1, 'a_3': 3, 'b': 2, 'c': 4, 'a_5': 5, 'd': 6, 'a': 7}
+        self.assertDictEqual(lvn_dict.variable_dict, expected_value_dict)
+
     def test_enumerate_given_a_update(self):
         as_tree = ast.parse(ms("""\
                                a = x + y
@@ -86,7 +105,7 @@ class TestLvnDict(unittest.TestCase):
     def test_value_number_to_var_list(self):
         as_tree = ast.parse(ms("""\
                a = x + y
-               b = x + z
+               b = x - z
                a = 2""")
         )
 
@@ -146,7 +165,7 @@ class TestLvnDict(unittest.TestCase):
             lvn_dict.add_simple_expr(simple_expr)
 
         # Testing internal data
-        expected_lvn_dict = {'0Add1': 2, '0Add3': 4}
+        expected_lvn_dict = {'0Add1': [2, 0], '0Add3': [4, 0]}
         self.assertEqual(lvn_dict, expected_lvn_dict)
 
         expected_lvn_code_tuples = [(2, 0, 'Add', 1, 0),
@@ -172,6 +191,28 @@ class TestLvnDict(unittest.TestCase):
 
         self.assertEqual(str(ssa_code), """a = x + y\nb = 2\n""")
 
+    def test_optimize_code_with_variable_reassigned(self):
+        """
+        x gets redefined at 3rd statement, result in the 4th statement not optimized
+        """
+        as_tree = ast.parse(ms("""\
+            d = d + e"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        # # Testing internal data
+        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
+        # expected_assign_dict = {'0Add1': 2}
+        #
+        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
+        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+
+        # Test the output
+        self.assertEqual(str(ssa_code), ms("""\
+            d = d_0 + e
+            """))
+
     def test_optimize_code_with_variable_redefinition_1(self):
         as_tree = ast.parse(ms("""\
             a = x + y
@@ -181,12 +222,6 @@ class TestLvnDict(unittest.TestCase):
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
-        # # Testing internal data
-        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
-        # expected_assign_dict = {'0Add1': 2}
-        #
-        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
-        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         # Test the output
         self.assertEqual(str(ssa_code), ms("""\
@@ -218,12 +253,7 @@ class TestLvnDict(unittest.TestCase):
             c = x + y
             """))
 
-    def test_ast(self):
-        as_tree = ast.parse(ms("""\
-            a = 1 < x"""))
-        print(ast.dump(as_tree))
-
-    def test_optimize_code_with_variable_redefinition_3(self):
+    def test_optimize_code_with_variable_redefinition_expect_not_update(self):
         """
         x gets redefined at 3rd statement, result in the 4th statement not optimized
         :return:
@@ -248,25 +278,68 @@ class TestLvnDict(unittest.TestCase):
             c = c_6
             """))
 
-    def test_optimize_code_with_variable_reassigned(self):
-        """
-        x gets redefined at 3rd statement, result in the 4th statement not optimized
-        """
+    def test_optimize_code_with_bin_op(self):
         as_tree = ast.parse(ms("""\
-            d = d + e"""))
+            f = g | h
+            k = g | j"""))
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        # # Testing internal data
-        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
-        # expected_assign_dict = {'0Add1': 2}
-        #
-        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
-        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
-
-        # Test the output
-        print(lvn_test.lvn_dict.lvn_code_tuples_list)
         self.assertEqual(str(ssa_code), ms("""\
-            d = d_0 + e
+            f = g | h
+            k = g | j
+            """))
+
+    def test_optimize_code_with_xor(self):
+        as_tree = ast.parse(ms("""\
+            f = g ^ 33
+            k = g ^ h"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            f = g ^ 33
+            k = g ^ h
+            """))
+
+    def test_optimize_code_with_different_operator(self):
+        as_tree = ast.parse(ms("""\
+            c = d + e
+            d = d + e
+            f = g | h
+            i = s ^ 3
+            k = g | h
+            p = s ^ 3
+            q = 3 < x
+            l = 3 < x"""))
+        print(ast.dump(as_tree))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            c = d_0 + e
+            d = c
+            f = g | h
+            i = s ^ 3
+            k = f
+            p = i
+            q = 3 < x
+            l = q
+            """))
+
+    def test_optimize_code_with_2_simple_expr_same_expect_not_updated(self):
+        as_tree = ast.parse(ms("""\
+            f = g + j
+            k = g + 1"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        print(ssa_code)
+        self.assertEqual(str(ssa_code), ms("""\
+            f = g + j
+            k = g + 1
             """))

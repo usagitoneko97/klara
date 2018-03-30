@@ -125,12 +125,17 @@ class LvnDict(dict):
         """
         if simple_expr.operator is not None:
             if str(simple_expr) not in self.__repr__():
-                self.__setitem__(str(simple_expr), simple_expr.target)
+                self.__setitem__(str(simple_expr), [simple_expr.target, simple_expr.is_constant])
                 self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                  simple_expr.right, 0))
+                                                  simple_expr.right, simple_expr.is_constant))
             else:
-                value_to_replace = self.get(str(simple_expr))
-                self.lvn_code_tuples_list.append((simple_expr.target, value_to_replace, None, None, 0))
+                # check the is_constant before do the replacing
+                list_to_replace = self.get(str(simple_expr))
+                if list_to_replace[1] == simple_expr.is_constant:
+                    self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0], None, None, 0))
+                else:
+                    self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
+                                                      simple_expr.right, simple_expr.is_constant))
 
         else:
             self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left,

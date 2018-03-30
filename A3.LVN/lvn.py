@@ -3,6 +3,9 @@ from tac import Ssa, SsaCode
 from variable_dict import LvnDict
 
 class Lvn:
+    operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
+                     'Lt': '<', 'Gt': '>'}
+
     def __init__(self):
 
         self.lvnDict = dict()
@@ -17,22 +20,30 @@ class Lvn:
         for lvn_code_tuple in self.lvn_dict.lvn_code_tuples_list:
             ssa = Ssa()
             ssa.target = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[0]]
-            if not self.is_constant(lvn_code_tuple):
+            # left is constant
+            if lvn_code_tuple[4] == 1:
+                ssa.left_oprd = lvn_code_tuple[1]
+                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
+                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
+                    ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
+            elif lvn_code_tuple[4] == 2:
+                ssa.right_oprd = lvn_code_tuple[3]
+                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
+                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
+                    ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+                # ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+            else:
                 ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
                 if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
                     ssa.operator = self.get_real_operator(lvn_code_tuple[2])
                     ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
-            else:
-                # ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
-                ssa.left_oprd = str(lvn_code_tuple[1])
 
             ssa_code.code_list.append(ssa)
 
         return ssa_code
 
     def get_real_operator(self, string):
-        if string == 'Add':
-            return '+'
+        return type(self).operator_dict.get(string)
 
     def is_constant(self, lvn_code_tuple):
         if lvn_code_tuple[4] == 1:
