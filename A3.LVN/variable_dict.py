@@ -21,21 +21,6 @@ class VariableDict(dict):
         if ssa.right_oprd is not None:
             self._add_to_variable_dict(ssa.right_oprd)
 
-        if ssa.target in self.__repr__():
-            # append _n to the original
-            value_number = self.get(ssa.target)
-            replaced_str = ssa.target + '_' + str(value_number)
-
-            # change the old str to replaced str
-            self.val_num_var_list.remove(ssa.target)
-            self.val_num_var_list.insert(value_number, replaced_str)
-
-            self.__setitem__(replaced_str, value_number)
-            self.__setitem__(ssa.target, self.current_value)
-            self.val_num_var_list.append(ssa.target)
-            self.current_value += 1
-
-
     def enumerate_lhs(self, ssa):
         if ssa.target in self.__repr__():
             # append _n to the original
@@ -107,7 +92,7 @@ class LvnDict(dict):
 
     def get_simple_expr(self, ssa):
         is_constant = 0
-        target = self.variable_dict.get(ssa.target)
+        target = self.variable_dict.current_value
         left_oprd, right_oprd = None, None
 
         '''
@@ -160,8 +145,6 @@ class LvnDict(dict):
 
     def enumerate_rhs(self, ssa):
         self.variable_dict.enumerate_rhs(ssa)
-
-
 
 
 class SimpleExpression:

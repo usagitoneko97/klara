@@ -1,6 +1,7 @@
 import unittest
 import ast
 import textwrap
+import common
 
 from tac import SsaCode
 from variable_dict import LvnDict
@@ -37,22 +38,33 @@ class TestLvnDict(unittest.TestCase):
                 self.assert_ssa(ssa_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], None)
 
     def test_is_num(self):
-        self.assertEqual(LvnDict.is_num(3), True)
-        self.assertEqual(LvnDict.is_num(3.023), True)
-        self.assertEqual(LvnDict.is_num("str"), False)
+        self.assertEqual(common.is_num(3), True)
+        self.assertEqual(common.is_num(3.023), True)
+        self.assertEqual(common.is_num("str"), False)
 
-    def test_ssa(self):
+    def test_ssa_all_valid_expressions(self):
         as_tree = ast.parse(ms("""\
            a = b + c
-           d = 2 + e
-           f = g + 3
+           d = 2 * e
+           f = g / 3
            h = - 4
-           h = - 
-           i = 1 < 3""")
+           i = + j
+           k = 1 < 3
+           l = k | m
+           n = o ^ 2""")
         )
 
-        pass
-
+        ssa_code = SsaCode(as_tree)
+        self.assertEqual(str(ssa_code), ms("""\
+        a = b Add c
+        d = 2 Mult e
+        f = g Div 3
+        h = USub 4
+        i = UAdd j
+        k = 1 Lt 3
+        l = k BitOr m
+        n = o BitXor 2
+        """))
 
     def test_enumerate_given_a_update(self):
         as_tree = ast.parse(ms("""\
@@ -65,7 +77,8 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.enumerate(ssa)
+            lvn_dict.enumerate_rhs(ssa)
+            lvn_dict.enumerate_lhs(ssa)
 
         expected_value_dict = {'a_2': 2, 'x': 0, 'y': 1, 'b': 3, 'a': 4, 'c': 5}
         self.assertDictEqual(lvn_dict.variable_dict, expected_value_dict)
@@ -80,7 +93,8 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.enumerate(ssa)
+            lvn_dict.enumerate_rhs(ssa)
+            lvn_dict.enumerate_lhs(ssa)
 
         expected_list = ['x', 'y', 'a_2', 'z', 'b', 'a']
         self.assertListEqual(lvn_dict.variable_dict.val_num_var_list, expected_list)
@@ -101,8 +115,9 @@ class TestLvnDict(unittest.TestCase):
         lvn_dict = LvnDict()
         simple_expr_list = []
         for ssa in ssa_code:
-            lvn_dict.enumerate(ssa)
+            lvn_dict.enumerate_rhs(ssa)
             simple_expr = lvn_dict.get_simple_expr(ssa)
+            lvn_dict.enumerate_lhs(ssa)
             simple_expr_list.append((simple_expr))
 
         expected_simple_expr_list = [(1, 0, 'Add', 4, 2),
@@ -127,6 +142,7 @@ class TestLvnDict(unittest.TestCase):
         for ssa in ssa_code:
             lvn_dict.enumerate_rhs(ssa)
             simple_expr = lvn_dict.get_simple_expr(ssa)
+            lvn_dict.enumerate_lhs(ssa)
             lvn_dict.add_simple_expr(simple_expr)
 
         # Testing internal data
@@ -139,8 +155,6 @@ class TestLvnDict(unittest.TestCase):
 
         for i in range(len(expected_lvn_code_tuples)):
             self.assertTupleEqual(lvn_dict.lvn_code_tuples_list[i], expected_lvn_code_tuples[i])
-
-
 
     def test_lvn_code_tuples_to_ssa_code(self):
         """
@@ -156,7 +170,7 @@ class TestLvnDict(unittest.TestCase):
 
         ssa_code = lvn.lvn_code_to_ssa_code()
 
-        self.assertEqual(str(ssa_code), ("""a = x + y\nb = 2\n"""))
+        self.assertEqual(str(ssa_code), """a = x + y\nb = 2\n""")
 
     def test_optimize_code_with_variable_redefinition_1(self):
         as_tree = ast.parse(ms("""\
@@ -167,7 +181,6 @@ class TestLvnDict(unittest.TestCase):
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
-        print(lvn_test.lvn_dict.lvn_code_tuples_list)
         # # Testing internal data
         # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
         # expected_assign_dict = {'0Add1': 2}
@@ -196,13 +209,6 @@ class TestLvnDict(unittest.TestCase):
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
-
-        # # Testing internal data
-        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
-        # expected_assign_dict = {'0Add1': 2}
-        #
-        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
-        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
 
         # Test the output
         self.assertEqual(str(ssa_code), ms("""\
@@ -233,26 +239,18 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        # # Testing internal data
-        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
-        # expected_assign_dict = {'0Add1': 2}
-        #
-        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
-        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
+        self.assertEqual(str(ssa_code), ms("""\
+            c_2 = d_0 + e_1
+            e = 5
+            d_4 = d_0 + e
+            d = d_4 + e
+            c_6 = d + e
+            c = c_6
+            """))
 
-        # Test the output
-        print(ssa_code)
-        # self.assertEqual(str(ssa_code), ms("""\
-        #     a = x_0 + y
-        #     b = a
-        #     x = 98
-        #     c = x + y
-        #     """))
-
-    def test_optimize_code_with_variable_redefinition_4(self):
+    def test_optimize_code_with_variable_reassigned(self):
         """
         x gets redefined at 3rd statement, result in the 4th statement not optimized
-        :return:
         """
         as_tree = ast.parse(ms("""\
             d = d + e"""))
@@ -269,38 +267,6 @@ class TestLvnDict(unittest.TestCase):
 
         # Test the output
         print(lvn_test.lvn_dict.lvn_code_tuples_list)
-        print(ssa_code)
-        # self.assertEqual(str(ssa_code), ms("""\
-        #     a = x_0 + y
-        #     b = a
-        #     x = 98
-        #     c = x + y
-        #     """))
-
-    def test_optimize_code_with_variable_redefinition_4(self):
-        """
-        x gets redefined at 3rd statement, result in the 4th statement not optimized
-        :return:
-        """
-        as_tree = ast.parse(ms("""\
-            d = d + e"""))
-        lvn_test = Lvn()
-        ssa_code = SsaCode(as_tree)
-        ssa_code = lvn_test.optimize(ssa_code)
-
-        # # Testing internal data
-        # expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1, 'a_2': 2}
-        # expected_assign_dict = {'0Add1': 2}
-        #
-        # self.assertDictEqual(expected_value_dict, lvn_test.value_number_dict)
-        # self.assertDictEqual(expected_assign_dict, lvn_test.lvnDict)
-
-        # Test the output
-        print(lvn_test.lvn_dict.lvn_code_tuples_list)
-        print(ssa_code)
-        # self.assertEqual(str(ssa_code), ms("""\
-        #     a = x_0 + y
-        #     b = a
-        #     x = 98
-        #     c = x + y
-        #     """))
+        self.assertEqual(str(ssa_code), ms("""\
+            d = d_0 + e
+            """))

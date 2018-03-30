@@ -47,7 +47,7 @@ class Lvn:
             # expr = self.lvn_dict.get_alg_ident(general_expr_str)
             # ssa.replace_rhs_expr(expr)
             simple_expr = self.lvn_dict.get_simple_expr(ssa)
-            #self.lvn_dict.enumerate_lhs(ssa)
+            self.lvn_dict.enumerate_lhs(ssa)
             self.lvn_dict.add_simple_expr(simple_expr)
 
         ssa_optimized_code = self.lvn_code_to_ssa_code()

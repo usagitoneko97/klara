@@ -13,11 +13,16 @@ class SsaCode:
         for assign_ssa in self.code_list:
             if assign_ssa.operator is None:
                 s = s + assign_ssa.target + ' = ' \
-                    + assign_ssa.left_oprd + '\n'
+                    + str(assign_ssa.left_oprd) + '\n'
             else:
-                s = s + assign_ssa.target + ' = ' \
-                    + assign_ssa.left_oprd + ' ' + assign_ssa.operator \
-                    + ' ' + assign_ssa.right_oprd + '\n'
+                if assign_ssa.left_oprd is not None:
+                    s = s + assign_ssa.target + ' = ' \
+                        + str(assign_ssa.left_oprd) + ' ' + str(assign_ssa.operator) \
+                        + ' ' + str(assign_ssa.right_oprd) + '\n'
+                else:
+                    s = s + assign_ssa.target + ' = ' \
+                        + str(assign_ssa.operator) \
+                        + ' ' + str(assign_ssa.right_oprd) + '\n'
 
         return s
 
@@ -96,7 +101,7 @@ class Ssa:
         elif isinstance(assign_node.value, ast.Compare):
             self.left_oprd = self.get_var_or_num(assign_node.value.left)
             self.right_oprd = self.get_var_or_num(assign_node.value.comparators[0])
-            self.operator = assign_node.value.op.__class__.__name__
+            self.operator = assign_node.value.ops[0].__class__.__name__
 
     @staticmethod
     def get_var_or_num(value):
