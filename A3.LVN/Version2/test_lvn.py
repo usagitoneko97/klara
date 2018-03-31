@@ -3,8 +3,8 @@ import ast
 import textwrap
 import common
 
-from tac import SsaCode
-from variable_dict import LvnDict
+from ssa import SsaCode
+from lvn_dict import LvnDict
 from lvn import Lvn
 ms = textwrap.dedent
 

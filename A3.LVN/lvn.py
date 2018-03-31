@@ -1,5 +1,5 @@
 import ast
-from tac import Ssa, SsaCode
+from ssa import Ssa, SsaCode
 from variable_dict import LvnDict
 
 class Lvn:
