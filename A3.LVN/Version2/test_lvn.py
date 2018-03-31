@@ -16,7 +16,7 @@ class TestLvnDict(unittest.TestCase):
         pass
 
     def assert_simple_expression(self, simple_expression, expression_tuple, msg):
-        self.assertEqual(simple_expression.is_constant, expression_tuple[4], "fail at " + msg + ': Operand type')
+        self.assertEqual(simple_expression.operand_type, expression_tuple[4], "fail at " + msg + ': Operand type')
         self.assertEqual(simple_expression.target, expression_tuple[0], "fail at " + msg + ': Target')
         self.assertEqual(simple_expression.left, expression_tuple[1], "fail at " + msg + ': Left operand')
         self.assertEqual(simple_expression.operator, expression_tuple[2], "fail at " + msg + ': Operator')
@@ -314,7 +314,6 @@ class TestLvnDict(unittest.TestCase):
             p = s ^ 3
             q = 3 < x
             l = 3 < x"""))
-        print(ast.dump(as_tree))
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
@@ -338,7 +337,6 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        print(ssa_code)
         self.assertEqual(str(ssa_code), ms("""\
             f = g + j
             k = g + 1

@@ -1,4 +1,6 @@
 from common import *
+
+
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
         self.current_value = 0
@@ -91,7 +93,7 @@ class LvnDict(dict):
             return None
 
     def get_simple_expr(self, ssa):
-        is_constant = 0
+        operand_type = 0
         target = self.variable_dict.current_value
         left_oprd, right_oprd = None, None
 
@@ -106,14 +108,14 @@ class LvnDict(dict):
         if ssa.left_oprd is not None:
             left_oprd = self.identify_oprd(ssa.left_oprd)
             if is_num(ssa.left_oprd):
-                is_constant = 1
+                operand_type = 1
 
         if ssa.right_oprd is not None:
             right_oprd = self.identify_oprd(ssa.right_oprd)
             if is_num(ssa.right_oprd):
-                is_constant = 2
+                operand_type = 2
 
-        simple_expr = SimpleExpression(left_oprd, right_oprd, ssa.operator, target, is_constant)
+        simple_expr = SimpleExpression(left_oprd, right_oprd, ssa.operator, target, operand_type)
         # simple_expr = str(left_oprd) + ssa.operator + str(right_oprd)
         return simple_expr
 
@@ -125,21 +127,21 @@ class LvnDict(dict):
         """
         if simple_expr.operator is not None:
             if str(simple_expr) not in self.__repr__():
-                self.__setitem__(str(simple_expr), [simple_expr.target, simple_expr.is_constant])
+                self.__setitem__(str(simple_expr), [simple_expr.target, simple_expr.operand_type])
                 self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                  simple_expr.right, simple_expr.is_constant))
+                                                  simple_expr.right, simple_expr.operand_type))
             else:
-                # check the is_constant before do the replacing
+                # check the operand_type before do the replacing
                 list_to_replace = self.get(str(simple_expr))
-                if list_to_replace[1] == simple_expr.is_constant:
+                if list_to_replace[1] == simple_expr.operand_type:
                     self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0], None, None, 0))
                 else:
                     self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                      simple_expr.right, simple_expr.is_constant))
+                                                      simple_expr.right, simple_expr.operand_type))
 
         else:
             self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left,
-                                              None, None, simple_expr.is_constant))
+                                              None, None, simple_expr.operand_type))
 
     def get_var(self, simple_expr_str):
         # perform search on dict, use the value returned to search on variable_dict and return
@@ -153,12 +155,12 @@ class LvnDict(dict):
 
 
 class SimpleExpression:
-    def __init__(self, left, right, operator, target=0, is_constant=0):
+    def __init__(self, left, right, operator, target=0, operand_type=0):
         self.left = left
         self.right = right
         self.operator = operator
         self.target = target
-        self.is_constant = is_constant
+        self.operand_type = operand_type
 
     def __repr__(self):
         if self.operator is None:
