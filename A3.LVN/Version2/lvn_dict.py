@@ -1,5 +1,5 @@
 from common import *
-
+import copy
 
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
@@ -55,7 +55,7 @@ class VariableDict(dict):
         pass
 
     def get_variable(self, val_num):
-        pass
+        return self.val_num_var_list[val_num]
 
 
 class LvnDict(dict):
@@ -64,6 +64,7 @@ class LvnDict(dict):
         if ssa is not None:
             self.variable_dict = VariableDict(ssa)
         self.variable_dict = VariableDict()
+        self.simple_assign_dict = dict()
         self.lvn_code_tuples_list = []
         dict.__init__(self)
 
@@ -92,6 +93,44 @@ class LvnDict(dict):
         else:
             return None
 
+    def get_all_simple_expr(self, ssa):
+        ssa_copy = copy.deepcopy(ssa)
+        if ssa_copy.operator is not None:
+            yield self.get_simple_expr(ssa_copy)
+            if not is_num(ssa_copy.left_oprd):
+                if self.variable_dict[ssa_copy.left_oprd] in self.simple_assign_dict:
+                    simple_assign_list = self.simple_assign_dict[self.variable_dict[ssa_copy.left_oprd]]
+                    left_oprd_val_num = simple_assign_list[0]
+                    if simple_assign_list[1] != LEFT_OPERATOR_CONSTANT:
+                        ssa_copy.left_oprd = self.variable_dict.get_variable(left_oprd_val_num)
+                    else:
+                        ssa_copy.left_oprd = left_oprd_val_num
+                    yield self.get_simple_expr(ssa_copy)
+
+            if not is_num(ssa_copy.right_oprd):
+                if ssa_copy.right_oprd is not None:
+                    if self.variable_dict[ssa_copy.right_oprd] in self.simple_assign_dict:
+                        simple_assign_list = self.simple_assign_dict[self.variable_dict[ssa_copy.right_oprd]]
+                        right_oprd_val_num = simple_assign_list[0]
+                        if simple_assign_list[1] != RIGHT_OPERATOR_CONSTANT:
+                            ssa_copy.right_oprd = self.variable_dict.get_variable(right_oprd_val_num)
+                        else:
+                            ssa_copy.right_oprd = right_oprd_val_num
+                        yield self.get_simple_expr(ssa_copy)
+
+        else:
+            if not is_num(ssa_copy.left_oprd):
+                if self.variable_dict[ssa_copy.left_oprd] in self.simple_assign_dict:
+                    # replacement
+                    value_number_to_replace_list = self.simple_assign_dict[self.variable_dict[ssa_copy.left_oprd]]
+                    left_oprd_val_num = value_number_to_replace_list[0]
+                    if value_number_to_replace_list[1] != LEFT_OPERATOR_CONSTANT:
+                        ssa_copy.left_oprd = self.variable_dict.get_variable(left_oprd_val_num)
+                    else:
+                        ssa_copy.left_oprd = left_oprd_val_num
+
+            yield self.get_simple_expr(ssa_copy)
+
     def get_simple_expr(self, ssa):
         operand_type = 0
         target = self.variable_dict.current_value
@@ -119,29 +158,40 @@ class LvnDict(dict):
         # simple_expr = str(left_oprd) + ssa.operator + str(right_oprd)
         return simple_expr
 
-    def add_simple_expr(self, simple_expr):
+    def add_simple_expr(self, simple_expr, insert_flag=True):
         """
         add the simple_expr into the dict. Modified the tuple
-        :param simple_expr:
+        :param simple_expr: a simple expression class
         :return:
         """
         if simple_expr.operator is not None:
-            if str(simple_expr) not in self.__repr__():
-                self.__setitem__(str(simple_expr), [simple_expr.target, simple_expr.operand_type])
-                self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                  simple_expr.right, simple_expr.operand_type))
+            if self.get(str(simple_expr)) is None:
+                if insert_flag is True:
+                    self.__setitem__(str(simple_expr), [simple_expr.target, simple_expr.operand_type])
+                    self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
+                                                      simple_expr.right, simple_expr.operand_type))
+                return False
             else:
                 # check the operand_type before do the replacing
                 list_to_replace = self.get(str(simple_expr))
                 if list_to_replace[1] == simple_expr.operand_type:
-                    self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0], None, None, 0))
+                    self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0], None, None, list_to_replace[1]))
+                    self.simple_assign_dict.__setitem__(simple_expr.target,
+                                                        [list_to_replace[0], simple_expr.operand_type])
+
+                    return True
                 else:
-                    self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                      simple_expr.right, simple_expr.operand_type))
+                    if insert_flag is True:
+                        self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
+                                                          simple_expr.right, simple_expr.operand_type))
+                    return False
+
 
         else:
+            self.simple_assign_dict.__setitem__(simple_expr.target, [simple_expr.left, simple_expr.operand_type])
             self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left,
                                               None, None, simple_expr.operand_type))
+            return True
 
     def get_var(self, simple_expr_str):
         # perform search on dict, use the value returned to search on variable_dict and return

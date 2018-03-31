@@ -4,7 +4,7 @@ import textwrap
 import common
 
 from ssa import SsaCode
-from lvn_dict import LvnDict
+from lvn_dict import LvnDict, SimpleExpression
 from lvn import Lvn
 ms = textwrap.dedent
 
@@ -118,7 +118,7 @@ class TestLvnDict(unittest.TestCase):
         expected_list = ['x', 'y', 'a_2', 'z', 'b', 'a']
         self.assertListEqual(lvn_dict.variable_dict.val_num_var_list, expected_list)
 
-    def test_get_simple_expr(self):
+    def test_get_all_simple_expr(self):
         as_tree = ast.parse(ms("""\
            a = b + 4    # b = 0, a = 1
            c = 33 + d   # d = 2, c = 3
@@ -331,8 +331,8 @@ class TestLvnDict(unittest.TestCase):
 
     def test_optimize_code_with_2_simple_expr_same_expect_not_updated(self):
         as_tree = ast.parse(ms("""\
-            f = g + j
-            k = g + 1"""))
+            f = g + j # 0 + 1
+            k = g + 1 # 0 + 1"""))
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
@@ -340,4 +340,192 @@ class TestLvnDict(unittest.TestCase):
         self.assertEqual(str(ssa_code), ms("""\
             f = g + j
             k = g + 1
+            """))
+
+    def test_simple_assignment_dict(self):
+        # 1 = 0
+        simple_expr = SimpleExpression(left=0, right=None, operator=None, target=1, operand_type=0)
+        lvn_test = Lvn()
+        lvn_test.lvn_dict.add_simple_expr(simple_expr)
+        expected_simple_assign_dict = {1: [0, 0]}
+        self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
+
+        # 2 = 0 + 1
+        simple_expr = SimpleExpression(left=0, right=1, operator='Add', target=2, operand_type=0)
+        lvn_test = Lvn()
+        lvn_test.lvn_dict.add_simple_expr(simple_expr)
+        expected_simple_assign_dict = {}
+        self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
+
+        # 2 = 0 + 44 where 44 is constant
+        simple_expr = SimpleExpression(left=0, right=44, operator='Add', target=2, operand_type=2)
+        lvn_test = Lvn()
+        lvn_test.lvn_dict.add_simple_expr(simple_expr)
+        expected_simple_assign_dict = {}
+        self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
+
+        # 2 = 44 + 0
+        simple_expr = SimpleExpression(left=44, right=0, operator='Add', target=2, operand_type=1)
+        lvn_test = Lvn()
+        lvn_test.lvn_dict.add_simple_expr(simple_expr)
+        expected_simple_assign_dict = {}
+        self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
+
+        # 1 = 44
+        simple_expr = SimpleExpression(left=44, right=None, operator=None, target=1, operand_type=1)
+        lvn_test = Lvn()
+        lvn_test.lvn_dict.add_simple_expr(simple_expr)
+        expected_simple_assign_dict = {1: [44, 1]}
+        self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
+
+    def test_get_all_simple_expr(self):
+        as_tree = ast.parse(ms("""\
+            c = b
+            a = c + d
+            """)
+        )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        simple_expr_list = []
+        for ssa in ssa_code:
+            lvn_dict.enumerate_rhs(ssa)
+            for simple_expr in lvn_dict.get_all_simple_expr(ssa):
+                simple_expr_list.append(simple_expr)
+                lvn_dict.add_simple_expr(simple_expr)
+            lvn_dict.enumerate_lhs(ssa)
+
+        expected_simple_expr_list = [(1, 0, None, None, 0),
+                                     (3, 1, 'Add', 2, 0),
+                                     (3, 0, 'Add', 2, 0)]
+
+        self.assert_simple_expression_list(simple_expr_list, *expected_simple_expr_list)
+
+    def test_get_all_simple_expr_given_const(self):
+        as_tree = ast.parse(ms("""\
+            c = 33
+            a = c + d
+            """)
+        )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        simple_expr_list = []
+        for ssa in ssa_code:
+            lvn_dict.enumerate_rhs(ssa)
+            for simple_expr in lvn_dict.get_all_simple_expr(ssa):
+                simple_expr_list.append(simple_expr)
+                lvn_dict.add_simple_expr(simple_expr)
+            lvn_dict.enumerate_lhs(ssa)
+
+        expected_simple_expr_list = [(0, 33, None, None, 1),
+                                     (2, 0, 'Add', 1, 0),
+                                     (2, 33, 'Add', 1, 1)]
+
+        self.assert_simple_expression_list(simple_expr_list, *expected_simple_expr_list)
+
+    def test_simple_assignment_expect_substitute_single_var(self):
+        as_tree = ast.parse(ms("""\
+            a = b
+            c = a"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        print(ssa_code)
+        self.assertEqual(str(ssa_code), ms("""\
+            a = b
+            c = b
+            """))
+
+    def test_simple_assignment_dict(self):
+        as_tree = ast.parse(ms("""\
+            z = l
+            a = x + y
+            b = 33
+            c = y + 11
+            d = 34 + f"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        print(ssa_code)
+
+
+    def test_simple_assignment_expect_substituted(self):
+        as_tree = ast.parse(ms("""\
+            z = a + y
+            b = a
+            c = b
+            d = c + y"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        print(ssa_code)
+        self.assertEqual(str(ssa_code), ms("""\
+            z = a + y
+            b = a
+            c = a
+            d = z
+            """))
+
+    def test_simple_assignment_given_constant(self):
+        as_tree = ast.parse(ms("""\
+            a = 33 + y
+            b = 33
+            c = b
+            d = c + y"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a = 33 + y
+            b = 33
+            c = 33
+            d = a
+            """))
+
+    def test_simple_assignment_given_constant_with_val_number_same_with_var(self):
+        as_tree = ast.parse(ms("""\
+            a = x + 1
+            b = a
+            c = b
+            d = x + c # c will be replaced by 1, the simple expr is 0 + 1, but its diff than the first assignment (which
+                      # is also 0 + 1 because the first statement is referring to constant 1 while fourth statement is
+                      # referring to variable with value number 1
+            """))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a = x + 1
+            b = a
+            c = a
+            d = x + c
+            """))
+
+    def test_simple_assignment_expect_substituted_4_lines(self):
+        as_tree = ast.parse(ms("""\
+            k = x + y
+            z = k + h
+            a = x + y
+            b = a
+            c = b
+            d = c + h"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        print(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            k = x + y
+            z = k + h
+            a = k
+            b = k
+            c = k
+            d = z
             """))

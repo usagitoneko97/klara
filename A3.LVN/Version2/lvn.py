@@ -16,9 +16,19 @@ class Lvn:
             # general_expr_str = self.lvn_dict.get_general_expr(ssa)
             # expr = self.lvn_dict.get_alg_ident(general_expr_str)
             # ssa.replace_rhs_expr(expr)
-            simple_expr = self.lvn_dict.get_simple_expr(ssa)
+            inserted_flag = False
+            for simple_expr in self.lvn_dict.get_all_simple_expr(ssa):
+                if self.lvn_dict.add_simple_expr(simple_expr, insert_flag=False) is True:
+                    inserted_flag = True
+                    break
+
+            if inserted_flag is False:
+                simple_expr = self.lvn_dict.get_simple_expr(ssa)
+                self.lvn_dict.add_simple_expr(simple_expr, insert_flag=True)
+                pass
+
+
             self.lvn_dict.enumerate_lhs(ssa)
-            self.lvn_dict.add_simple_expr(simple_expr)
 
         ssa_optimized_code = self.lvn_code_to_ssa_code()
         return ssa_optimized_code
