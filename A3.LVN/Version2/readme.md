@@ -53,17 +53,17 @@ And console will be showing,
 ```
 
 ## 1.2 Details of the Implementation
-The same concept on previous page in the [algorithm](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) section will reapplied here. A few more data structure need to be added on top of Version 1 to implement a ssa. Apart from the 2 dictionaries used before which is one for storing the value number of variables, and another is to store the simple expression, additional data structures like list and tuple will be used to fully implement the ssa. 
+The same concept on the previous page in the [algorithm](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) section will be reapplied here. A few more data structure need to be added on top of Version 1 to implement a SSA. Apart from the 2 dictionaries used before which is one for storing the value number of variables, and another is to store the simple expression, additional data structures like list and tuple will be used to fully implement the SSA. 
 
 ### 1.2.1 Lvn Code Tuples List
-The tuples, namely `lvn_code_tuples_list` is to provide the representation of the ssa source code in a form of value number (All operands and target are numbers). One of the problem that you will quickly realise is that after conversion, the variable and constant will be converted to numbers, and that may cause confusion. One way to solve this is to **append a flag** at the end of the tuple, to annotate that either left or right operand is constant. **Note** that there will be no cases where left and right are both constant since it will be folded during the conversion from ast to ssa.
+The tuples, namely `lvn_code_tuples_list` is to provide the representation of the SSA source code in a form of value number (All operands and target are numbers). One of the problems that you will quickly realize is that after conversion, the variable and constant will be converted to numbers, and that may cause confusion. One way to solve this is to **append a flag** at the end of the tuple, to annotate that either left or right operand is constant. **Note** that there will be no cases where left and right are both constant since it will be folded during the conversion from ast to SSA.
 
 
 - operand_type = 0   --> no constant
 - operand_type = 1   --> left is constant
 - operand_type = 2   --> right is constant
 
-To incoporate the ssa into our dictionary, whenever a variable that going to replaced by a newer entry, the old entry will not be removed, instead, an abitary number, the value number of that key will be append to the old key. I.e., 
+To incorporate the ssa into our dictionary, whenever a variable that going to replaced by a newer entry, the old entry will not be removed, instead, an arbitrary number, the value number of that key will be appended to the old key. I.e., 
 
 a = 33
 
@@ -99,7 +99,7 @@ h = a + b
 | 'x' |  5 |
 | 'h' | 6 |
 
-Because of the key in the simple expression involves only numbers, there's a need to know whether the number is correspond to variable or just a constant. The operand_type variable previously will be append to the value to form a list. 
+Because of the key in the simple expression involves only numbers, there's a need to know whether the number corresponds to a variable or just a constant. The operand_type variable previously will be appended to the value to form a list. 
 
 **Simple Expression Dictionary**
 
@@ -110,7 +110,7 @@ Because of the key in the simple expression involves only numbers, there's a nee
 | "44 + 2" | 3, 1  |
 | "55"   |    5, 1|
 
-The first 4 statements will be inserted into the tuples below without substitution. But on the last statement, because of `a + b` or simple expression `0 + 1` is existed in Simple Expression Dictionary, it will substitute `a + b`with `x`, or `0 + 1` with `2` only if the want-to-add simple expression's **operand_type** flag is the same with the entry of Simple Expression dictionary. This is to prevent `a + 1` get substitute with `a + b` when `b` has a value number 1. 
+The first 4 statements will be inserted into the tuples below without substitution. But on the last statement, because of `a + b` or simple expression `0 + 1` is existed in Simple Expression Dictionary, it will substitute `a + b` with `x`, or `0 + 1` with `2` only if the want-to-add simple expression's **operand_type** flag is the same with the entry of Simple Expression dictionary. This is to prevent `a + 1` get substitute with `a + b` when `b` has a value number 1. 
 
 **lvn_code_tuples_list**
 
@@ -125,11 +125,11 @@ The first 4 statements will be inserted into the tuples below without substituti
 ---
 
 ### 1.2.2 Value Number to Variable List
-To convert the tuples above back to ssa form, a list is implemented to find out the which variables is correspond to which value number. It can be in a list since all variable will have an unique value number. Whenever a variable is being reassigned or a value number is distributed, it will append at the back at the list. When the variable that are reassigned is already exist in the list, it will append some arbitrary value at the back of the old variable to differentiate between the old and new variable. Using the example above,the list will be, 
+To convert the tuples above back to SSA form, a list is implemented to find out the which variables correspond to which value number. It can be in a list since all variable will have a unique value number. Whenever a variable is being reassigned or a value number is distributed, it will append at the back of the list. When the variable that is reassigned is already existed in the list, it will append some arbitrary value to the back of the old variable to differentiate between the old and new variable. Using the example above, the list will be, 
 
     ['a', 'b', 'x', 'y', 'z', 'x_5', 'h']
       |    |    |    |    |     |     |
       0    1    2    3    4     5     6
  
-The final step is to convert the **lvn_code_tuples_list** to the ssa_code list. It will convert all the value number to the variable that represent by the list above. For example, the first list of the tuples_list will generate `2 = 0 + 1` and map to `x = a + b`. 
+The final step is to convert the **lvn_code_tuples_list** to the ssa_code list. It will convert all the value number to the variable that represents by the list above. For example, the first list of the tuples_list will generate `2 = 0 + 1` and map to `x = a + b`. 
 
