@@ -113,7 +113,6 @@ class TestValueAssign(unittest.TestCase):
             c = x + y"""))
         lvn_test = Lvn()
         optimized_tree = lvn_test.lvn_optimize(ast_tree)
-        print(optimized_tree)
 
         expected_value_dict = {'a': 4, 'b': 3, 'c': 5, 'x': 0, 'y': 1}
         expected_assign_dict = {'0Add1': 2}

@@ -1,6 +1,6 @@
 import ast
-from ssa import Ssa, SsaCode
-from variable_dict import LvnDict
+from ssa import Tac
+
 
 class Lvn:
     operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
@@ -13,60 +13,56 @@ class Lvn:
         self.current_val = 0
         self.alg_identities_dict = dict()
         self.build_alg_identities_dict()
-        self.lvn_dict = LvnDict()
-
-    def lvn_code_to_ssa_code(self):
-        ssa_code = SsaCode()
-        for lvn_code_tuple in self.lvn_dict.lvn_code_tuples_list:
-            ssa = Ssa()
-            ssa.target = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[0]]
-            # left is constant
-            if lvn_code_tuple[4] == 1:
-                ssa.left_oprd = lvn_code_tuple[1]
-                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
-                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
-                    ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
-            elif lvn_code_tuple[4] == 2:
-                ssa.right_oprd = lvn_code_tuple[3]
-                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
-                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
-                    ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
-                # ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
-            else:
-                ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
-                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
-                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
-                    ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
-
-            ssa_code.code_list.append(ssa)
-
-        return ssa_code
-
-    def get_real_operator(self, string):
-        return type(self).operator_dict.get(string)
-
-    def is_constant(self, lvn_code_tuple):
-        if lvn_code_tuple[4] == 1:
-            return True
-        return False
-
-    def optimize(self, ssa_code):
-        for ssa in ssa_code:
-            # building the variable dictionary
-            self.lvn_dict.enumerate_rhs(ssa)
-            # general_expr_str = self.lvn_dict.get_general_expr(ssa)
-            # expr = self.lvn_dict.get_alg_ident(general_expr_str)
-            # ssa.replace_rhs_expr(expr)
-            simple_expr = self.lvn_dict.get_simple_expr(ssa)
-            self.lvn_dict.enumerate_lhs(ssa)
-            self.lvn_dict.add_simple_expr(simple_expr)
-
-        ssa_optimized_code = self.lvn_code_to_ssa_code()
-        return ssa_optimized_code
 
     def build_alg_identities_dict(self):
         self.alg_identities_dict = {'#Mult2': '#Add#', '#Add#': '#Mult2', "#Add0": "#", "0Add#": "#", '#Sub0': "#",
                                     '#Mult0': '0', '0Mult#': '0'}
+
+    def lvn_optimize(self, as_tree):
+        """
+        perform lvn analysis on the asTree and return an optimized tree
+        :param as_tree: the root of the tree
+        :return: optimized tree
+        """
+        for assign_node in self._get_assign_class(as_tree):
+            # check if its normal assignment or bin op
+            if isinstance(assign_node.value, ast.BinOp):
+                # form a string in form of "<valueNumber1><operator><valueNumber2>
+                # ordering the value number in ascending order
+                tac_stmt = Tac(assign_node=assign_node)
+
+                query_string_list = self.enumerate_and_store_var_in_dict(tac_stmt.left_oprd,
+                                                                         tac_stmt.right_oprd, tac_stmt.target)
+
+                assign_node = self.lvn_optimize_alg_identities(assign_node)
+
+                if isinstance(assign_node.value, ast.BinOp):
+                    # sort it to simplify the problem like "a + 0" = "0 + a"
+                    query_string_list = self.sort_operands_by_value_number(query_string_list, assign_node)
+
+                    # build a string to represent the statement by value number.
+                    # Eg., 2Add0, 0Mult1, where 0, 1, 2 is the value number of a particular variable
+                    query_string = self.build_value_number_expr(query_string_list, assign_node)
+
+                    if query_string not in self.lvnDict:
+                        # assign the value number to the hash key ("0Add1 : 2)
+                        self.lvnDict[query_string] = self.current_val - 1
+
+                    else:
+                        # it's in, replace the BinOp node with name
+                        if self.lvnDict[query_string] in self.value_number_dict.values():
+                            # value number has an associated variable
+                            name_node = ast.Name(id=list(self.value_number_dict.keys())[
+                                                    list(self.value_number_dict.values()).
+                                                    index(self.lvnDict[query_string])],
+                                                 ctx=ast.Store())
+                            assign_node.value = name_node
+            else:
+                self.value_number_dict[assign_node.targets[0].id] = self.current_val
+                self.current_val += 1
+            # always assign new value number to left hand side
+
+        return as_tree
 
     @staticmethod
     def lvn_ast2arg_expr(assign_node):
@@ -234,54 +230,6 @@ class Lvn:
         query_string += assign_node.value.op.__class__.__name__
         query_string += str(query_string_list[1])
         return query_string
-
-    def lvn_optimize(self, as_tree):
-        """
-        perform lvn analysis on the asTree and return an optimized tree
-        :param as_tree: the root of the tree
-        :return: optimized tree
-        """
-        for assign_node in self._get_assign_class(as_tree):
-
-
-            # check if its normal assignment or bin op
-            if isinstance(assign_node.value, ast.BinOp):
-                # form a string in form of "<valueNumber1><operator><valueNumber2>
-                # ordering the value number in ascending order
-                tac_stmt = Tac(assign_node)
-
-                query_string_list = self.enumerate_and_store_var_in_dict(tac_stmt.left_oprd,
-                                                                         tac_stmt.right_oprd, tac_stmt.target)
-
-                assign_node = self.lvn_optimize_alg_identities(assign_node)
-
-                if isinstance(assign_node.value, ast.BinOp):
-                    # sort it to simplify the problem like "a + 0" = "0 + a"
-                    query_string_list = self.sort_operands_by_value_number(query_string_list, assign_node)
-
-                    # build a string to represent the statement by value number.
-                    # Eg., 2Add0, 0Mult1, where 0, 1, 2 is the value number of a particular variable
-                    query_string = self.build_value_number_expr(query_string_list, assign_node)
-
-                    if query_string not in self.lvnDict:
-                        # assign the value number to the hash key ("0Add1 : 2)
-                        self.lvnDict[query_string] = self.current_val - 1
-
-                    else:
-                        # it's in, replace the BinOp node with name
-                        if self.lvnDict[query_string] in self.value_number_dict.values():
-                            # value number has an associated variable
-                            name_node = ast.Name(id=list(self.value_number_dict.keys())[
-                                                    list(self.value_number_dict.values()).
-                                                    index(self.lvnDict[query_string])],
-                                                 ctx=ast.Store())
-                            assign_node.value = name_node
-            else:
-                self.value_number_dict[assign_node.targets[0].id] = self.current_val
-                self.current_val += 1
-            # always assign new value number to left hand side
-
-        return as_tree
 
     @staticmethod
     def represents_int(s):

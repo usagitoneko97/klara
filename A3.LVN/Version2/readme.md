@@ -99,7 +99,6 @@ h = a + b
 | 'x' |  5 |
 | 'h' | 6 |
 
----
 Because of the key in the simple expression involves only numbers, there's a need to know whether the number is correspond to variable or just a constant. The operand_type variable previously will be append to the value to form a list. 
 
 **Simple Expression Dictionary**
@@ -111,9 +110,9 @@ Because of the key in the simple expression involves only numbers, there's a nee
 | "44 + 2" | 3, 1  |
 | "55"   |    5, 1|
 
-**lvn_code_tuples_list**
-
 The first 4 statements will be inserted into the tuples below without substitution. But on the last statement, because of `a + b` or simple expression `0 + 1` is existed in Simple Expression Dictionary, it will substitute `a + b`with `x`, or `0 + 1` with `2` only if the want-to-add simple expression's **operand_type** flag is the same with the entry of Simple Expression dictionary. This is to prevent `a + 1` get substitute with `a + b` when `b` has a value number 1. 
+
+**lvn_code_tuples_list**
 
 | target | left | operator | right | operand_type |
 | :----: | :---:|  :---:   | :---: |  :-----:    |
