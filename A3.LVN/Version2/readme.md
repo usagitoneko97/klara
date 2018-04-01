@@ -162,3 +162,20 @@ z = 44 + x
 x = 55
 h = x_2
 ``` 
+
+Another problem that I had solve is redefining variable. 
+The whole idea of solving this particular problem is using SSA. For example:
+a = x + y
+b = x + y  --> b = a
+a = 17
+c = x + y  --> cannot be substituted with a since a gets redefined
+
+Without the help of SSA, the third statement will redefines *a*, thus not allowing the 4th statement to substitute with *a*. 
+
+But after SSA and LVN optimize
+a_0 = x + y
+b = a_0
+a = 17
+c = a_0  --> now is substituted
+
+With SSA, it can now be be substituted with the old a, which is *a_0*

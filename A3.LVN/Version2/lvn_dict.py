@@ -1,6 +1,7 @@
 from common import *
 import copy
 
+
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
         self.current_value = 0
@@ -69,6 +70,12 @@ class VariableDict(dict):
             return self.val_num_var_list[val_num_list[0]]
 
 
+class LvnCodeTupleList(list):
+    def append_alg_expr(self, alg_expr):
+        self.append((alg_expr.target, alg_expr.left, alg_expr.operator,
+                     alg_expr.right, alg_expr.operand_type))
+
+
 class LvnDict(dict):
     def __init__(self, ssa=None):
         # enumerate ssa_code
@@ -76,7 +83,7 @@ class LvnDict(dict):
             self.variable_dict = VariableDict(ssa)
         self.variable_dict = VariableDict()
         self.simple_assign_dict = dict()
-        self.lvn_code_tuples_list = []
+        self.lvn_code_tuples_list = LvnCodeTupleList()
         dict.__init__(self)
 
     def is_const(self, ssa):
@@ -116,51 +123,42 @@ class LvnDict(dict):
 
             return self.variable_dict.get_variable_or_constant(simple_assign_list)
 
+    def replace_var(self, oprd):
+        """
+        replace the var with any equivalent var
+        :param oprd:
+        :return: The replaced var.
+        """
+        if self.variable_dict.get_value_number(oprd) in self.simple_assign_dict:
+            # search on the simple assign dict whether it has another variable associate with it
+            simple_assign_list = self.simple_assign_dict[
+                self.variable_dict.get_value_number(oprd)]
+
+            oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
+        return oprd
+
     def get_all_alg_expr(self, ssa):
         ssa_copy = copy.deepcopy(ssa)
         if ssa_copy.operator is not None:
             yield self.get_alg_expr(ssa_copy)
             if not is_num(ssa_copy.left_oprd):
-                if self.variable_dict.get_value_number(ssa_copy.left_oprd) in self.simple_assign_dict:
-                    # search on the simple assign dict whether it has another variable associate with it
-                    simple_assign_list = self.simple_assign_dict[
-                        self.variable_dict.get_value_number(ssa_copy.left_oprd)]
-
-                    ssa_copy.left_oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
-
-                    yield self.get_alg_expr(ssa_copy)
+                ssa_copy.left_oprd = self.replace_var(ssa.left_oprd)
+                yield self.get_alg_expr(ssa_copy)
 
             if not is_num(ssa_copy.right_oprd):
                 if ssa_copy.right_oprd is not None:
-                    if self.variable_dict.get_value_number(ssa_copy.right_oprd) in self.simple_assign_dict:
-                        # search on the simple assign dict whether it has another variable associate with it
-                        simple_assign_list = self.simple_assign_dict[
-                            self.variable_dict.get_value_number(ssa_copy.right_oprd)]
-                        ssa_copy.right_oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
-
+                    ssa_copy.right_oprd = self.replace_var(ssa.right_oprd)
                     yield self.get_alg_expr(ssa_copy)
 
         else:
             if not is_num(ssa_copy.left_oprd):
-                if self.variable_dict[ssa_copy.left_oprd] in self.simple_assign_dict:
-                    # replacement
-                    value_number_to_replace_list = self.simple_assign_dict[self.variable_dict[ssa_copy.left_oprd]]
-                    ssa_copy.left_oprd = self.variable_dict.get_variable_or_constant(value_number_to_replace_list)
-
+                ssa_copy.left_oprd = self.replace_var(ssa.left_oprd)
             yield self.get_alg_expr(ssa_copy)
 
     def get_alg_expr(self, ssa):
         operand_type = 0
         target = self.variable_dict.current_value
         left_oprd, right_oprd = None, None
-
-        '''
-        if self.is_both_oprd_const(ssa):
-            # fold
-            eval()
-        else:
-            pass
-        '''
 
         if ssa.left_oprd is not None:
             left_oprd = self.identify_oprd(ssa.left_oprd)
@@ -186,8 +184,7 @@ class LvnDict(dict):
             if self.get(str(alg_expr)) is None:
                 if insert_flag is True:
                     self.__setitem__(str(alg_expr), [alg_expr.target, alg_expr.operand_type])
-                    self.lvn_code_tuples_list.append((alg_expr.target, alg_expr.left, alg_expr.operator,
-                                                      alg_expr.right, alg_expr.operand_type))
+                    self.lvn_code_tuples_list.append_alg_expr(alg_expr)
                 return False
             else:
                 # check the operand_type before do the replacing
@@ -201,15 +198,12 @@ class LvnDict(dict):
                     return True
                 else:
                     if insert_flag is True:
-                        self.lvn_code_tuples_list.append((alg_expr.target, alg_expr.left, alg_expr.operator,
-                                                          alg_expr.right, alg_expr.operand_type))
+                        self.lvn_code_tuples_list.append_alg_expr(alg_expr)
                     return False
-
 
         else:
             self.simple_assign_dict.__setitem__(alg_expr.target, [alg_expr.left, alg_expr.operand_type])
-            self.lvn_code_tuples_list.append((alg_expr.target, alg_expr.left,
-                                              None, None, alg_expr.operand_type))
+            self.lvn_code_tuples_list.append_alg_expr(alg_expr)
             return True
 
     def get_var(self, alg_expr_str):

@@ -344,35 +344,35 @@ class TestLvnDict(unittest.TestCase):
 
     def test_simple_assignment_dict(self):
         # 1 = 0
-        alg_expr = SimpleExpression(left=0, right=None, operator=None, target=1, operand_type=0)
+        alg_expr = AlgebraicExpression(left=0, right=None, operator=None, target=1, operand_type=0)
         lvn_test = Lvn()
         lvn_test.lvn_dict.add_alg_expr(alg_expr)
         expected_simple_assign_dict = {1: [0, 0]}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 2 = 0 + 1
-        alg_expr = SimpleExpression(left=0, right=1, operator='Add', target=2, operand_type=0)
+        alg_expr = AlgebraicExpression(left=0, right=1, operator='Add', target=2, operand_type=0)
         lvn_test = Lvn()
         lvn_test.lvn_dict.add_alg_expr(alg_expr)
         expected_simple_assign_dict = {}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 2 = 0 + 44 where 44 is constant
-        alg_expr = SimpleExpression(left=0, right=44, operator='Add', target=2, operand_type=2)
+        alg_expr = AlgebraicExpression(left=0, right=44, operator='Add', target=2, operand_type=2)
         lvn_test = Lvn()
         lvn_test.lvn_dict.add_alg_expr(alg_expr)
         expected_simple_assign_dict = {}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 2 = 44 + 0
-        alg_expr = SimpleExpression(left=44, right=0, operator='Add', target=2, operand_type=1)
+        alg_expr = AlgebraicExpression(left=44, right=0, operator='Add', target=2, operand_type=1)
         lvn_test = Lvn()
         lvn_test.lvn_dict.add_alg_expr(alg_expr)
         expected_simple_assign_dict = {}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 1 = 44
-        alg_expr = SimpleExpression(left=44, right=None, operator=None, target=1, operand_type=1)
+        alg_expr = AlgebraicExpression(left=44, right=None, operator=None, target=1, operand_type=1)
         lvn_test = Lvn()
         lvn_test.lvn_dict.add_alg_expr(alg_expr)
         expected_simple_assign_dict = {1: [44, 1]}
@@ -437,7 +437,7 @@ class TestLvnDict(unittest.TestCase):
             c = b
             """))
 
-    def test_simple_assignment_dict(self):
+    def test_simple_assignment_given_all_possible_combination(self):
         as_tree = ast.parse(ms("""\
             z = l
             a = x + y
@@ -522,6 +522,25 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
+        self.assertEqual(str(ssa_code), ms("""\
+            k = x + y
+            z = k + h
+            a = k
+            b = k
+            c = k
+            d = z
+            """))
+
+    def test_simple_assignment_given_3_stmt_same(self):
+        as_tree = ast.parse(ms("""\
+            a=3
+            b=a
+            c=b"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        print(ssa_code)
         self.assertEqual(str(ssa_code), ms("""\
             k = x + y
             z = k + h

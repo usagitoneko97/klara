@@ -354,10 +354,10 @@ import textwrap
 # create a tree
 
 ast_tree = ast.parse(textwrap.dedent("""\
-                                     b = 2
-                                     c = 3
-                                     a = b + c
-                                     d = b + c"""))
+    b = 2
+    c = 3
+    a = b + c
+    d = b + c"""))
 # initialize the test
 lvn_test = Lvn()
 optimized_tree = lvn_test.lvn_optimize(ast_tree)
