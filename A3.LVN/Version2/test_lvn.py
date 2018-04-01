@@ -432,7 +432,6 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        print(ssa_code)
         self.assertEqual(str(ssa_code), ms("""\
             a = b
             c = b
@@ -449,8 +448,13 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        print(ssa_code)
-
+        self.assertEqual(str(ssa_code), ms("""\
+            z = l
+            a = x + y
+            b = 33
+            c = y + 11
+            d = 34 + f
+            """))
 
     def test_simple_assignment_expect_substituted(self):
         as_tree = ast.parse(ms("""\
@@ -462,7 +466,6 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        print(ssa_code)
         self.assertEqual(str(ssa_code), ms("""\
             z = a + y
             b = a
@@ -518,8 +521,6 @@ class TestLvnDict(unittest.TestCase):
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
-
-        print(ssa_code)
 
         self.assertEqual(str(ssa_code), ms("""\
             k = x + y

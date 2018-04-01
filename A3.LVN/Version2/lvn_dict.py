@@ -112,7 +112,7 @@ class LvnDict(dict):
                     if self.variable_dict[ssa_copy.right_oprd] in self.simple_assign_dict:
                         simple_assign_list = self.simple_assign_dict[self.variable_dict[ssa_copy.right_oprd]]
                         right_oprd_val_num = simple_assign_list[0]
-                        if simple_assign_list[1] != RIGHT_OPERATOR_CONSTANT:
+                        if simple_assign_list[1] == NO_OPERATOR_CONSTANT:
                             ssa_copy.right_oprd = self.variable_dict.get_variable(right_oprd_val_num)
                         else:
                             ssa_copy.right_oprd = right_oprd_val_num
@@ -175,7 +175,8 @@ class LvnDict(dict):
                 # check the operand_type before do the replacing
                 list_to_replace = self.get(str(simple_expr))
                 if list_to_replace[1] == simple_expr.operand_type:
-                    self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0], None, None, list_to_replace[1]))
+                    self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0],
+                                                      None, None, NO_OPERATOR_CONSTANT))
                     self.simple_assign_dict.__setitem__(simple_expr.target,
                                                         [list_to_replace[0], simple_expr.operand_type])
 

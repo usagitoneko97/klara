@@ -38,24 +38,22 @@ a = b + z                  # ADD R3, R4, R0         ; Assuming R3 = a, R4 = b
 
 ### 1.1.2 Limitations
 #### 1.1.2.1 Indirect substitution
-This algorithm is able to solve the problem mention above. But there is a limitation.
-
-Example below shows that this algorithm will not able to solve
+Example below shows a problem. At the 3rd statement, `'f + c'` wont be substituted with `'b + c'` even though `f = b`. An additional algorithm need to be added on top of the original implementation to substitute any possible value on the operands to search for the occurence that happen before in order to substitute it. The details of the implementation is in section [1.1.5]()
 ```python
 # [Code 1]
 # Input
 a = b + c
-d = b
-e = d + c
+f = b
+e = f + c
 
 # LVN output
 a = b + c
-d = b
-e = d + c            # Fail to substitute
+f = b
+e = f + c            # Fail to substitute
 
 # Expected output
 a = b + c
-d = b
+f = b
 e = a
 ```
 
@@ -169,11 +167,81 @@ With these new names defined, LVN can then produces the desired result. To be ex
 > a = 17                
 > c = a<sub>0</sub>   
 
+### 1.1.5 Details and Solution for Indirect Substitution. 
+Using the same example [above](), 
+```python
+# [Code 1]
+# Input
+a = b + c
+f = b
+e = f + c
+
+# Expected output
+a = b + c
+f = b
+e = a
+```
+The algorithm that solves this problem is fairly simple. A table will be used 
+to hold the information of simple assignment. Simple assignment means the right hand side is a single variable or a constant, but **not** an expression. 
+```python
+a = b       # a simple assignment
+a = 3       # a simple assignment
+a = a + 3   # not a simple assignment
+a = b + c   # not a simple assignment
+```
+
+After getting pass the second statement in the example above, the table will be looking like:
+
+**Simple Assignment Table**
+
+| key  | value |
+| :---:| :---: |
+| 'f'  |  'b'  |
+
+Upon executing the third statement, lvn will look up the expr `f + c` and it will failed since `f + c` does not occurs before. It will then look up at the table with the value of left operand. Because `f` exist in the table, it will substitute `f` with the value obtained from the table, namely `b`. Now it will do the look up with the expr `b + c` and it will return `a` since it's inserted before. The third statement will convert from `e = f + c` to `e = a`. 
+
+Now consider example below:
+```python
+a = b + c
+f = b
+g = f
+e = g + c  # Expected result : e = a
+```
+
+With the algorithm stated above, the table will be looking like:
+
+**Simple Assignment Table**
+
+| key  | value |
+| :---:| :---: |
+| 'f'  |  'b'  |
+| 'g'  |  'f'  |
+
+At the forth statement, `g` will be substitute with `f` and will perform a search with `f + c`. Since it does not return a result, the `f` will substitute with `b` and perform a search with `b + c` and this time it will return a result. 
+
+One way to avoid using recursion as stated above is by letting `g = b` instead of `g = f`. With this every operands will only have to substitute at most once, instead of multiple time as stated above. 
+
+**Simple Assignment Table**
+
+| key  | value |
+| :---:| :---: |
+| 'f'  |  'b'  |
+| 'g'  |  'b'  |
+
+The example will then converted to:
+
+Now consider example below:
+```python
+a = b + c
+f = b
+g = b
+e = a
+```
+
+**Note**: In the real implementation however, the key and the value of the Simple Assignment Table is the Value Number of the variable, **not** the variable itself. 
 
 ## 1.2 The python implementation
 In the real implementation, parsing AST 2 times like the explanation [above](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) is not required. Instead, the 2 steps (which is enumerating variables and substituting the expression on RHS) in [1.1.3](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) can happen concurrently without having to parse ast 2 times. 
-
-To get started easily, consider the only assignment of binary operation, (`binOp` in python ast)
 
 ### 1.2.1 Data structure used
 For the sake of simplicity, **2 hash map** (dictionary in python) will be used, 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`.
