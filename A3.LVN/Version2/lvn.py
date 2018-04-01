@@ -2,9 +2,12 @@ from ssa import Ssa, SsaCode
 from lvn_dict import LvnDict
 import common
 
+
 class Lvn:
     operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
-                     'Lt': '<', 'Gt': '>'}
+                     'Lt': '<', 'Gt': '>', 'FloorDiv': '//', 'Mod': '%', 'Pow': '^', 'LShift': '<<', 'RShift': '>>',
+                     'Eq': '==', 'NotEq': '!=', 'LtE': '<=', 'GtE': '>=', 'Is' :'is', 'IsNot': 'is not', 'In': 'in',
+                     'NotIn': 'not in'}
 
     def __init__(self):
         self.lvn_dict = LvnDict()

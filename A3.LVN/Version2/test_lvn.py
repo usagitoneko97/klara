@@ -542,10 +542,7 @@ class TestLvnDict(unittest.TestCase):
 
         print(ssa_code)
         self.assertEqual(str(ssa_code), ms("""\
-            k = x + y
-            z = k + h
-            a = k
-            b = k
-            c = k
-            d = z
+            a = 3
+            b = 3
+            c = 3
             """))
