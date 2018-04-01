@@ -17,14 +17,14 @@ class Lvn:
             # expr = self.lvn_dict.get_alg_ident(general_expr_str)
             # ssa.replace_rhs_expr(expr)
             inserted_flag = False
-            for simple_expr in self.lvn_dict.get_all_simple_expr(ssa):
-                if self.lvn_dict.add_simple_expr(simple_expr, insert_flag=False) is True:
+            for alg_expr in self.lvn_dict.get_all_alg_expr(ssa):
+                if self.lvn_dict.add_alg_expr(alg_expr, insert_flag=False) is True:
                     inserted_flag = True
                     break
 
             if inserted_flag is False:
-                simple_expr = self.lvn_dict.get_simple_expr(ssa)
-                self.lvn_dict.add_simple_expr(simple_expr, insert_flag=True)
+                alg_expr = self.lvn_dict.get_alg_expr(ssa)
+                self.lvn_dict.add_alg_expr(alg_expr, insert_flag=True)
                 pass
 
 

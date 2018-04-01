@@ -116,10 +116,10 @@ class LvnDict(dict):
 
             return self.variable_dict.get_variable_or_constant(simple_assign_list)
 
-    def get_all_simple_expr(self, ssa):
+    def get_all_alg_expr(self, ssa):
         ssa_copy = copy.deepcopy(ssa)
         if ssa_copy.operator is not None:
-            yield self.get_simple_expr(ssa_copy)
+            yield self.get_alg_expr(ssa_copy)
             if not is_num(ssa_copy.left_oprd):
                 if self.variable_dict.get_value_number(ssa_copy.left_oprd) in self.simple_assign_dict:
                     # search on the simple assign dict whether it has another variable associate with it
@@ -128,7 +128,7 @@ class LvnDict(dict):
 
                     ssa_copy.left_oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
 
-                    yield self.get_simple_expr(ssa_copy)
+                    yield self.get_alg_expr(ssa_copy)
 
             if not is_num(ssa_copy.right_oprd):
                 if ssa_copy.right_oprd is not None:
@@ -138,7 +138,7 @@ class LvnDict(dict):
                             self.variable_dict.get_value_number(ssa_copy.right_oprd)]
                         ssa_copy.right_oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
 
-                    yield self.get_simple_expr(ssa_copy)
+                    yield self.get_alg_expr(ssa_copy)
 
         else:
             if not is_num(ssa_copy.left_oprd):
@@ -147,9 +147,9 @@ class LvnDict(dict):
                     value_number_to_replace_list = self.simple_assign_dict[self.variable_dict[ssa_copy.left_oprd]]
                     ssa_copy.left_oprd = self.variable_dict.get_variable_or_constant(value_number_to_replace_list)
 
-            yield self.get_simple_expr(ssa_copy)
+            yield self.get_alg_expr(ssa_copy)
 
-    def get_simple_expr(self, ssa):
+    def get_alg_expr(self, ssa):
         operand_type = 0
         target = self.variable_dict.current_value
         left_oprd, right_oprd = None, None
@@ -172,47 +172,47 @@ class LvnDict(dict):
             if is_num(ssa.right_oprd):
                 operand_type = 2
 
-        simple_expr = SimpleExpression(left_oprd, right_oprd, ssa.operator, target, operand_type)
-        # simple_expr = str(left_oprd) + ssa.operator + str(right_oprd)
-        return simple_expr
+        alg_expr = AlgebraicExpression(left_oprd, right_oprd, ssa.operator, target, operand_type)
+        # alg_expr = str(left_oprd) + ssa.operator + str(right_oprd)
+        return alg_expr
 
-    def add_simple_expr(self, simple_expr, insert_flag=True):
+    def add_alg_expr(self, alg_expr, insert_flag=True):
         """
-        add the simple_expr into the dict. Modified the tuple
-        :param simple_expr: a simple expression class
+        add the alg_expr into the dict. Modified the tuple
+        :param alg_expr: a simple expression class
         :return:
         """
-        if simple_expr.operator is not None:
-            if self.get(str(simple_expr)) is None:
+        if alg_expr.operator is not None:
+            if self.get(str(alg_expr)) is None:
                 if insert_flag is True:
-                    self.__setitem__(str(simple_expr), [simple_expr.target, simple_expr.operand_type])
-                    self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                      simple_expr.right, simple_expr.operand_type))
+                    self.__setitem__(str(alg_expr), [alg_expr.target, alg_expr.operand_type])
+                    self.lvn_code_tuples_list.append((alg_expr.target, alg_expr.left, alg_expr.operator,
+                                                      alg_expr.right, alg_expr.operand_type))
                 return False
             else:
                 # check the operand_type before do the replacing
-                list_to_replace = self.get(str(simple_expr))
-                if list_to_replace[1] == simple_expr.operand_type:
-                    self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0],
+                list_to_replace = self.get(str(alg_expr))
+                if list_to_replace[1] == alg_expr.operand_type:
+                    self.lvn_code_tuples_list.append((alg_expr.target, list_to_replace[0],
                                                       None, None, OPERATOR_VARIABLE))
-                    self.simple_assign_dict.__setitem__(simple_expr.target,
-                                                        [list_to_replace[0], simple_expr.operand_type])
+                    self.simple_assign_dict.__setitem__(alg_expr.target,
+                                                        [list_to_replace[0], alg_expr.operand_type])
 
                     return True
                 else:
                     if insert_flag is True:
-                        self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left, simple_expr.operator,
-                                                          simple_expr.right, simple_expr.operand_type))
+                        self.lvn_code_tuples_list.append((alg_expr.target, alg_expr.left, alg_expr.operator,
+                                                          alg_expr.right, alg_expr.operand_type))
                     return False
 
 
         else:
-            self.simple_assign_dict.__setitem__(simple_expr.target, [simple_expr.left, simple_expr.operand_type])
-            self.lvn_code_tuples_list.append((simple_expr.target, simple_expr.left,
-                                              None, None, simple_expr.operand_type))
+            self.simple_assign_dict.__setitem__(alg_expr.target, [alg_expr.left, alg_expr.operand_type])
+            self.lvn_code_tuples_list.append((alg_expr.target, alg_expr.left,
+                                              None, None, alg_expr.operand_type))
             return True
 
-    def get_var(self, simple_expr_str):
+    def get_var(self, alg_expr_str):
         # perform search on dict, use the value returned to search on variable_dict and return
         pass
 
@@ -223,7 +223,7 @@ class LvnDict(dict):
         self.variable_dict.enumerate_rhs(ssa)
 
 
-class SimpleExpression:
+class AlgebraicExpression:
     def __init__(self, left, right, operator, target=0, operand_type=0):
         self.left = left
         self.right = right
