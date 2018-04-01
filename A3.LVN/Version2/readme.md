@@ -1,37 +1,38 @@
-# 1 Python implementation version 2
-The purpose of the version 2 is to improve the readability of the code as well as the newly added ssa implementation. 
+# 1 Python Implementation version 2
+This version improves on the ealier one by including SSA to solve **variable-redefinition** problem. Also, the code was revamped to be expressive and modular to improve readability.
+
+Now the `optimize` function is short and expressive without implementation details exposed:
+```python
+def optimize(self, ssa_code):
+    for ssa in ssa_code:
+        # Enumerate the RHS variable
+        self.lvn_dict.enumerate_rhs(ssa)
+        # Get algebraic expr class that contains the information like the values
+        # number for left and right operands, and operator. 
+        algebraic_expr = self.lvn_dict.get_algebraic_expr(ssa)
+        # Enumerate the RHS variables
+        self.lvn_dict.enumerate_lhs(ssa)
+        # add algebraic expression to the dictionary
+        self.lvn_dict.add_algebraic_expr(algebraic_expr)
+
+    ssa_optimized_code = self.lvn_to_ssa()
+    return ssa_optimized_code
+```
 
 ## 1.1 Using the Class
-Before lvn optimization start, a full list of the ssa need to be obtained. 
+Before applying LVN optimization, the code in AST form is transformed into SSA form: 
 ```python
 as_tree = ast.parse("some_str = x1 + x2")
 ssa_code = SsaCode(as_tree)
 ```
-To use lvn optimization, 
+then the LVN optimization is applied: 
 ```python
 lvn_handler = Lvn()
 ssa_optimized = lvn_handler.optimize(ssa_code)
 print(ssa_optimized)
 ```
 
-The implementation of the `optimize` function is simply, 
-```python
-def optimize(self, ssa_code):
-    for ssa in ssa_code:
-        # Enumerate the expression or variable at the right hand side
-        self.lvn_dict.enumerate_rhs(ssa)
-        # get simple expr class that contain the information like the value
-        # number for left, right operand and operator. 
-        simple_expr = self.lvn_dict.get_simple_expr(ssa)
-        # enumerate the variable at the left hand side
-        self.lvn_dict.enumerate_lhs(ssa)
-        # add simple expression to the dictionary
-        self.lvn_dict.add_simple_expr(simple_expr)
-
-    ssa_optimized_code = self.lvn_code_to_ssa_code()
-    return ssa_optimized_code
-```
-A few example on showing how lvn can optimize a code. 
+The following shows an example on how to use the code. 
 ```python
 as_tree = ast.parse(ms("""\
     a = x + y
@@ -44,41 +45,57 @@ ssa_code = lvn_test.optimize(ssa_code)
 
 print(ssa_code)
 ```
-And console will be showing, 
+Running the program will dump the following output: 
 ```python
 >>> a_2 = x + y
 >>> b = a_2
 >>> a = 17
 >>> c = a_2
 ```
+Note: `a_2` can be viewed as *temporary* variable of `a`, since the latter is reassigned with a constant value of 17 at the 3rd statement. The temporary variable is important because it is used to optimize assignment of `c` at the last statement.
 
 ## 1.2 Details of the Implementation
-The same concept on the previous page in the [algorithm](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) section will be reapplied here. A few more data structure need to be added on top of Version 1 to implement a SSA. Apart from the 2 dictionaries used before which is one for storing the value number of variables, and another is to store the simple expression, additional data structures like list and tuple will be used to fully implement the SSA. 
+The same concept on the previous page in the [algorithm](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) section is reapplied here. Apart from the 2 dictionaries used before, one for storing the value numbers of variables and the other for the algebraic expression, additional data structures like list and tuple is added to allow incorporation of the SSA. 
 
-### 1.2.1 Lvn Code Tuples List
-The tuples, namely `lvn_code_tuples_list` is to provide the representation of the SSA source code in a form of value number (All operands and target are numbers). One of the problems that you will quickly realize is that after conversion, the variable and constant will be converted to numbers, and that may cause confusion. One way to solve this is to **append a flag** at the end of the tuple, to annotate that either left or right operand is constant. **Note** that there will be no cases where left and right are both constant since it will be folded during the conversion from ast to SSA.
+### 1.2.1 LVN Code Tuples List
+The tuples, namely `lvn_code_tuples_list`, is the SSA code represented in the form of value number. All operands and target are numbers, which means a variable cannot be distinguished from a constant value. The last element, known as the `operand_type`, in the tuple is the flag to indicate the type of the operands.   
 
+- operand_type = 0   --> both operands are variable
+- operand_type = 1   --> left operand is constant
+- operand_type = 2   --> right operand is constant
+- operand_type = 3   --> both operands are constant
 
-- operand_type = 0   --> all operands are variable
-- operand_type = 1   --> left is constant
-- operand_type = 2   --> right is constant
+To implement the SSA, whenever a variable is redefined the old variable is not removed, but is renamed instead. This is done by appending a unique number to the name. The choice of number implemented in the code is the LVN value assigned to that old variable, since it the simplest way and the number is unique. For example, 
 
-To incorporate the ssa into our dictionary, whenever a variable that going to replaced by a newer entry, the old entry will not be removed, instead, an arbitrary number, the value number of that key will be appended to the old key. I.e., 
-
+```python
 a = 33
+a = 44
+a = 55
+```
 
-| key | value |
+When `a = 33` is processed, the name of the variable and its LVN is:
+
+| Name | LVN |
 |:---:|:---:  |
 | 'a' |   0   |
 
-a = 44
+When `a = 44` is processed, then
 
-| key | value |
+| Name | LVN |
 |:---:|:---:  |
 | 'a_0'|   0   |
 | 'a' |   1   |
 
-The following example will demonstrate how the dictionary and the tuples list get inserted
+Finally, when `a = 55` is processed, then
+
+| Name | LVN |
+|:---:|:---:  |
+| 'a_0'|   0  |
+| 'a_1' |   1  |
+| 'a' |   2  |
+
+### 1.2.2 Example
+The following is a code example to demonstrate the algorithm:
 
 ```python
 x = a + b
@@ -87,9 +104,12 @@ z = 44 + x
 x = 55
 h = a + b
 ``` 
+
+The result is:
+
 **Value Number Dictionary**
 
-| key | value | 
+| Name (key)| LVN (value)|
 | :--:| :---: |
 | 'a' |  0    |
 | 'b' |  1    |
@@ -99,37 +119,46 @@ h = a + b
 | 'x' |  5 |
 | 'h' | 6 |
 
-Because of the key in the simple expression involves only numbers, there's a need to know whether the number corresponds to a variable or just a constant. The operand_type variable previously will be appended to the value to form a list. 
+Recall that the key in the algebraic expression involves only number, so there is a need to know whether the number corresponds to a variable or just a constant value. The `operand_type` is added to the dictionary `Value` to annotate the operands' type: 
 
-**Simple Expression Dictionary**
+**Algebraic Expression Dictionary**
 
-| Key     | Value (Value Number, operand_type) |
+| Key     | Value (value number, operand_type) |
 | :--:    | :---: |
 | "0 + 1" |   2, 0|
 | "0 + 33" |  3, 2|
 | "44 + 2" | 3, 1  |
 | "55"   |    5, 1|
 
-The first 4 statements will be inserted into the tuples below without substitution. But on the last statement, because of `a + b` or simple expression `0 + 1` is existed in Simple Expression Dictionary, it will substitute `a + b` with `x`, or `0 + 1` with `2` only if the want-to-add simple expression's **operand_type** flag is the same with the entry of Simple Expression dictionary. This is to prevent `a + 1` get substitute with `a + b` when `b` has a value number 1. 
+The first 4 statements is inserted into the tuples below without substitution. But on the last statement, because of `a + b` or the algebraic expression `0 + 1` already existed in the Algebraic Expression Dictionary, it substitutes `a + b` with `x`, or `0 + 1` with `2` only if the want-to-add simple expression's **operand_type** flag is the same with the entry of Algebraic Expression dictionary. This is to prevent `a + 1` get substitute with `a + b` when `b` has a value number 1. 
 
-**lvn_code_tuples_list**
+**LVN Code (lvn_code_tuples_list)**
 
-| target | left | operator | right | operand_type |
+| target* | left | operator | right | operand_type |
 | :----: | :---:|  :---:   | :---: |  :-----:    |
-| 2      |  0   |   '+'    |  1    |    0        |
-| 3      |  0   |   '+'    |  33   |    2        |
-| 4      |  44  |   '+'    |  3    |    2        |
-| 5      |  55  |   None   |  None |    1        |
-| 6      |  2   |   None   |  None |    0        |
+| 2      |  0   |   '+'    |  1    |    0 (both are variables) |
+| 3      |  0   |   '+'    |  33   |    2 (right is constant)  |
+| 4      |  44  |   '+'    |  3    |    1 (left is constant)  |
+| 5      |  55  |   None   |  None |    1 (left is constant)   |
+| 6      |  2   |   None   |  None |    0 (both are variables) |
+
+* *target* means LHS variable of the assignment expression. 
+
 
 ---
 
-### 1.2.2 Converting Back To Ssa
-To convert the tuples above back to SSA form, a list is implemented to find out the which variables correspond to which value number. It can be in a list since all variable will have a unique value number. Whenever a variable is being reassigned or a value number is distributed, it will append at the back of the list. When the variable that is reassigned is already existed in the list, it will append some arbitrary value to the back of the old variable to differentiate between the old and new variable. Using the example above, the list will be, 
+### 1.2.2 Converting Back To SSA
+To convert the tuples above back to SSA form, a list is implemented to find out which variable correspond to which value number. It can be in a list since each variable has unique value number. Whenever a variable is being reassigned or a value number is distributed, it will append at the back of the list. When the variable that is reassigned/redefined has already existed in the list, it is appended with some unique value of the name of the variable to differentiate old from new. Using the example above, the list will be, 
 
     ['a', 'b', 'x', 'y', 'z', 'x_5', 'h']
       |    |    |    |    |     |     |
       0    1    2    3    4     5     6
  
-The final step is to convert the **lvn_code_tuples_list** to the ssa_code list. It will convert all the value number to the variable that represents by the list above. For example, the first list of the tuples_list will generate `2 = 0 + 1` and map to `x = a + b`. 
-
+The SSA code for the LVN code in the example above is:
+```python
+x = a + b
+y = a + 33
+z = 44 + x
+x = 55
+h = x_2
+``` 
