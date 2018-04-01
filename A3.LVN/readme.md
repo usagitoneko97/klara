@@ -38,7 +38,7 @@ a = b + z                  # ADD R3, R4, R0         ; Assuming R3 = a, R4 = b
 
 ### 1.1.2 Limitations
 #### 1.1.2.1 Indirect substitution
-Example below shows a problem. At the 3rd statement, `'f + c'` wont be substituted with `'b + c'` even though `f = b`. An additional algorithm need to be added on top of the original implementation to substitute any possible value on the operands to search for the occurence that happen before in order to substitute it. The details of the implementation is in section [1.1.5]()
+Example below shows a problem. At the 3rd statement, `'f + c'` wont be substituted with `'b + c'` even though `f = b`. An additional algorithm need to be added on top of the original implementation to substitute any possible value on the operands to search for the occurence that happen before in order to substitute it. The details of the implementation is in section [1.1.5](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#115-details-and-solution-for-indirect-substitution)
 ```python
 # [Code 1]
 # Input
@@ -131,7 +131,7 @@ Now because of string `"0 + 1"` is found in the hash, LVN will replace a variabl
 
 ![lvnReplaced](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/lvnReplaced.svg)
 
-## 1.1.4 Details and solution for problems when redefining occurs.
+### 1.1.4 Details and solution for problems when redefining occurs.
 
 ![problemRedefinedValNum](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/problemRedefinedValNum.svg)
 
@@ -168,7 +168,7 @@ With these new names defined, LVN can then produces the desired result. To be ex
 > c = a<sub>0</sub>   
 
 ### 1.1.5 Details and Solution for Indirect Substitution. 
-Using the same example [above](), 
+Using the same example [above](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#1121-indirect-substitution), 
 ```python
 # [Code 1]
 # Input
@@ -241,10 +241,14 @@ e = a
 **Note**: In the real implementation however, the key and the value of the Simple Assignment Table is the Value Number of the variable, **not** the variable itself. 
 
 ## 1.2 The python implementation
+There's 2 version that can be found on A3.LVN. [The first version](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version1) is sort of legacy code and only used for reference. [The second version](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version2) is more complete and includes additional algorithm stated above. 
+
+---
+
 In the real implementation, parsing AST 2 times like the explanation [above](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) is not required. Instead, the 2 steps (which is enumerating variables and substituting the expression on RHS) in [1.1.3](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) can happen concurrently without having to parse ast 2 times. 
 
 ### 1.2.1 Data structure used
-For the sake of simplicity, **2 hash map** (dictionary in python) will be used, 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`.
+For the sake of simplicity, **2 hash map** (dictionary in python) will be used, 1 for storing the corresponding value number to the variable, and 1 for storing the textual string like `"2 - 3"`. There's 2 data structures more to implement the ssa, one is **lvn_code_tuple_list**, a list of tuple, which is used to represent the source code in the form of Value Number. Another one is **lvn_code_tuples_list**, is a list of variables arranged in ascending order of their Value Number. It's used to find out what variable is associate with this Value Number. 
 
 ### 1.2.2 Dealing with an abstract syntax tree
 Details on dealing with ast can be found [here](https://github.com/usagitoneko97/python-ast/tree/master/A2.ReversingAst)

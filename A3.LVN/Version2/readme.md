@@ -59,7 +59,7 @@ The same concept on the previous page in the [algorithm](https://github.com/usag
 The tuples, namely `lvn_code_tuples_list` is to provide the representation of the SSA source code in a form of value number (All operands and target are numbers). One of the problems that you will quickly realize is that after conversion, the variable and constant will be converted to numbers, and that may cause confusion. One way to solve this is to **append a flag** at the end of the tuple, to annotate that either left or right operand is constant. **Note** that there will be no cases where left and right are both constant since it will be folded during the conversion from ast to SSA.
 
 
-- operand_type = 0   --> no constant
+- operand_type = 0   --> all operands are variable
 - operand_type = 1   --> left is constant
 - operand_type = 2   --> right is constant
 
@@ -124,7 +124,7 @@ The first 4 statements will be inserted into the tuples below without substituti
 
 ---
 
-### 1.2.2 Value Number to Variable List
+### 1.2.2 Converting Back To Ssa
 To convert the tuples above back to SSA form, a list is implemented to find out the which variables correspond to which value number. It can be in a list since all variable will have a unique value number. Whenever a variable is being reassigned or a value number is distributed, it will append at the back of the list. When the variable that is reassigned is already existed in the list, it will append some arbitrary value to the back of the old variable to differentiate between the old and new variable. Using the example above, the list will be, 
 
     ['a', 'b', 'x', 'y', 'z', 'x_5', 'h']

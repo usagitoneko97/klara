@@ -49,13 +49,24 @@ class VariableDict(dict):
         :param var:
         :return:
         """
-        pass
+        return self.__getitem__(var)
 
     def set_value_number(self, var, val_num):
         pass
 
     def get_variable(self, val_num):
         return self.val_num_var_list[val_num]
+
+    def get_variable_or_constant(self, val_num_list):
+        """
+        get a variable or constant
+        :param val_num_list: [Value Number, operand_type]
+        :return: A string if it's variable or a number if it's constant
+        """
+        if val_num_list[1] == LEFT_OPERATOR_CONSTANT:
+            return val_num_list[0]
+        else:
+            return self.val_num_var_list[val_num_list[0]]
 
 
 class LvnDict(dict):
@@ -93,41 +104,48 @@ class LvnDict(dict):
         else:
             return None
 
+    def get_eq_var(self, curr_var):
+        """
+        get equal value of variable or number of curr_var
+        :param curr_var : the current variable to search on the dict
+        :return: Another var or num associate with curr_var
+        """
+        if self.variable_dict[curr_var] in self.simple_assign_dict:
+            # search on the simple assign dict whether it has another variable associate with it
+            simple_assign_list = self.simple_assign_dict[self.variable_dict[curr_var]]
+
+            return self.variable_dict.get_variable_or_constant(simple_assign_list)
+
     def get_all_simple_expr(self, ssa):
         ssa_copy = copy.deepcopy(ssa)
         if ssa_copy.operator is not None:
             yield self.get_simple_expr(ssa_copy)
             if not is_num(ssa_copy.left_oprd):
-                if self.variable_dict[ssa_copy.left_oprd] in self.simple_assign_dict:
-                    simple_assign_list = self.simple_assign_dict[self.variable_dict[ssa_copy.left_oprd]]
-                    left_oprd_val_num = simple_assign_list[0]
-                    if simple_assign_list[1] != LEFT_OPERATOR_CONSTANT:
-                        ssa_copy.left_oprd = self.variable_dict.get_variable(left_oprd_val_num)
-                    else:
-                        ssa_copy.left_oprd = left_oprd_val_num
+                if self.variable_dict.get_value_number(ssa_copy.left_oprd) in self.simple_assign_dict:
+                    # search on the simple assign dict whether it has another variable associate with it
+                    simple_assign_list = self.simple_assign_dict[
+                        self.variable_dict.get_value_number(ssa_copy.left_oprd)]
+
+                    ssa_copy.left_oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
+
                     yield self.get_simple_expr(ssa_copy)
 
             if not is_num(ssa_copy.right_oprd):
                 if ssa_copy.right_oprd is not None:
-                    if self.variable_dict[ssa_copy.right_oprd] in self.simple_assign_dict:
-                        simple_assign_list = self.simple_assign_dict[self.variable_dict[ssa_copy.right_oprd]]
-                        right_oprd_val_num = simple_assign_list[0]
-                        if simple_assign_list[1] == NO_OPERATOR_CONSTANT:
-                            ssa_copy.right_oprd = self.variable_dict.get_variable(right_oprd_val_num)
-                        else:
-                            ssa_copy.right_oprd = right_oprd_val_num
-                        yield self.get_simple_expr(ssa_copy)
+                    if self.variable_dict.get_value_number(ssa_copy.right_oprd) in self.simple_assign_dict:
+                        # search on the simple assign dict whether it has another variable associate with it
+                        simple_assign_list = self.simple_assign_dict[
+                            self.variable_dict.get_value_number(ssa_copy.right_oprd)]
+                        ssa_copy.right_oprd = self.variable_dict.get_variable_or_constant(simple_assign_list)
+
+                    yield self.get_simple_expr(ssa_copy)
 
         else:
             if not is_num(ssa_copy.left_oprd):
                 if self.variable_dict[ssa_copy.left_oprd] in self.simple_assign_dict:
                     # replacement
                     value_number_to_replace_list = self.simple_assign_dict[self.variable_dict[ssa_copy.left_oprd]]
-                    left_oprd_val_num = value_number_to_replace_list[0]
-                    if value_number_to_replace_list[1] != LEFT_OPERATOR_CONSTANT:
-                        ssa_copy.left_oprd = self.variable_dict.get_variable(left_oprd_val_num)
-                    else:
-                        ssa_copy.left_oprd = left_oprd_val_num
+                    ssa_copy.left_oprd = self.variable_dict.get_variable_or_constant(value_number_to_replace_list)
 
             yield self.get_simple_expr(ssa_copy)
 
@@ -176,7 +194,7 @@ class LvnDict(dict):
                 list_to_replace = self.get(str(simple_expr))
                 if list_to_replace[1] == simple_expr.operand_type:
                     self.lvn_code_tuples_list.append((simple_expr.target, list_to_replace[0],
-                                                      None, None, NO_OPERATOR_CONSTANT))
+                                                      None, None, OPERATOR_VARIABLE))
                     self.simple_assign_dict.__setitem__(simple_expr.target,
                                                         [list_to_replace[0], simple_expr.operand_type])
 
