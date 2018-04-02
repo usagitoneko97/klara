@@ -1,12 +1,11 @@
 import unittest
 import ast
-import textwrap
 import common
 
 from ssa import SsaCode
 from lvn_dict import LvnDict, AlgebraicExpression
 from lvn import Lvn
-ms = textwrap.dedent
+
 
 
 class TestLvnDict(unittest.TestCase):
