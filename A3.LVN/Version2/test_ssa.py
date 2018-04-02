@@ -76,3 +76,27 @@ class TestSsa(unittest.TestCase):
         """))
 
         self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+
+    def test_ssa_all_valid_expressions(self):
+        as_tree = ast.parse(ms("""\
+           a = b + c
+           d = 2 * e
+           f = g / 3
+           h = - 4
+           i = + j
+           k = 1 < 3
+           l = k | m
+           n = o ^ 2""")
+        )
+
+        ssa_code = SsaCode(as_tree)
+        self.assertEqual(str(ssa_code), ms("""\
+        a_0 = b_0 Add c_0
+        d_0 = 2 Mult e_0
+        f_0 = g_0 Div 3
+        h_0 = USub 4
+        i_0 = UAdd j_0
+        k_0 = 1 Lt 3
+        l_0 = k_0 BitOr m_0
+        n_0 = o_0 BitXor 2
+        """))

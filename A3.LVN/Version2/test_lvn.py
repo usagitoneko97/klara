@@ -1,6 +1,6 @@
 import unittest
 import ast
-import common
+from common import *
 
 from ssa import SsaCode
 from lvn_dict import LvnDict, AlgebraicExpression
@@ -41,30 +41,7 @@ class TestLvnDict(unittest.TestCase):
         self.assertEqual(common.is_num(3.023), True)
         self.assertEqual(common.is_num("str"), False)
 
-    def test_ssa_all_valid_expressions(self):
-        as_tree = ast.parse(ms("""\
-           a = b + c
-           d = 2 * e
-           f = g / 3
-           h = - 4
-           i = + j
-           k = 1 < 3
-           l = k | m
-           n = o ^ 2""")
-        )
-
-        ssa_code = SsaCode(as_tree)
-        self.assertEqual(str(ssa_code), ms("""\
-        a = b Add c
-        d = 2 Mult e
-        f = g Div 3
-        h = USub 4
-        i = UAdd j
-        k = 1 Lt 3
-        l = k BitOr m
-        n = o BitXor 2
-        """))
-
+# ----------------------------Enumerate test-----------------------------------
     def test_enumerate_given_multiple_time(self):
         as_tree = ast.parse(ms("""\
             a = 3   # a = 0
@@ -78,10 +55,9 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.enumerate_rhs(ssa)
-            lvn_dict.enumerate_lhs(ssa)
+            lvn_dict.variable_dict.enumerate(ssa)
 
-        expected_value_dict = {'a_0': 0, 'a_1': 1, 'a_3': 3, 'b': 2, 'c': 4, 'a_5': 5, 'd': 6, 'a': 7}
+        expected_value_dict = {'a_0': 0, 'a_1': 1, 'a_2': 3, 'b_0': 2, 'c_0': 4, 'a_3': 5, 'd_0': 6, 'a_4': 7}
         self.assertDictEqual(lvn_dict.variable_dict, expected_value_dict)
 
     def test_enumerate_given_a_update(self):
@@ -89,16 +65,17 @@ class TestLvnDict(unittest.TestCase):
                                a = x + y
                                b = x + y
                                a = 2
-                               c = x + y""")
+                               c = x + y
+                               d = 3 + x
+                               f = y + 4""")
                             )
 
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.enumerate_rhs(ssa)
-            lvn_dict.enumerate_lhs(ssa)
+            lvn_dict.variable_dict.enumerate(ssa)
 
-        expected_value_dict = {'a_2': 2, 'x': 0, 'y': 1, 'b': 3, 'a': 4, 'c': 5}
+        expected_value_dict = {'a_0': 2, 'x_0': 0, 'y_0': 1, 'b_0': 3, 'a_1': 4, 'c_0': 5, 'd_0': 6, 'f_0': 7}
         self.assertDictEqual(lvn_dict.variable_dict, expected_value_dict)
 
     def test_value_number_to_var_list(self):
@@ -111,13 +88,14 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
         for ssa in ssa_code:
-            lvn_dict.enumerate_rhs(ssa)
-            lvn_dict.enumerate_lhs(ssa)
+            lvn_dict.variable_dict.enumerate(ssa)
 
-        expected_list = ['x', 'y', 'a_2', 'z', 'b', 'a']
+        expected_list = ['x_0', 'y_0', 'a_0', 'z_0', 'b_0', 'a_1']
         self.assertListEqual(lvn_dict.variable_dict.val_num_var_list, expected_list)
 
-    def test_get_all_alg_expr(self):
+# ----------------get_alg_expr test----------------------------------
+
+    def test_get_alg_expr(self):
         as_tree = ast.parse(ms("""\
            a = b + 4    # b = 0, a = 1
            c = 33 + d   # d = 2, c = 3
@@ -133,20 +111,60 @@ class TestLvnDict(unittest.TestCase):
         lvn_dict = LvnDict()
         alg_expr_list = []
         for ssa in ssa_code:
-            lvn_dict.enumerate_rhs(ssa)
+            lvn_dict.variable_dict.enumerate(ssa)
             alg_expr = lvn_dict.get_alg_expr(ssa)
-            lvn_dict.enumerate_lhs(ssa)
             alg_expr_list.append((alg_expr))
 
         expected_alg_expr_list = [(1, 0, 'Add', 4, 2),
-                                     (3, 33, 'Add', 2, 1),
-                                     (6, 4, 'Add', 5, 0),
-                                     (7, 24, None, None, 1),
-                                     (9, 8, None, None, 0),
-                                     (10, None, 'USub', 38, 2),
-                                     (12, None, 'USub', 11, 0)]
+                                  (3, 33, 'Add', 2, 1),
+                                  (6, 4, 'Add', 5, 0),
+                                  (7, 24, None, None, 1),
+                                  (9, 8, None, None, 0),
+                                  (10, None, 'USub', 38, 2),
+                                  (12, None, 'USub', 11, 0)]
 
         self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
+
+    def test_get_alg_expr(self):
+        as_tree = ast.parse(ms("""\
+            c = b
+            a = c + d
+            """)
+        )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        alg_expr_list = []
+        for ssa in ssa_code:
+            lvn_dict.variable_dict.enumerate(ssa)
+            alg_expr = lvn_dict.get_alg_expr(ssa)
+            alg_expr_list.append((alg_expr))
+
+        expected_alg_expr_list = [(1, 0, None, None, 0),
+                                  (3, 1, 'Add', 2, 0)]
+
+        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
+
+    def test_get_alg_expr_given_const(self):
+        as_tree = ast.parse(ms("""\
+            c = 33
+            a = c + d
+            """)
+        )
+
+        ssa_code = SsaCode(as_tree)
+        lvn_dict = LvnDict()
+        alg_expr_list = []
+        for ssa in ssa_code:
+            lvn_dict.variable_dict.enumerate(ssa)
+            alg_expr = lvn_dict.get_alg_expr(ssa)
+            alg_expr_list.append((alg_expr))
+
+        expected_alg_expr_list = [(0, 33, None, None, 1),
+                                  (2, 0, 'Add', 1, 0)]
+
+        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
+
 
     def test_build_alg_expr_and_lvn_code_tuple(self):
         as_tree = ast.parse(ms("""\
@@ -376,52 +394,6 @@ class TestLvnDict(unittest.TestCase):
         lvn_test.lvn_dict.add_alg_expr(alg_expr)
         expected_simple_assign_dict = {1: [44, 1]}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
-
-    def test_get_all_alg_expr(self):
-        as_tree = ast.parse(ms("""\
-            c = b
-            a = c + d
-            """)
-        )
-
-        ssa_code = SsaCode(as_tree)
-        lvn_dict = LvnDict()
-        alg_expr_list = []
-        for ssa in ssa_code:
-            lvn_dict.enumerate_rhs(ssa)
-            for alg_expr in lvn_dict.get_all_alg_expr(ssa):
-                alg_expr_list.append(alg_expr)
-                lvn_dict.add_alg_expr(alg_expr)
-            lvn_dict.enumerate_lhs(ssa)
-
-        expected_alg_expr_list = [(1, 0, None, None, 0),
-                                     (3, 1, 'Add', 2, 0),
-                                     (3, 0, 'Add', 2, 0)]
-
-        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
-
-    def test_get_all_alg_expr_given_const(self):
-        as_tree = ast.parse(ms("""\
-            c = 33
-            a = c + d
-            """)
-        )
-
-        ssa_code = SsaCode(as_tree)
-        lvn_dict = LvnDict()
-        alg_expr_list = []
-        for ssa in ssa_code:
-            lvn_dict.enumerate_rhs(ssa)
-            for alg_expr in lvn_dict.get_all_alg_expr(ssa):
-                alg_expr_list.append(alg_expr)
-                lvn_dict.add_alg_expr(alg_expr)
-            lvn_dict.enumerate_lhs(ssa)
-
-        expected_alg_expr_list = [(0, 33, None, None, 1),
-                                     (2, 0, 'Add', 1, 0),
-                                     (2, 33, 'Add', 1, 1)]
-
-        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
 
     def test_simple_assignment_expect_substitute_single_var(self):
         as_tree = ast.parse(ms("""\

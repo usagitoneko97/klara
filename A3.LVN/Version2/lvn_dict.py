@@ -10,22 +10,24 @@ class VariableDict(dict):
             self.enumerate_rhs(ssa_code)
         dict.__init__(self)
 
-    def _add_to_variable_dict(self, string):
-        if not is_num(string):
-            if string not in self.__repr__():
-                self.__setitem__(string, self.current_value)
-                self.val_num_var_list.append(string)
+    def _add_to_variable_dict(self, ssa_var):
+        if not ssa_var.is_constant():
+            if self.get(str(ssa_var)) is None:
+                self.__setitem__(str(ssa_var), self.current_value)
+                self.val_num_var_list.append(str(ssa_var))
                 self.current_value += 1
 
-    def enumerate_rhs(self, ssa):
+    def enumerate(self, ssa):
         if ssa.left_oprd is not None:
             self._add_to_variable_dict(ssa.left_oprd)
 
         if ssa.right_oprd is not None:
             self._add_to_variable_dict(ssa.right_oprd)
 
+        self._add_to_variable_dict(ssa.target)
+
     def enumerate_lhs(self, ssa):
-        if ssa.target in self.__repr__():
+        if self.get(str(ssa.target)) is not None:
             # append _n to the original
             value_number = self.get(ssa.target)
             replaced_str = ssa.target + '_' + str(value_number)
@@ -76,6 +78,17 @@ class LvnCodeTupleList(list):
                      alg_expr.right, alg_expr.operand_type))
 
 
+class SimpleAssignDict(dict):
+    def find_substitute(self, val_num):
+        subs = self.get(val_num)
+        if subs is None:
+            return val_num
+        return subs
+
+    def update_simp_assgn(self, target, var):
+        self.__setitem__(target, var)
+
+
 class LvnDict(dict):
     def __init__(self, ssa=None):
         # enumerate ssa_code
@@ -101,12 +114,12 @@ class LvnDict(dict):
             return True
         return False
 
-    def identify_oprd(self, oprd):
-        if oprd is not None:
-            if is_num(oprd):
-                return oprd
+    def identify_oprd(self, ssa_var):
+        if ssa_var is not None:
+            if ssa_var.is_constant():
+                return ssa_var.var
             else:
-                return self.variable_dict.get(oprd)
+                return self.variable_dict.get(str(ssa_var))
 
         else:
             return None
@@ -157,17 +170,17 @@ class LvnDict(dict):
 
     def get_alg_expr(self, ssa):
         operand_type = 0
-        target = self.variable_dict.current_value
+        target = self.identify_oprd(ssa.target)
         left_oprd, right_oprd = None, None
 
         if ssa.left_oprd is not None:
             left_oprd = self.identify_oprd(ssa.left_oprd)
-            if is_num(ssa.left_oprd):
+            if ssa.left_oprd.is_constant():
                 operand_type = 1
 
         if ssa.right_oprd is not None:
             right_oprd = self.identify_oprd(ssa.right_oprd)
-            if is_num(ssa.right_oprd):
+            if ssa.right_oprd.is_constant():
                 operand_type = 2
 
         alg_expr = AlgebraicExpression(left_oprd, right_oprd, ssa.operator, target, operand_type)
@@ -210,11 +223,8 @@ class LvnDict(dict):
         # perform search on dict, use the value returned to search on variable_dict and return
         pass
 
-    def enumerate_lhs(self, ssa):
-        self.variable_dict.enumerate_lhs(ssa)
-
-    def enumerate_rhs(self, ssa):
-        self.variable_dict.enumerate_rhs(ssa)
+    def find_substitute(self, alg_expr):
+        pass
 
 
 class AlgebraicExpression:
@@ -229,3 +239,4 @@ class AlgebraicExpression:
         if self.operator is None:
             return str(self.left)
         return str(self.left) + self.operator + str(self.right)
+

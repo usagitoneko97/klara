@@ -95,8 +95,11 @@ class SsaCode:
         for assign_node in as_tree.body:
             target, left, op, right = self.get_stmt_param_from_ast(assign_node)
 
+            left_var, right_var = None, None
             target_var = SsaVariable(target, self.update_version(target))
-            left_var = SsaVariable(left, self.get_version(left))
+
+            if left is not None:
+                left_var = SsaVariable(left, self.get_version(left))
             if right is not None:
                 right_var = SsaVariable(right, self.get_version(right))
 
@@ -154,4 +157,7 @@ class SsaVariable:
 
         else:
             return self.var + '_' + str(self.version_num)
+
+    def is_constant(self):
+        return is_num(self.var)
 

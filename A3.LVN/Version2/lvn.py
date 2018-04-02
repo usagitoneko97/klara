@@ -15,23 +15,25 @@ class Lvn:
     def optimize(self, ssa_code):
         for ssa in ssa_code:
             # building the variable dictionary
-            self.lvn_dict.enumerate_rhs(ssa)
+            self.lvn_dict.variable_dict.enumerate(ssa)
             # general_expr_str = self.lvn_dict.get_general_expr(ssa)
             # expr = self.lvn_dict.get_alg_ident(general_expr_str)
             # ssa.replace_rhs_expr(expr)
-            inserted_flag = False
-            for alg_expr in self.lvn_dict.get_all_alg_expr(ssa):
-                if self.lvn_dict.add_alg_expr(alg_expr, insert_flag=False) is True:
-                    inserted_flag = True
-                    break
 
-            if inserted_flag is False:
-                alg_expr = self.lvn_dict.get_alg_expr(ssa)
-                self.lvn_dict.add_alg_expr(alg_expr, insert_flag=True)
-                pass
+            # build an alg_expr
 
+            alg_expr = self.lvn_dict.get_alg_expr(ssa)
+            if self.is_simple_expr(alg_expr):
+                # try to replace the left operand
+                alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
+                self.lvn_dict.simple_assign_dict.update_simp_assgn(alg_expr.left)
 
-            self.lvn_dict.enumerate_lhs(ssa)
+            else:
+                alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
+                alg_expr.right = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.right)
+                alg_expr = self.lvn_dict.find_substitute(alg_expr)
+
+            self.lvn_dict.lvn_code_tuples_list.append_alg_expr(alg_expr)
 
         ssa_optimized_code = self.lvn_code_to_ssa_code()
         return ssa_optimized_code
