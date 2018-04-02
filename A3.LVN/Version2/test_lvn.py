@@ -165,6 +165,45 @@ class TestLvnDict(unittest.TestCase):
 
         self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
 
+# -------------------------- is_simple_expr test------------------------------
+    def test_is_simple_expr(self):
+        # 3 = 0 + 1
+        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 0)
+        self.assertFalse(alg_expr.is_simple_expr())
+
+        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 1)
+        self.assertFalse(alg_expr.is_simple_expr())
+
+        alg_expr = AlgebraicExpression(0, None, None, 3, 1)
+        self.assertTrue(alg_expr.is_simple_expr())
+
+# ----------------------Simple Assign Dict find substitute test---------------------------------
+    def test_simple_assign_find_substitute(self):
+        lvn_handler = Lvn()
+        self.assertEqual(lvn_handler.lvn_dict.simple_assign_dict.find_substitute(0), 0)
+        lvn_handler.lvn_dict.simple_assign_dict.update_simp_assgn(0, 5)
+        self.assertEqual(lvn_handler.lvn_dict.simple_assign_dict.find_substitute(0), 5)
+
+# --------------------lvn dict find substitute test---------------------------
+    def test_lvn_dict_find_substitute_found_substitute(self):
+        lvn_handler = Lvn()
+        lvn_handler.lvn_dict["0 + 1"] = [2, 0]
+
+        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 0)
+        alg_expr_result = lvn_handler.find_substitute(alg_expr)
+
+        expected_alg_expr_tuple = (3, 2, None, None, 0)
+        self.assert_alg_expression(alg_expr_result, expected_alg_expr_tuple)
+
+    def test_lvn_dict_find_substitute_given_left_constant(self):
+        lvn_handler = Lvn()
+        lvn_handler.lvn_dict["0 + 1"] = [2, 0]
+
+        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 1)
+        alg_expr_result = lvn_handler.find_substitute(alg_expr)
+
+        expected_alg_expr_tuple = (3, 0, 'Add', 1, 1)
+        self.assert_alg_expression(alg_expr_result, expected_alg_expr_tuple)
 
     def test_build_alg_expr_and_lvn_code_tuple(self):
         as_tree = ast.parse(ms("""\

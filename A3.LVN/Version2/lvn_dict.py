@@ -89,13 +89,14 @@ class SimpleAssignDict(dict):
         self.__setitem__(target, var)
 
 
+
 class LvnDict(dict):
     def __init__(self, ssa=None):
         # enumerate ssa_code
         if ssa is not None:
             self.variable_dict = VariableDict(ssa)
         self.variable_dict = VariableDict()
-        self.simple_assign_dict = dict()
+        self.simple_assign_dict = SimpleAssignDict()
         self.lvn_code_tuples_list = LvnCodeTupleList()
         dict.__init__(self)
 
@@ -239,4 +240,9 @@ class AlgebraicExpression:
         if self.operator is None:
             return str(self.left)
         return str(self.left) + self.operator + str(self.right)
+
+    def is_simple_expr(self):
+        if self.operator is None:
+            return True
+        return False
 

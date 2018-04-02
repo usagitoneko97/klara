@@ -14,19 +14,14 @@ class Lvn:
 
     def optimize(self, ssa_code):
         for ssa in ssa_code:
-            # building the variable dictionary
             self.lvn_dict.variable_dict.enumerate(ssa)
-            # general_expr_str = self.lvn_dict.get_general_expr(ssa)
-            # expr = self.lvn_dict.get_alg_ident(general_expr_str)
-            # ssa.replace_rhs_expr(expr)
-
-            # build an alg_expr
 
             alg_expr = self.lvn_dict.get_alg_expr(ssa)
-            if self.is_simple_expr(alg_expr):
+            if alg_expr.is_simple_expr():
                 # try to replace the left operand
-                alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
-                self.lvn_dict.simple_assign_dict.update_simp_assgn(alg_expr.left)
+                if alg_expr.operand_type != LEFT_OPERATOR_CONSTANT:
+                    alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
+                self.lvn_dict.simple_assign_dict.update_simp_assgn(alg_expr.target, alg_expr.left)
 
             else:
                 alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
