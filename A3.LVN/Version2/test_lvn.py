@@ -3,23 +3,23 @@ import ast
 from common import *
 
 from ssa import SsaCode
-from lvn_dict import LvnDict, AlgebraicExpression
+from lvn_dict import LvnDict, LvnExpression
 from lvn import Lvn
 
 
 
 class TestLvnDict(unittest.TestCase):
-    def assert_alg_expression_list(self, alg_expression_list, *args):
+    def assert_lvn_expression_list(self, lvn_expression_list, *args):
         for i in range(len(args)):
-            self.assert_alg_expression(alg_expression_list[i], args[i], "index {}".format(i))
+            self.assert_lvn_expression(lvn_expression_list[i], args[i], "index {}".format(i))
         pass
 
-    def assert_alg_expression(self, alg_expression, expression_tuple, msg):
-        self.assertEqual(alg_expression.operand_type, expression_tuple[4], "fail at " + msg + ': Operand type')
-        self.assertEqual(alg_expression.target, expression_tuple[0], "fail at " + msg + ': Target')
-        self.assertEqual(alg_expression.left, expression_tuple[1], "fail at " + msg + ': Left operand')
-        self.assertEqual(alg_expression.operator, expression_tuple[2], "fail at " + msg + ': Operator')
-        self.assertEqual(alg_expression.right, expression_tuple[3], "fail at " + msg + ': Right operand')
+    def assert_lvn_expression(self, lvn_expression, expression_tuple, msg):
+        self.assertEqual(lvn_expression.operand_type, expression_tuple[4], "fail at " + msg + ': Operand type')
+        self.assertEqual(lvn_expression.target, expression_tuple[0], "fail at " + msg + ': Target')
+        self.assertEqual(lvn_expression.left, expression_tuple[1], "fail at " + msg + ': Left operand')
+        self.assertEqual(lvn_expression.operator, expression_tuple[2], "fail at " + msg + ': Operator')
+        self.assertEqual(lvn_expression.right, expression_tuple[3], "fail at " + msg + ': Right operand')
 
     def assert_ssa(self, ssa, target, left_oprd, right_oprd, operator=None):
         self.assertEqual(ssa.target, target)
@@ -93,9 +93,9 @@ class TestLvnDict(unittest.TestCase):
         expected_list = ['x_0', 'y_0', 'a_0', 'z_0', 'b_0', 'a_1']
         self.assertListEqual(lvn_dict.variable_dict.val_num_var_list, expected_list)
 
-# ----------------get_alg_expr test----------------------------------
+# ----------------get_lvn_expr test----------------------------------
 
-    def test_get_alg_expr(self):
+    def test_get_lvn_expr(self):
         as_tree = ast.parse(ms("""\
            a = b + 4    # b = 0, a = 1
            c = 33 + d   # d = 2, c = 3
@@ -109,13 +109,13 @@ class TestLvnDict(unittest.TestCase):
 
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
-        alg_expr_list = []
+        lvn_expr_list = []
         for ssa in ssa_code:
             lvn_dict.variable_dict.enumerate(ssa)
-            alg_expr = lvn_dict.get_alg_expr(ssa)
-            alg_expr_list.append((alg_expr))
+            lvn_expr = lvn_dict.get_lvn_expr(ssa)
+            lvn_expr_list.append((lvn_expr))
 
-        expected_alg_expr_list = [(1, 0, 'Add', 4, 2),
+        expected_lvn_expr_list = [(1, 0, 'Add', 4, 2),
                                   (3, 33, 'Add', 2, 1),
                                   (6, 4, 'Add', 5, 0),
                                   (7, 24, None, None, 1),
@@ -123,9 +123,9 @@ class TestLvnDict(unittest.TestCase):
                                   (10, None, 'USub', 38, 2),
                                   (12, None, 'USub', 11, 0)]
 
-        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
+        self.assert_lvn_expression_list(lvn_expr_list, *expected_lvn_expr_list)
 
-    def test_get_alg_expr(self):
+    def test_get_lvn_expr(self):
         as_tree = ast.parse(ms("""\
             c = b
             a = c + d
@@ -134,18 +134,18 @@ class TestLvnDict(unittest.TestCase):
 
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
-        alg_expr_list = []
+        lvn_expr_list = []
         for ssa in ssa_code:
             lvn_dict.variable_dict.enumerate(ssa)
-            alg_expr = lvn_dict.get_alg_expr(ssa)
-            alg_expr_list.append((alg_expr))
+            lvn_expr = lvn_dict.get_lvn_expr(ssa)
+            lvn_expr_list.append((lvn_expr))
 
-        expected_alg_expr_list = [(1, 0, None, None, 0),
+        expected_lvn_expr_list = [(1, 0, None, None, 0),
                                   (3, 1, 'Add', 2, 0)]
 
-        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
+        self.assert_lvn_expression_list(lvn_expr_list, *expected_lvn_expr_list)
 
-    def test_get_alg_expr_given_const(self):
+    def test_get_lvn_expr_given_const(self):
         as_tree = ast.parse(ms("""\
             c = 33
             a = c + d
@@ -154,28 +154,28 @@ class TestLvnDict(unittest.TestCase):
 
         ssa_code = SsaCode(as_tree)
         lvn_dict = LvnDict()
-        alg_expr_list = []
+        lvn_expr_list = []
         for ssa in ssa_code:
             lvn_dict.variable_dict.enumerate(ssa)
-            alg_expr = lvn_dict.get_alg_expr(ssa)
-            alg_expr_list.append((alg_expr))
+            lvn_expr = lvn_dict.get_lvn_expr(ssa)
+            lvn_expr_list.append((lvn_expr))
 
-        expected_alg_expr_list = [(0, 33, None, None, 1),
+        expected_lvn_expr_list = [(0, 33, None, None, 1),
                                   (2, 0, 'Add', 1, 0)]
 
-        self.assert_alg_expression_list(alg_expr_list, *expected_alg_expr_list)
+        self.assert_lvn_expression_list(lvn_expr_list, *expected_lvn_expr_list)
 
 # -------------------------- is_simple_expr test------------------------------
     def test_is_simple_expr(self):
         # 3 = 0 + 1
-        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 0)
-        self.assertFalse(alg_expr.is_simple_expr())
+        lvn_expr = LvnExpression(0, 1, 'Add', 3, 0)
+        self.assertFalse(lvn_expr.is_simple_expr())
 
-        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 1)
-        self.assertFalse(alg_expr.is_simple_expr())
+        lvn_expr = LvnExpression(0, 1, 'Add', 3, 1)
+        self.assertFalse(lvn_expr.is_simple_expr())
 
-        alg_expr = AlgebraicExpression(0, None, None, 3, 1)
-        self.assertTrue(alg_expr.is_simple_expr())
+        lvn_expr = LvnExpression(0, None, None, 3, 1)
+        self.assertTrue(lvn_expr.is_simple_expr())
 
 # ----------------------Simple Assign Dict find substitute test---------------------------------
     def test_simple_assign_find_substitute(self):
@@ -189,23 +189,23 @@ class TestLvnDict(unittest.TestCase):
         lvn_handler = Lvn()
         lvn_handler.lvn_dict["0 + 1"] = [2, 0]
 
-        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 0)
-        alg_expr_result = lvn_handler.find_substitute(alg_expr)
+        lvn_expr = LvnExpression(0, 1, 'Add', 3, 0)
+        lvn_expr_result = lvn_handler.find_substitute(lvn_expr)
 
-        expected_alg_expr_tuple = (3, 2, None, None, 0)
-        self.assert_alg_expression(alg_expr_result, expected_alg_expr_tuple)
+        expected_lvn_expr_tuple = (3, 2, None, None, 0)
+        self.assert_lvn_expression(lvn_expr_result, expected_lvn_expr_tuple)
 
     def test_lvn_dict_find_substitute_given_left_constant(self):
         lvn_handler = Lvn()
         lvn_handler.lvn_dict["0 + 1"] = [2, 0]
 
-        alg_expr = AlgebraicExpression(0, 1, 'Add', 3, 1)
-        alg_expr_result = lvn_handler.find_substitute(alg_expr)
+        lvn_expr = LvnExpression(0, 1, 'Add', 3, 1)
+        lvn_expr_result = lvn_handler.find_substitute(lvn_expr)
 
-        expected_alg_expr_tuple = (3, 0, 'Add', 1, 1)
-        self.assert_alg_expression(alg_expr_result, expected_alg_expr_tuple)
+        expected_lvn_expr_tuple = (3, 0, 'Add', 1, 1)
+        self.assert_lvn_expression(lvn_expr_result, expected_lvn_expr_tuple)
 
-    def test_build_alg_expr_and_lvn_code_tuple(self):
+    def test_build_lvn_expr_and_lvn_code_tuple(self):
         as_tree = ast.parse(ms("""\
                        a = x + y
                        b = x + z
@@ -216,9 +216,9 @@ class TestLvnDict(unittest.TestCase):
         lvn_dict = LvnDict()
         for ssa in ssa_code:
             lvn_dict.enumerate_rhs(ssa)
-            alg_expr = lvn_dict.get_alg_expr(ssa)
+            lvn_expr = lvn_dict.get_lvn_expr(ssa)
             lvn_dict.enumerate_lhs(ssa)
-            lvn_dict.add_alg_expr(alg_expr)
+            lvn_dict.add_lvn_expr(lvn_expr)
 
         # Testing internal data
         expected_lvn_dict = {'0Add1': [2, 0], '0Add3': [4, 0]}
@@ -385,7 +385,7 @@ class TestLvnDict(unittest.TestCase):
             l = q
             """))
 
-    def test_optimize_code_with_2_alg_expr_same_expect_not_updated(self):
+    def test_optimize_code_with_2_lvn_expr_same_expect_not_updated(self):
         as_tree = ast.parse(ms("""\
             f = g + j # 0 + 1
             k = g + 1 # 0 + 1"""))
@@ -400,37 +400,37 @@ class TestLvnDict(unittest.TestCase):
 
     def test_simple_assignment_dict(self):
         # 1 = 0
-        alg_expr = AlgebraicExpression(left=0, right=None, operator=None, target=1, operand_type=0)
+        lvn_expr = LvnExpression(left=0, right=None, operator=None, target=1, operand_type=0)
         lvn_test = Lvn()
-        lvn_test.lvn_dict.add_alg_expr(alg_expr)
+        lvn_test.lvn_dict.add_lvn_expr(lvn_expr)
         expected_simple_assign_dict = {1: [0, 0]}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 2 = 0 + 1
-        alg_expr = AlgebraicExpression(left=0, right=1, operator='Add', target=2, operand_type=0)
+        lvn_expr = LvnExpression(left=0, right=1, operator='Add', target=2, operand_type=0)
         lvn_test = Lvn()
-        lvn_test.lvn_dict.add_alg_expr(alg_expr)
+        lvn_test.lvn_dict.add_lvn_expr(lvn_expr)
         expected_simple_assign_dict = {}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 2 = 0 + 44 where 44 is constant
-        alg_expr = AlgebraicExpression(left=0, right=44, operator='Add', target=2, operand_type=2)
+        lvn_expr = LvnExpression(left=0, right=44, operator='Add', target=2, operand_type=2)
         lvn_test = Lvn()
-        lvn_test.lvn_dict.add_alg_expr(alg_expr)
+        lvn_test.lvn_dict.add_lvn_expr(lvn_expr)
         expected_simple_assign_dict = {}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 2 = 44 + 0
-        alg_expr = AlgebraicExpression(left=44, right=0, operator='Add', target=2, operand_type=1)
+        lvn_expr = LvnExpression(left=44, right=0, operator='Add', target=2, operand_type=1)
         lvn_test = Lvn()
-        lvn_test.lvn_dict.add_alg_expr(alg_expr)
+        lvn_test.lvn_dict.add_lvn_expr(lvn_expr)
         expected_simple_assign_dict = {}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
         # 1 = 44
-        alg_expr = AlgebraicExpression(left=44, right=None, operator=None, target=1, operand_type=1)
+        lvn_expr = LvnExpression(left=44, right=None, operator=None, target=1, operand_type=1)
         lvn_test = Lvn()
-        lvn_test.lvn_dict.add_alg_expr(alg_expr)
+        lvn_test.lvn_dict.add_lvn_expr(lvn_expr)
         expected_simple_assign_dict = {1: [44, 1]}
         self.assertDictEqual(lvn_test.lvn_dict.simple_assign_dict, expected_simple_assign_dict)
 
