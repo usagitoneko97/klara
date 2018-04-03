@@ -20,3 +20,10 @@ def get_var_or_num(value):
         return value.id
     else:
         return value.n
+
+
+def value_list_get_op_type(val_list):
+    return val_list[1]
+
+def value_list_get_var(val_list):
+    return val_list[0]

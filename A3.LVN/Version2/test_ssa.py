@@ -100,3 +100,23 @@ class TestSsa(unittest.TestCase):
         l_0 = k_0 BitOr m_0
         n_0 = o_0 BitXor 2
         """))
+
+    def test_ssa_all_valid_expressions(self):
+        as_tree = ast.parse(ms("""\
+            c = d + e
+            e = 5
+            d = d + e
+            d = d + e
+            c = d + e
+            c = d + e""")
+                            )
+
+        ssa_code = SsaCode(as_tree)
+        self.assertEqual(str(ssa_code), ms("""\
+            c_0 = d_0 Add e_0
+            e_1 = 5
+            d_1 = d_0 Add e_1
+            d_2 = d_1 Add e_1
+            c_1 = d_2 Add e_1
+            c_2 = d_2 Add e_1
+        """))

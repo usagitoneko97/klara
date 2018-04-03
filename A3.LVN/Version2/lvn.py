@@ -1,6 +1,6 @@
 from ssa import Ssa, SsaCode
 from lvn_dict import LvnDict
-import common
+from common import *
 
 
 class Lvn:
@@ -16,19 +16,23 @@ class Lvn:
         for ssa in ssa_code:
             self.lvn_dict.variable_dict.enumerate(ssa)
 
-            alg_expr = self.lvn_dict.get_alg_expr(ssa)
-            if alg_expr.is_simple_expr():
+            lvn_stmt = self.lvn_dict.get_lvn_stmt(ssa)
+            if lvn_stmt.is_simple_expr():
                 # try to replace the left operand
-                if alg_expr.operand_type != LEFT_OPERATOR_CONSTANT:
-                    alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
-                self.lvn_dict.simple_assign_dict.update_simp_assgn(alg_expr.target, alg_expr.left)
+                lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
+                self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
 
             else:
-                alg_expr.left = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.left)
-                alg_expr.right = self.lvn_dict.simple_assign_dict.find_substitute(alg_expr.right)
-                alg_expr = self.lvn_dict.find_substitute(alg_expr)
+                lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
+                lvn_stmt.right = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.right)
+                lvn_stmt = self.lvn_dict.find_substitute(lvn_stmt)
+                if not lvn_stmt.is_simple_expr():
+                    self.lvn_dict.add_expr(lvn_stmt.get_expr(), lvn_stmt.target)
+                else:
+                    # it's simple expr, add into simple_assign_dict
+                    self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
 
-            self.lvn_dict.lvn_code_tuples_list.append_alg_expr(alg_expr)
+            self.lvn_dict.lvn_code_tuples_list.append_lvn_stmt(lvn_stmt)
 
         ssa_optimized_code = self.lvn_code_to_ssa_code()
         return ssa_optimized_code
@@ -36,26 +40,16 @@ class Lvn:
     def lvn_code_to_ssa_code(self):
         ssa_code = SsaCode()
         for lvn_code_tuple in self.lvn_dict.lvn_code_tuples_list:
-            ssa = Ssa()
-            ssa.target = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[0]]
+            target, left, op, right = None, None, None, None
+
+            target = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[0]]
             # left is constant
-            if self.get_operand_type(lvn_code_tuple) == common.LEFT_OPERATOR_CONSTANT:
-                ssa.left_oprd = lvn_code_tuple[1]
-                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
-                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
-                    ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
+            left = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
+            if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
+                op = self.get_real_operator(lvn_code_tuple[2])
+                right = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
 
-            elif self.get_operand_type(lvn_code_tuple) == common.RIGHT_OPERATOR_CONSTANT:
-                ssa.right_oprd = lvn_code_tuple[3]
-                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
-                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
-                    ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
-            else:
-                ssa.left_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[1]]
-                if lvn_code_tuple[2] is not None and lvn_code_tuple[3] is not None:
-                    ssa.operator = self.get_real_operator(lvn_code_tuple[2])
-                    ssa.right_oprd = self.lvn_dict.variable_dict.val_num_var_list[lvn_code_tuple[3]]
-
+            ssa = Ssa(target, left, op, right)
             ssa_code.code_list.append(ssa)
 
         return ssa_code

@@ -96,12 +96,13 @@ class SsaCode:
             target, left, op, right = self.get_stmt_param_from_ast(assign_node)
 
             left_var, right_var = None, None
-            target_var = SsaVariable(target, self.update_version(target))
 
             if left is not None:
                 left_var = SsaVariable(left, self.get_version(left))
             if right is not None:
                 right_var = SsaVariable(right, self.get_version(right))
+
+            target_var = SsaVariable(target, self.update_version(target))
 
             assign_ssa = Ssa(target_var, left_var, op, right_var)
             self.code_list.append(assign_ssa)
