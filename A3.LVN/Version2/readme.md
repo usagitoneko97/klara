@@ -56,12 +56,12 @@ print(ssa_code)
 ```
 Running the program will dump the following output: 
 ```python
->>> a_2 = x + y
->>> b = a_2
->>> a = 17
->>> c = a_2
+>>> a_0 = x_0 + y_0
+>>> b_0 = a_0
+>>> a_1 = 17
+>>> c_0 = a_1
 ```
-Note: `a_2` can be viewed as *temporary* variable of `a`, since the latter is reassigned with a constant value of 17 at the 3rd statement. The temporary variable is important because it is used to optimize assignment of `c` at the last statement.
+Note: `a_0` can be viewed as *temporary* variable of `a`, since the latter is reassigned with a constant value of 17 at the 3rd statement. The temporary variable is important because it is used to optimize assignment of `c` at the last statement.
 
 ## 1.2 Details of the Implementation
 The same concept on the previous page in the [algorithm](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) section is reapplied here. Apart from the 2 dictionaries used before, one for storing the value numbers of variables and the other for the algebraic expression, additional data structures like list and tuple is added to allow incorporation of the SSA. 
@@ -167,7 +167,7 @@ After performing all the steps explained above from section **1.2.1** onwards, t
 5 = 2     # d = z   ---> substituted
 ``` 
 
-Converting this back to ssa is fairly simple. It will look up the variable associate with this value number by the list that built in [section1.2.2](). 
+Converting this back to ssa is fairly simple. It will look up the variable associate with this value number by the list that built in [section1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version2#122-enumerating-variables). 
 
 Result:
 ```python
@@ -180,6 +180,18 @@ d_0 = z_0
 ## 1.3 Example
 The following is a code example to demonstrate the algorithm:
 
+**input ast**
+```python
+x = a + b
+y = a + 33
+z = 44 + x
+x = 55
+h = a + b
+```
+
+By performing all the steps in 1.2 will result in:
+
+**SSA Code**
 ```python
 x_0 = a_0 + b_0
 y_0 = a_0 + 33
@@ -187,8 +199,6 @@ z_0 = 44 + x_0
 x_1 = 55
 h_0 = a_0 + b_0
 ``` 
-
-The result is:
 
 **Value Number Dictionary**
 
@@ -204,9 +214,9 @@ The result is:
 
 **val_num_var_list**
 ```
-   ['a', 'b', 'x', 'y', 'z', 'x_5', 'h']
-     |    |    |    |    |     |     |
-     0    1    2    3    4     5     6
+   ['a_0', 'b_0', 'x_0', 'y_0', 'z_0', 'x_1', 'h_0']
+      |      |      |      |      |      |      |
+      0      1      2      3      4      5      6
 ```
 
 **Algebraic Expression Dictionary**
@@ -235,9 +245,9 @@ The first 4 statements is inserted into the tuples below without substitution. B
 With this LVN Code, it can convert back to ssa easily by referring to **val_num_var_list**. 
 
 ```python
-x = a + b
-y = a + 33
-z = 44 + x
-x = 55
-h = x_2
+x_0 = a_0 + b_0
+y_0 = a_0 + 33
+z_0 = 44 + x_0
+x_1 = 55
+h_0 = x_0
 ``` 
