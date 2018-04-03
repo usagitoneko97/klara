@@ -66,7 +66,37 @@ Note: `a_0` can be viewed as *temporary* variable of `a`, since the latter is re
 ## 1.2 Details of the Implementation
 The same concept on the previous page in the [algorithm](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) section is reapplied here. Apart from the 2 dictionaries used before, one for storing the value numbers of variables and the other for the algebraic expression, additional data structures like list and tuple is added to allow incorporation of the SSA. 
 
-### 1.2.1 Transformation from AST to SSA
+### 1.2.1 Terminology
+
+**Value Number**
+
+A unique number assigned to a variable
+
+**Simple assignment** 
+
+Means only either one variable or one constant value exists on the RHS in an equation. i.e.,
+```
+a = b
+a = 3123
+```
+**Lvn Statement**
+
+It's a statement but in Value Number form. I.e., 
+```
+3 = 0 + 1
+4 = 2
+```
+
+**Expression**
+
+It's only contain operands and a operator. Because of all the ssa is in TAC form, it can only have at most 2 operands and 1 operator. I.e.,
+```
+a + d
+34 + c
+- e
+```
+
+### 1.2.2 Transformation from AST to SSA
 Before any analysis can be done, SSA needs to form from the AST. For example,
 
     a = b + c 
@@ -100,7 +130,7 @@ And result in the dictionary as follow:
 |   'c'         |         0            |
 
 
-### 1.2.2 Enumerating Variables
+### 1.2.3 Enumerating Variables
 To enumerate a variable, a unique **Value-Number** is assigned to the variable. The operands will get the value-number first, then followed by the target. For example,
 ```python
 a_0 = b_0 + c_0
@@ -120,7 +150,7 @@ A list can be implemented since each variable has a unique value number. Wheneve
        |      |      |   
        0      1      2   
 
-### 1.2.3 LVN Statement
+### 1.2.4 LVN Statement
 What differs LVN statement from the ordinary statement is that the target and both the operands is in Value-Number form. Using the same example and assumes the variables had been enumerated and the dictionary is as shown above,  
 
 ```python
@@ -135,7 +165,7 @@ will transform into:
 
 LVN statement will ease our analysis later on. 
 
-### 1.2.4 Storing Simple Assignment and It's Uses
+### 1.2.5 Storing Simple Assignment and It's Uses
 The details can be found [here](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#115-details-and-solution-for-indirect-substitution). In the real implementation, however, all the operands will substitute accordingly based on Simple Assignment Dictionary. The example below will demonstrate the idea. 
 
 ```python
@@ -147,7 +177,7 @@ d = c + y   # d = a + y
 
 There's no need to search the replacement for 'c + y'. Instead, 'c' will be substitute with 'a' every time. So to conclude, **all the operands should substitute accordingly everytime**.   
 
-### 1.2.5 Expression substitution and code generation
+### 1.2.6 Expression substitution and code generation
 This [section](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) discuss on the substitution of the statement with appropriate expression. The substituted statement will then add into a list of tuple.  `lvn_code_tuples_list` is the SSA code represented in the form of value number. It contains full information about how the code looks like. 
 
 For example, 
@@ -167,7 +197,7 @@ After performing all the steps explained above from section **1.2.1** onwards, t
 5 = 2     # d = z   ---> substituted
 ``` 
 
-Converting this back to SSA is fairly simple. It will look up the variable associated with this value number by the list that built-in [section1.2.2](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version2#122-enumerating-variables). 
+Converting this back to SSA is fairly simple. It will look up the variable associated with this value number by the list that built-in [section1.2.3](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version2#123-enumerating-variables). 
 
 Result:
 ```python
