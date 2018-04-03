@@ -166,17 +166,17 @@ class TestLvnDict(unittest.TestCase):
 
         self.assert_lvn_stmt_list(lvn_stmt_list, *expected_lvn_stmt_list)
 
-# -------------------------- is_simple_expr test------------------------------
+# -------------------------- is_simple_assignment test------------------------------
     def test_is_simple_expr(self):
         # 3 = 0 + 1
         lvn_stmt = LvnStatement(3, 0, 'Add', 1)
-        self.assertFalse(lvn_stmt.is_simple_expr())
+        self.assertFalse(lvn_stmt.is_simple_assignment())
 
         lvn_stmt = LvnStatement(3, 0, 'Add', 1)
-        self.assertFalse(lvn_stmt.is_simple_expr())
+        self.assertFalse(lvn_stmt.is_simple_assignment())
 
         lvn_stmt = LvnStatement(3, 0, None, None)
-        self.assertTrue(lvn_stmt.is_simple_expr())
+        self.assertTrue(lvn_stmt.is_simple_assignment())
 
     # ----------------update simple_assign_dict test---------------------
     def test_update_simp_assign_test(self):

@@ -133,7 +133,7 @@ class LvnStatement:
             return str(self.target) + ' = ' + str(self.left)
         return str(self.target) + ' = ' + str(self.left) + self.operator + str(self.right)
 
-    def is_simple_expr(self):
+    def is_simple_assignment(self):
         if self.operator is None:
             return True
         return False

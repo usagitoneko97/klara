@@ -17,7 +17,7 @@ class Lvn:
             self.lvn_dict.variable_dict.enumerate(ssa)
 
             lvn_stmt = self.lvn_dict.get_lvn_stmt(ssa)
-            if lvn_stmt.is_simple_expr():
+            if lvn_stmt.is_simple_assignment():
                 # try to replace the left operand
                 lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
                 self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
@@ -26,7 +26,7 @@ class Lvn:
                 lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
                 lvn_stmt.right = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.right)
                 lvn_stmt = self.lvn_dict.find_substitute(lvn_stmt)
-                if not lvn_stmt.is_simple_expr():
+                if not lvn_stmt.is_simple_assignment():
                     self.lvn_dict.add_expr(lvn_stmt.get_expr(), lvn_stmt.target)
                 else:
                     # it's simple expr, add into simple_assign_dict
