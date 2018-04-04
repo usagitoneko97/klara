@@ -1,6 +1,7 @@
 import ast
 from common import *
 
+
 class SsaCode:
     def __init__(self, as_tree=None):
         self.code_list = []

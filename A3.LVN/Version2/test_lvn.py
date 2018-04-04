@@ -2,7 +2,7 @@ import unittest
 import ast
 from common import *
 
-from ssa import SsaCode
+from ssa import SsaCode, SsaVariable
 from lvn_dict import LvnDict, LvnStatement
 from lvn import Lvn
 
@@ -33,6 +33,10 @@ class TestLvnDict(unittest.TestCase):
                 self.assert_ssa(ssa_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], operator_list[i])
             else:
                 self.assert_ssa(ssa_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], None)
+
+    def assert_variable_list_equal(self, actual_list, expected_list):
+        for i in range(len(actual_list)):
+            self.assertEqual(str(actual_list[i]), str(expected_list[i]))
 
     def test_is_num(self):
         self.assertEqual(is_num(3), True)
@@ -91,8 +95,12 @@ class TestLvnDict(unittest.TestCase):
         for ssa in ssa_code:
             lvn_dict.variable_dict.enumerate(ssa)
 
-        expected_list = ['x_0', 'y_0', 'a_0', 'z_0', 'b_0', '2', 'a_1']
-        self.assertListEqual(lvn_dict.variable_dict.val_num_var_list, expected_list)
+        expected_list = [SsaVariable("x"), SsaVariable("y"), SsaVariable("a"),
+                         SsaVariable("z"), SsaVariable("b"), SsaVariable(2),
+                         SsaVariable("a", 1)]
+
+        self.assert_variable_list_equal(lvn_dict.variable_dict.val_num_var_list,
+                                        expected_list)
 
 # ----------------get_lvn_stmt test----------------------------------
 
@@ -346,14 +354,12 @@ class TestLvnDict(unittest.TestCase):
         lvn_test = Lvn()
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
-
         self.assertEqual(str(ssa_code), ms("""\
             c_0 = d_0 + e_0
             e_1 = 5
             d_1 = d_0 + 5
             d_2 = 5 + d_1
             c_1 = 5 + d_2
-            c_2 = c_1
             """))
 
     def test_optimize_code_with_bin_op(self):
@@ -536,7 +542,6 @@ class TestLvnDict(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         ssa_code = lvn_test.optimize(ssa_code)
 
-        print(ssa_code)
         self.assertEqual(str(ssa_code), ms("""\
               a_0 = 3
               b_0 = 3
@@ -582,5 +587,49 @@ class TestLvnDict(unittest.TestCase):
             d_0 = c_0 - b_0
             """))
 
+# ----------------optimize redundant stmt--------------------------
+    def test_optimize_redundant_stmt_1_stmt_d_d(self):
+        as_tree = ast.parse(ms("""\
+            d = d"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
 
+        self.assertEqual(str(ssa_code), ms("""\
+            """))
 
+    def test_optimize_redundant_stmt_2_stmt_a_a(self):
+        as_tree = ast.parse(ms("""\
+            a = b
+            a = a"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a_0 = b_0
+            """))
+
+    def test_optimize_redundant_stmt_substituted(self):
+        as_tree = ast.parse(ms("""\
+            d = a
+            a = d"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            d_0 = a_0
+            """))
+
+    def test_optimize_redundant_stmt_2_stmt(self):
+        as_tree = ast.parse(ms("""\
+            d = b + c
+            d = b + c"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            d_0 = b_0 + c_0
+            """))

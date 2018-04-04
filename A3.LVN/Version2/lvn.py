@@ -19,7 +19,11 @@ class Lvn:
             lvn_stmt = self.lvn_dict.get_lvn_stmt(ssa)
             if lvn_stmt.is_simple_assignment():
                 # try to replace the left operand
+                if self.lvn_dict.variable_dict.is_both_var_same(lvn_stmt.target, lvn_stmt.left):
+                    continue
                 lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
+                if self.lvn_dict.variable_dict.is_both_var_same(lvn_stmt.target, lvn_stmt.left):
+                    continue
                 self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
 
             else:
@@ -27,10 +31,13 @@ class Lvn:
                 lvn_stmt.right = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.right)
                 lvn_stmt.reorder_selected_operands()
                 lvn_stmt = self.lvn_dict.find_substitute(lvn_stmt)
+
                 if not lvn_stmt.is_simple_assignment():
                     self.lvn_dict.add_expr(lvn_stmt.get_expr(), lvn_stmt.target)
                 else:
                     # it's simple expr, add into simple_assign_dict
+                    if self.lvn_dict.variable_dict.is_both_var_same(lvn_stmt.target, lvn_stmt.left):
+                        continue
                     self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
 
             self.lvn_dict.lvn_code_tuples_list.append_lvn_stmt(lvn_stmt)

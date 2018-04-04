@@ -12,7 +12,7 @@ class VariableDict(dict):
     def _add_to_variable_dict(self, ssa_var):
         if self.get(str(ssa_var)) is None:
             self.__setitem__(str(ssa_var), self.current_value)
-            self.val_num_var_list.append(str(ssa_var))
+            self.val_num_var_list.append((ssa_var))
             self.current_value += 1
 
     def enumerate(self, ssa):
@@ -34,6 +34,13 @@ class VariableDict(dict):
 
     def get_variable(self, val_num):
         return self.val_num_var_list[val_num]
+
+    def is_both_var_same(self, val_num_1, val_num_2):
+        var_1 = self.get_variable(val_num_1)
+        var_2 = self.get_variable(val_num_2)
+        if var_1.var == var_2.var:
+            return True
+        return False
 
 
 class LvnCodeTupleList(list):
