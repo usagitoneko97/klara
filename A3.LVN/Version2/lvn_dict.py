@@ -141,3 +141,19 @@ class LvnStatement:
     def replace_expr(self, stmt_Vn):
         self.left = stmt_Vn
         self.right, self.operator = None, None
+
+    def reorder(self):
+        operands_list = [self.left, self.right]
+        operands_list.sort()
+        self.left = operands_list[0]
+        self.right = operands_list[1]
+
+    def reorder_selected_operands(self):
+        if self.operator is not None:
+            if self.operator == 'Add' or \
+               self.operator == 'Mult'or \
+               self.operator == 'BitOr' or \
+               self.operator == 'BitXor' or \
+               self.operator == 'BitAnd':
+
+                self.reorder()

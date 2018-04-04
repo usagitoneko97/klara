@@ -6,7 +6,7 @@ from common import *
 class Lvn:
     operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
                      'Lt': '<', 'Gt': '>', 'FloorDiv': '//', 'Mod': '%', 'Pow': '^', 'LShift': '<<', 'RShift': '>>',
-                     'Eq': '==', 'NotEq': '!=', 'LtE': '<=', 'GtE': '>=', 'Is' :'is', 'IsNot': 'is not', 'In': 'in',
+                     'Eq': '==', 'NotEq': '!=', 'LtE': '<=', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not', 'In': 'in',
                      'NotIn': 'not in'}
 
     def __init__(self):
@@ -25,6 +25,7 @@ class Lvn:
             else:
                 lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
                 lvn_stmt.right = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.right)
+                lvn_stmt.reorder_selected_operands()
                 lvn_stmt = self.lvn_dict.find_substitute(lvn_stmt)
                 if not lvn_stmt.is_simple_assignment():
                     self.lvn_dict.add_expr(lvn_stmt.get_expr(), lvn_stmt.target)

@@ -166,6 +166,28 @@ class TestLvnDict(unittest.TestCase):
 
         self.assert_lvn_stmt_list(lvn_stmt_list, *expected_lvn_stmt_list)
 
+# ----------------------------reorder_selected_operands test-----------------
+    def test_reorder_selected_operands(self):
+        # 2 = 0 + 1 and 2 = 1 + 0
+        lvn_stmt1 = LvnStatement(2, 0, 'Add', 1)
+        lvn_stmt2 = LvnStatement(2, 1, 'Add', 0)
+        lvn_stmt1.reorder_selected_operands()
+        lvn_stmt2.reorder_selected_operands()
+        self.assertEqual(str(lvn_stmt1), str(lvn_stmt2))
+
+        # 2 = 0 - 1 is not 2 = 1 - 0
+        lvn_stmt1 = LvnStatement(2, 0, 'Sub', 1)
+        lvn_stmt2 = LvnStatement(2, 1, 'Sub', 0)
+        lvn_stmt1.reorder_selected_operands()
+        lvn_stmt2.reorder_selected_operands()
+        self.assertNotEqual(str(lvn_stmt1), str(lvn_stmt2))
+
+        # 2 = 0 should be the same
+        lvn_stmt1 = LvnStatement(2, 0, None, None)
+        lvn_stmt1.reorder_selected_operands()
+        lvn_stmt2 = LvnStatement(2, 0, None, None)
+        self.assertEqual(str(lvn_stmt1), str(lvn_stmt2))
+
 # -------------------------- is_simple_assignment test------------------------------
     def test_is_simple_expr(self):
         # 3 = 0 + 1
@@ -306,7 +328,7 @@ class TestLvnDict(unittest.TestCase):
             a_0 = x_0 + y_0
             b_0 = a_0
             x_1 = 98
-            c_0 = 98 + y_0
+            c_0 = y_0 + 98
             """))
 
     def test_optimize_code_with_variable_redefinition_expect_not_update(self):
@@ -329,8 +351,8 @@ class TestLvnDict(unittest.TestCase):
             c_0 = d_0 + e_0
             e_1 = 5
             d_1 = d_0 + 5
-            d_2 = d_1 + 5
-            c_1 = d_2 + 5
+            d_2 = 5 + d_1
+            c_1 = 5 + d_2
             c_2 = c_1
             """))
 
@@ -520,4 +542,45 @@ class TestLvnDict(unittest.TestCase):
               b_0 = 3
               c_0 = 3
               """))
+
+    def test_optimize_reordering_operands_Add_op(self):
+        as_tree = ast.parse(ms("""\
+            a = b + c
+            d = c + b"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a_0 = b_0 + c_0
+            d_0 = a_0
+            """))
+
+    def test_optimize_reordering_operands_BitOr_op(self):
+        as_tree = ast.parse(ms("""\
+            a = b | c
+            d = c | b"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a_0 = b_0 | c_0
+            d_0 = a_0
+            """))
+
+    def test_optimize_reordering_operands_Sub_op_expect_no_subs(self):
+        as_tree = ast.parse(ms("""\
+            a = b - c
+            d = c - b"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a_0 = b_0 - c_0
+            d_0 = c_0 - b_0
+            """))
+
+
 

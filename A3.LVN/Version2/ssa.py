@@ -145,13 +145,6 @@ class SsaVariable:
         if not is_num(self.var):
             self.version_num = version_num
 
-    def __str__(self):
-        if is_num(self.var):
-            return str(self.var)
-
-        else:
-            return self.var + '_' + str(self.version_num)
-
     def __repr__(self):
         if is_num(self.var):
             return str(self.var)
