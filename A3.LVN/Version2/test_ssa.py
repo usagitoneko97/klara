@@ -36,6 +36,15 @@ class TestSsa(unittest.TestCase):
         self.assertEqual(str(ssa_code), "z_0 = a_0 Add y_0\n")
         self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
 
+    def test_ssa_generation_number(self):
+        as_tree = ast.parse(ms("""\
+            z = 4"""))
+
+        ssa_code = SsaCode(as_tree)
+        expected_ssa_dict = {'z': 0, 4: 0}
+        self.assertEqual(str(ssa_code), "z_0 = 4\n")
+        self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+
     def test_ssa_generation_2_stmt(self):
         as_tree = ast.parse(ms("""\
             z = a + y

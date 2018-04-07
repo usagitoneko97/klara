@@ -11,10 +11,14 @@ class Lvn:
 
     def __init__(self):
         self.lvn_dict = LvnDict()
+        self.alg_ident = AlgIdent
 
     def optimize(self, ssa_code):
         for ssa in ssa_code:
             self.lvn_dict.variable_dict.enumerate(ssa)
+            ssa.left_oprd, ssa.operator, ssa.right_oprd = self.alg_ident.optimize_alg_identities(ssa.left_oprd,
+                                                                                                 ssa.operator,
+                                                                                                 ssa.right_oprd)
 
             lvn_stmt = self.lvn_dict.get_lvn_stmt(ssa)
             if lvn_stmt.is_simple_assignment():

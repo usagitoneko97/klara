@@ -633,3 +633,4 @@ class TestLvnDict(unittest.TestCase):
         self.assertEqual(str(ssa_code), ms("""\
             d_0 = b_0 + c_0
             """))
+

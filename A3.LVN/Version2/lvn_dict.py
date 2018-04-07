@@ -1,5 +1,7 @@
 from common import *
 
+from algebraic_identities import AlgIdent
+
 
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
@@ -124,6 +126,7 @@ class LvnDict(dict):
 
 
 class LvnStatement:
+
     def __init__(self, target, left, operator, right):
         self.left = left
         self.right = right
@@ -164,3 +167,4 @@ class LvnStatement:
                self.operator == 'BitAnd':
 
                 self.reorder()
+
