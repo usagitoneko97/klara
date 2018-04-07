@@ -44,13 +44,15 @@ class AlgIdent:
         pass
 
     def find_operands_func(self, operand_str):
-        return self.alg_ident_dict[operand_str]
+        return self.alg_ident_dict.get(operand_str)
 
     def optimize_alg_identities(self, left, op, right):
         if op is None:
-            return None
+            return left, op, right
         else:
             # find respective func through this dict
             op_func = self.find_operands_func(op)
-            left, op, right = op_func(left, right)
+            if op_func is not None:
+                left, op, right = op_func(left.get_var(), right.get_var())
+                return left, op, right
             return left, op, right

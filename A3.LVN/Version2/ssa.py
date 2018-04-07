@@ -156,3 +156,11 @@ class SsaVariable:
     def is_constant(self):
         return is_num(self.var)
 
+    def get_var(self):
+        if is_num(self.var):
+            return self.var
+
+        else:
+            return self.var + '_' + str(self.version_num)
+
+

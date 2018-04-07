@@ -1,7 +1,7 @@
 from ssa import Ssa, SsaCode
 from lvn_dict import LvnDict
 from common import *
-
+from algebraic_identities import AlgIdent
 
 class Lvn:
     operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
@@ -11,7 +11,7 @@ class Lvn:
 
     def __init__(self):
         self.lvn_dict = LvnDict()
-        self.alg_ident = AlgIdent
+        self.alg_ident = AlgIdent()
 
     def optimize(self, ssa_code):
         for ssa in ssa_code:

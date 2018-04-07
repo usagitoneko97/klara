@@ -634,3 +634,32 @@ class TestLvnDict(unittest.TestCase):
             d_0 = b_0 + c_0
             """))
 
+
+# -------------- optimize alg ident------------
+    def test_optimize_redundant_stmt_2_stmt(self):
+        as_tree = ast.parse(ms("""\
+            d = b + 0"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            d_0 = b_0
+            """))
+
+    def test_optimize_redundant_stmt_2_stmt(self):
+        as_tree = ast.parse(ms("""\
+            d = b + 0
+            e = b
+            f = b - 0
+            g = c * 0"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            d_0 = b_0
+            e_0 = b_0
+            f_0 = b_0
+            g_0 = 0
+            """))
