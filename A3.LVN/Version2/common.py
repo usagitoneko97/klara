@@ -8,6 +8,10 @@ RIGHT_OPERATOR_CONSTANT = 2
 
 ms = textwrap.dedent
 
+operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
+                 'Lt': '<', 'Gt': '>', 'FloorDiv': '//', 'Mod': '%', 'Pow': '^', 'LShift': '<<', 'RShift': '>>',
+                 'Eq': '==', 'NotEq': '!=', 'LtE': '<=', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not', 'In': 'in',
+                 'NotIn': 'not in'}
 
 def is_num(s):
     if isinstance(s, int) or isinstance(s, float):

@@ -3,11 +3,8 @@ from lvn_dict import LvnDict
 from common import *
 from algebraic_identities import AlgIdent
 
+
 class Lvn:
-    operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
-                     'Lt': '<', 'Gt': '>', 'FloorDiv': '//', 'Mod': '%', 'Pow': '^', 'LShift': '<<', 'RShift': '>>',
-                     'Eq': '==', 'NotEq': '!=', 'LtE': '<=', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not', 'In': 'in',
-                     'NotIn': 'not in'}
 
     def __init__(self):
         self.lvn_dict = LvnDict()
@@ -71,7 +68,7 @@ class Lvn:
         return lvn_code_tuple[4]
 
     def get_real_operator(self, string):
-        return type(self).operator_dict.get(string)
+        return operator_dict.get(string)
 
     @staticmethod
     def is_constant(lvn_code_tuple):

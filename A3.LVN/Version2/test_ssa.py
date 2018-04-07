@@ -118,7 +118,7 @@ class TestSsa(unittest.TestCase):
             d = d + e
             c = d + e
             c = d + e""")
-                            )
+        )
 
         ssa_code = SsaCode(as_tree)
         self.assertEqual(str(ssa_code), ms("""\
@@ -129,3 +129,19 @@ class TestSsa(unittest.TestCase):
             c_1 = d_2 Add e_1
             c_2 = d_2 Add e_1
         """))
+
+    def test_ssa_constant_folding(self):
+        as_tree = ast.parse(ms("""\
+                    c = 4 + 3
+                    d = 4 - 3
+                    e = 2 * 2
+                    f = 4 / 2""")
+                            )
+
+        ssa_code = SsaCode(as_tree)
+        self.assertEqual(str(ssa_code), ms("""\
+                    c_0 = 7
+                    d_0 = 1
+                    e_0 = 4
+                    f_0 = 2.0
+                """))

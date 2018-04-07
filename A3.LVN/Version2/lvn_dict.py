@@ -1,7 +1,5 @@
 from common import *
 
-from algebraic_identities import AlgIdent
-
 
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
