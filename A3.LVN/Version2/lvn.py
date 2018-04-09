@@ -1,4 +1,4 @@
-from ssa import Ssa, SsaCode
+from ssa import Ssa, SsaCode, SsaVariable
 from lvn_dict import LvnDict
 from common import *
 from algebraic_identities import AlgIdent
@@ -30,16 +30,22 @@ class Lvn:
             else:
                 lvn_stmt.left = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.left)
                 lvn_stmt.right = self.lvn_dict.simple_assign_dict.find_substitute(lvn_stmt.right)
-                lvn_stmt.reorder_selected_operands()
-                lvn_stmt = self.lvn_dict.find_substitute(lvn_stmt)
+                if self.lvn_dict.variable_dict.is_const(lvn_stmt.left) and \
+                   self.lvn_dict.variable_dict.is_const(lvn_stmt.right):
+                    # fold it by eval the string
+                    self.fold_lvn_stmt(lvn_stmt)
 
-                if not lvn_stmt.is_simple_assignment():
-                    self.lvn_dict.add_expr(lvn_stmt.get_expr(), lvn_stmt.target)
                 else:
-                    # it's simple expr, add into simple_assign_dict
-                    if self.lvn_dict.variable_dict.is_both_var_same(lvn_stmt.target, lvn_stmt.left):
-                        continue
-                    self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
+                    lvn_stmt.reorder_selected_operands()
+                    lvn_stmt = self.lvn_dict.find_substitute(lvn_stmt)
+
+                    if not lvn_stmt.is_simple_assignment():
+                        self.lvn_dict.add_expr(lvn_stmt.get_expr(), lvn_stmt.target)
+                    else:
+                        # it's simple expr, add into simple_assign_dict
+                        if self.lvn_dict.variable_dict.is_both_var_same(lvn_stmt.target, lvn_stmt.left):
+                            continue
+                        self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
 
             self.lvn_dict.lvn_code_tuples_list.append_lvn_stmt(lvn_stmt)
 
@@ -62,6 +68,16 @@ class Lvn:
             ssa_code.code_list.append(ssa)
 
         return ssa_code
+
+    def fold_lvn_stmt(self, lvn_stmt):
+        eval_string = str(self.lvn_dict.variable_dict.get_variable(lvn_stmt.left)) + \
+                      operator_dict.get(lvn_stmt.operator) + \
+                      str(self.lvn_dict.variable_dict.get_variable(lvn_stmt.right))
+        val_after_folded = eval(eval_string)
+        lvn_stmt.left = self.lvn_dict.variable_dict._add_to_variable_dict(SsaVariable(val_after_folded))
+        lvn_stmt.operator = None
+        lvn_stmt.right = None
+        self.lvn_dict.simple_assign_dict.update_simp_assgn(lvn_stmt.target, lvn_stmt.left)
 
     @staticmethod
     def get_operand_type(lvn_code_tuple):

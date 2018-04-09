@@ -14,6 +14,9 @@ class VariableDict(dict):
             self.__setitem__(str(ssa_var), self.current_value)
             self.val_num_var_list.append((ssa_var))
             self.current_value += 1
+            return self.current_value - 1
+        else:
+            return self.get(str(ssa_var))
 
     def enumerate(self, ssa):
         if ssa.left_oprd is not None:
@@ -41,6 +44,10 @@ class VariableDict(dict):
         if var_1.var == var_2.var:
             return True
         return False
+
+    def is_const(self, val_num):
+        var_1 = self.get_variable(val_num)
+        return var_1.is_constant()
 
 
 class LvnCodeTupleList(list):

@@ -492,6 +492,40 @@ class TestLvnDict(unittest.TestCase):
               d_0 = a_0
               """))
 
+    def test_optimize_simple_assignment_expect_constant_folding(self):
+        as_tree = ast.parse(ms("""\
+            a = 5
+            b = a
+            c = b + 9
+            d = b * c"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a_0 = 5
+            b_0 = 5
+            c_0 = 14
+            d_0 = 70
+            """))
+
+    def test_optimize_simple_assignment_expect_constant_fold_and_replaced(self):
+        as_tree = ast.parse(ms("""\
+            a = 14 + c
+            d = 8
+            e = d + 6  # is 14
+            f = e + c"""))
+        lvn_test = Lvn()
+        ssa_code = SsaCode(as_tree)
+        ssa_code = lvn_test.optimize(ssa_code)
+
+        self.assertEqual(str(ssa_code), ms("""\
+            a_0 = 14 + c_0
+            d_0 = 8
+            e_0 = 14
+            f_0 = a_0
+            """))
+
     def test_optimize_simple_assignment_given_constant_with_val_number_same_with_var(self):
         as_tree = ast.parse(ms("""\
               a = x + 1
