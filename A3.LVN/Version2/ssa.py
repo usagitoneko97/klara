@@ -95,11 +95,6 @@ class SsaCode:
     def add_ssa(self, as_tree):
         for assign_node in as_tree.body:
             target, left, op, right = self.get_stmt_param_from_ast(assign_node)
-            if is_num(left) and is_num(right):
-                op = operator_dict.get(op)
-                eval_string = str(left) + op + str(right)
-                left = eval(eval_string)
-                op, right = None, None
             left_var, right_var = None, None
 
             if left is not None:

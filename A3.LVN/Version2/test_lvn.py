@@ -475,6 +475,7 @@ class TestLvnDict(unittest.TestCase):
               d_0 = z_0
               """))
 
+# ----------------optimize related to constant---------------------
     def test_optimize_simple_assignment_given_constant(self):
         as_tree = ast.parse(ms("""\
               a = 33 + y
@@ -526,6 +527,7 @@ class TestLvnDict(unittest.TestCase):
             f_0 = a_0
             """))
 
+# -----------------=optimize simple assignment-------------------
     def test_optimize_simple_assignment_given_constant_with_val_number_same_with_var(self):
         as_tree = ast.parse(ms("""\
               a = x + 1
