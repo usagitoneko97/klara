@@ -257,6 +257,13 @@ def optimize_alg_identities(self, left, op, right):
 
 **Note**: the left, right parameter on function above is in SsaVariable type. recall [here](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version2#122-transformation-from-ast-to-ssa). 
 
+### 1.2.8 Constant Folding
+Constant folding is required when both of the operands is constant. See [Constant Propagation](). For example, assume the following code need to be folded. 
+```python
+x = 33 + 44
+```
+The whole idea is to built the expression string `33 + 44` and use the python built-in function `eval` to calculate the value. 
+
 ## 1.3 Example
 The following is a code example to demonstrate the algorithm:
 

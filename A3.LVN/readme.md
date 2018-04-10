@@ -334,6 +334,37 @@ More example is shown below
 
 ![Algebraic identities](https://github.com/usagitoneko97/python-ast/blob/master/A3.LVN/resources/algebraicId.png)
 
+### 1.3.3 Constant Propagation
+Assume the following code, 
+```python
+a = 5
+b = a          
+c = b + 9    
+d = b * c  
+```
+
+On the second statement, b will be assign to `5` instead of `a`, and it's already [before](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#115-details-and-solution-for-indirect-substitution). Now the tricky part is the 3rd statement, where the `b` will be substituted with `5`, which rewrites the whole statement to 
+```python
+ c = 5 + 9
+```
+Since both of the operands is a constant, then it can be folded to `14`. 
+
+On the last statement, similar to 3rd statement, `b` will be replace with `5`, and `c` will be replace with value of `14` that has been calculated in the 3rd statement. The whole statement will be rewrite as:
+```python
+d = 14 * 5
+```
+and since both of the operands is constant, it will now fold the expression. 
+
+The result:
+```python
+a = 5
+b = 5
+c = 14
+d = 70
+```
+
+
+
 ## 1.4 Testing and running
 ### 1.4.1 Dependencies
 [Astor](http://astor.readthedocs.io/en/latest/) is used to transform an ast to python readable source code. Install by,
