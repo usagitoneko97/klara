@@ -89,7 +89,7 @@ It's a statement but in Value Number form. I.e.,
 
 **Expression**
 
-It's only contain operands and a operator. Because of all the ssa is in TAC form, it can only have at most 2 operands and 1 operator. I.e.,
+It only contains operands and an operator. Because of all the SSA is in TAC form, it can only have at most 2 operands and 1 operator. I.e.,
 ```
 a + d
 34 + c
@@ -129,6 +129,10 @@ And result in the dictionary as follow:
 |   'b'         |         0            |
 |   'c'         |         0            |
 
+To fully make use of object-oriented design, a class name `SsaVariable` will be created to store all the operands or target of the assignment. SsaVariable will have 2 attributes
+
+- **var** - the variable name. I.e., 'a', '3'
+- **version_number** - the version of the variable, will not exist if the var is a number. 
 
 ### 1.2.3 Enumerating Variables
 To enumerate a variable, a unique **Value-Number** is assigned to the variable. The operands will get the value-number first, then followed by the target. For example,
@@ -175,7 +179,7 @@ c = b       # c = a
 d = c + y   # d = a + y
 ```
 
-There's no need to search the replacement for 'c + y'. Instead, 'c' will be substitute with 'a' every time. So to conclude, **all the operands should substitute accordingly everytime**.   
+There's no need to search the replacement for 'c + y'. Instead, 'c' will be substituted with 'a' every time. So to conclude, **all the operands should substitute accordingly everytime**.   
 
 ### 1.2.6 Expression substitution and code generation
 This [section](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#113-algorithm-in-details) discuss on the substitution of the statement with appropriate expression. The substituted statement will then add into a list of tuple.  `lvn_code_tuples_list` is the SSA code represented in the form of value number. It contains full information about how the code looks like. 
@@ -206,6 +210,52 @@ b_0 = a_0
 c_0 = a_0 
 d_0 = z_0
 ``` 
+
+### 1.2.7 Optimizing Algebraic Identities
+To recall, Algebraic Identities had been discussed [here](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#132-algebraic-identities). To simplify the implementation, we can break the algebraic identities by looking at the operator. Take, for example, the `'+'` operator will only have to take care of when one of the operands is 0. I.e.,
+```python
+x = a + 0
+x = 0 + a
+```
+This separation of concerns greatly helps to reduce the complexity of the implementation. 
+
+A class name `AlgIdent` is built specifically to handle all the operations related to algebraic identities. To separate them by the operator, the function needs to be declared that specifically handle that operator. For example, the function below will try to simplify the expression related to `+` operator. 
+
+```python
+def alg_ident_add(self, left, right):
+    if left == 0:
+        return right, None, None
+    elif right == 0:
+        return left, None, None
+    else:
+        return left, 'Add', right
+    pass
+```
+
+To relate the function to the operator, a dictionary will be implemented.
+
+| operator (key)| op_func (value)|
+| :--:| :---: |
+| 'Add' |  self.alg_ident_add|
+| 'Sub' |  self.alg_ident_Sub|
+| 'Mult' |  self.alg_ident_mult|
+|...|...|
+
+After everything is in place, the optimize function is simply, 
+```python
+def optimize_alg_identities(self, left, op, right):
+    if op is None:
+        return left, op, right
+    else:
+        # find respective func through this dict
+        op_func = self.find_operands_func(op)
+        if op_func is not None:
+            left, op, right = op_func(left.get_var(), right.get_var())
+            return left, op, right
+        return left, op, right
+```
+
+**Note**: the left, right parameter on function above is in SsaVariable type. recall [here](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN/Version2#122-transformation-from-ast-to-ssa). 
 
 ## 1.3 Example
 The following is a code example to demonstrate the algorithm:
