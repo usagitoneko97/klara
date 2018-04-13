@@ -1,14 +1,12 @@
-def dummy1():
-    dummy2()
+def get_something(x):
+    if x == 1:
+        return "something"
+    return None
 
-def dummy2():
-    pass
+def main():
+    x = get_something(0) or "another thing"
+    print(x)
 
-x = 1
-y = 0
-if x == 1:
-    y = 1
-else:
-    y = 2
 
-dummy1()
+if __name__ == '__main__':
+    main()
