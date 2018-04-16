@@ -92,6 +92,7 @@ class test_cfg(unittest.TestCase):
 
     # ----------------- cfg test------------------
 
+    # TODO: seriously need to clean up the test code duh
     def test_cfg_given_no_branch(self):
         as_tree = ast.parse(ms("""\
             a = 3
@@ -153,7 +154,6 @@ class test_cfg(unittest.TestCase):
     def test_cfg_given_if_elif_no_else(self):
         as_tree = ast.parse(ms("""\
             a = 3
-            a = 4
             if a > 3:
                 a = 4
             elif a < 1:
@@ -161,5 +161,28 @@ class test_cfg(unittest.TestCase):
             c = 5
             """)
         )
-        cfg = Cfg(as_tree)
-        pass
+        cfg_real = Cfg(as_tree)
+
+        b_block_0 = BasicBlock(0, as_tree.body[:2])
+        b_block_1 = BasicBlock(1, as_tree.body[1].body[0:1])
+
+        # elif
+        b_block_2 = BasicBlock(2, as_tree.body[1].orelse[:1])
+
+        # a = 5
+        b_block_3 = BasicBlock(2, as_tree.body[1].orelse[0].body)
+
+        # c = 5
+        b_block_4 = BasicBlock(2, as_tree.body[2:])
+
+        b_block_0.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_1)
+        b_block_0.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_2)
+
+        b_block_2.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_3)
+        b_block_2.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_4)
+
+        b_block_1.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_4)
+        b_block_3.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_4)
+
+        cfg_expected = Cfg(None, b_block_0, b_block_1, b_block_2, b_block_3, b_block_4)
+        self.assertCfgEqual(cfg_real, cfg_expected)

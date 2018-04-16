@@ -31,6 +31,7 @@ class BasicBlock:
 
 class Cfg:
     def __init__(self, as_tree=None, *basic_block_args):
+        self.__else_flag__ = False
         self.block_list = []
         self.cur_block_id = 0
         if as_tree is not None:
@@ -64,10 +65,10 @@ class Cfg:
 
         # self.add_basic_block(basic_block)
 
-    def link_tail_to_cur_block(self, all_tail_list, basic_block):
+    @staticmethod
+    def link_tail_to_cur_block(all_tail_list, basic_block):
         for tail in all_tail_list:
-            tail.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, basic_block)
-        pass
+            tail.nxt_block.append(basic_block)
 
     def parse(self, ast_body):
         all_tail_list = []
@@ -81,7 +82,6 @@ class Cfg:
                 pass
                 self.link_tail_to_cur_block(all_tail_list, basic_block)
 
-            # TODO: linking of basic block when there is no else stmt
             self.add_basic_block(basic_block)
             if basic_block.get_block_type() == BasicBlock.BLOCK_IF:
                 ast_if_node = basic_block.ast_list[-1]
@@ -91,7 +91,13 @@ class Cfg:
                 all_tail_list.extend(tail_list)
 
                 head_returned, tail_list = self.parse(ast_if_node.orelse)
-                basic_block.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, head_returned)
+                if head_returned is not None:
+                    # has an else or elif
+                    basic_block.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, head_returned)
+                else:
+                    # no else
+                    # link this to the next statement
+                    all_tail_list.append(basic_block)
                 all_tail_list.extend(tail_list)
             else:
                 all_tail_list.append(basic_block)
