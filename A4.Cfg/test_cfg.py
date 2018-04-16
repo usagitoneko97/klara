@@ -54,7 +54,7 @@ class test_cfg(unittest.TestCase):
 
         self.assertBasicBlockEqual(simple_block_list[0], expected_block)
 
-    def test_get_simple_block_given_no_indent(self):
+    def test_get_simple_block_given_indent(self):
         as_tree = ast.parse(ms("""\
             a = 3
             if a < 3:
@@ -84,15 +84,7 @@ class test_cfg(unittest.TestCase):
             a = 4
             """)
         )
-        cfg_real = Cfg()
-        front_block = cfg_real.get_basic_block(as_tree.body)
-
-        expected_front_block = BasicBlock()
-        expected_front_block.ast_list.extend(as_tree.body)
-
-        self.assertBasicBlockEqual(front_block, expected_front_block)
-
-        # build expected cfg
+        cfg_real = Cfg(as_tree)
 
         self.assertCfgWithAst(cfg_real, as_tree.body)
         pass
@@ -102,18 +94,21 @@ class test_cfg(unittest.TestCase):
             a = 3
             if a > 3:
                 a = 4
-            elif a < 2:
-                r = 4
-            elif a < 5:
-                r = 4
             else:
                 z = 5
             """)
         )
-        pass
-        # cfg_real = Cfg(as_tree)
+        cfg_real = Cfg(as_tree)
 
-        # self.assertCfgWithAst(cfg_real, as_tree.body[:2], as_tree.body[1].body[0:1])
+        b_block_0 = BasicBlock(0, as_tree.body[:2])
+        b_block_1 = BasicBlock(1, as_tree.body[1].body[0:1])
+        b_block_2 = BasicBlock(2, as_tree.body[1].orelse[0:1])
+
+        b_block_0.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_1)
+        b_block_0.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_2)
+
+        cfg_expected = Cfg(None, b_block_0, b_block_1, b_block_2)
+        self.assertCfgEqual(cfg_real, cfg_expected)
 
     def test_cfg_given_2_branch(self):
         as_tree = ast.parse(ms("""\
