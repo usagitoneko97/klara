@@ -59,9 +59,15 @@ class Cfg:
                 yield basic_block
                 basic_block = BasicBlock(self.cur_block_id)
                 self.cur_block_id += 1
-        yield basic_block
+        if len(basic_block.ast_list) != 0:
+            yield basic_block
 
         # self.add_basic_block(basic_block)
+
+    def link_tail_to_cur_block(self, all_tail_list, basic_block):
+        for tail in all_tail_list:
+            tail.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, basic_block)
+        pass
 
     def parse(self, ast_body):
         all_tail_list = []
@@ -73,7 +79,7 @@ class Cfg:
                 head = basic_block
             else:
                 pass
-                # self.link_tail_to_cur_block()
+                self.link_tail_to_cur_block(all_tail_list, basic_block)
 
             # TODO: linking of basic block when there is no else stmt
             self.add_basic_block(basic_block)
@@ -90,7 +96,7 @@ class Cfg:
             else:
                 all_tail_list.append(basic_block)
 
-            return head, all_tail_list
+        return head, all_tail_list
 
 
 
