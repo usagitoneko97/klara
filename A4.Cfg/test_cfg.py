@@ -55,12 +55,16 @@ class test_cfg(unittest.TestCase):
 
             cfg_expected.block_list.append(basic_block)
 
-        for i in range(len(args)):
+        self.fill_nxt_block(cfg_expected, block_links)
+
+        self.assertCfgEqual(cfg_real, cfg_expected)
+
+    @staticmethod
+    def fill_nxt_block(cfg_expected, block_links):
+        for i in range(len(block_links)):
             nxt_block_list = block_links.get(str(i))
             for nxt_block_num in nxt_block_list:
                 cfg_expected.block_list[i].nxt_block.append(cfg_expected.block_list[nxt_block_num])
-
-        self.assertCfgEqual(cfg_real, cfg_expected)
 
 # ------------------link_tail_to_cur_block --------------------
     def test_link_tail_to_cur_block_given_1_tail(self):
