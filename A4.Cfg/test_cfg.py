@@ -46,6 +46,22 @@ class test_cfg(unittest.TestCase):
 
         self.assertCfgEqual(cfg_real, cfg_expected)
 
+    def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links):
+        cfg_expected = Cfg()
+
+        for i in range(len(args)):
+            basic_block = BasicBlock()
+            basic_block.ast_list.extend(args[i])
+
+            cfg_expected.block_list.append(basic_block)
+
+        for i in range(len(args)):
+            nxt_block_list = block_links.get(str(i))
+            for nxt_block_num in nxt_block_list:
+                cfg_expected.block_list[i].nxt_block.append(cfg_expected.block_list[nxt_block_num])
+
+        self.assertCfgEqual(cfg_real, cfg_expected)
+
 # ------------------link_tail_to_cur_block --------------------
     def test_link_tail_to_cur_block_given_1_tail(self):
 
@@ -92,7 +108,6 @@ class test_cfg(unittest.TestCase):
 
     # ----------------- cfg test------------------
 
-    # TODO: seriously need to clean up the test code duh
     def test_cfg_given_no_branch(self):
         as_tree = ast.parse(ms("""\
             a = 3
@@ -106,83 +121,60 @@ class test_cfg(unittest.TestCase):
 
     def test_cfg_given_if_else_without_link_tail(self):
         as_tree = ast.parse(ms("""\
-            a = 3
-            if a > 3:
-                a = 4
-            else:
-                z = 5
+            a = 3           # --- 1st
+            if a > 3:       # ---  |
+                a = 4       # --- 2nd
+            else:           # ----3rd
+                z = 5       # ---- |
             """)
         )
         cfg_real = Cfg(as_tree)
 
-        b_block_0 = BasicBlock(0, as_tree.body[:2])
-        b_block_1 = BasicBlock(1, as_tree.body[1].body[0:1])
-        b_block_2 = BasicBlock(2, as_tree.body[1].orelse[0:1])
-
-        b_block_0.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_1)
-        b_block_0.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_2)
-
-        cfg_expected = Cfg(None, b_block_0, b_block_1, b_block_2)
-        self.assertCfgEqual(cfg_real, cfg_expected)
+        self.assertCfgWithBasicBlocks(cfg_real,
+                                      as_tree.body[:2],
+                                      as_tree.body[1].body[0:1],
+                                      as_tree.body[1].orelse[0:1],
+                                      block_links={'0': [1, 2], '1': [], '2': []}
+                                      )
 
     def test_cfg_given_if_else_with_link_tail(self):
         as_tree = ast.parse(ms("""\
-            a = 3
-            if a > 3:
-                a = 4
-            else:
-                z = 5
-            y = 5
+            a = 3           # 1st
+            if a > 3:       #  |
+                a = 4       # 2nd
+            else:           # 3rd
+                z = 5       #  |
+            y = 5           # 4th
             """)
         )
         cfg_real = Cfg(as_tree)
 
-        b_block_0 = BasicBlock(0, as_tree.body[:2])
-        b_block_1 = BasicBlock(1, as_tree.body[1].body[0:1])
-        b_block_2 = BasicBlock(2, as_tree.body[1].orelse[0:1])
-        b_block_3 = BasicBlock(2, as_tree.body[2:])
-
-        b_block_0.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_1)
-        b_block_0.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_2)
-
-        b_block_1.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_3)
-        b_block_2.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_3)
-
-        cfg_expected = Cfg(None, b_block_0, b_block_1, b_block_2, b_block_3)
-        self.assertCfgEqual(cfg_real, cfg_expected)
+        self.assertCfgWithBasicBlocks(cfg_real,
+                                      as_tree.body[:2],
+                                      as_tree.body[1].body[0:1],
+                                      as_tree.body[1].orelse[0:1],
+                                      as_tree.body[2:],
+                                      block_links={'0': [1, 2], '1': [3], '2': [3], '3': []}
+                                      )
 
     def test_cfg_given_if_elif_no_else(self):
         as_tree = ast.parse(ms("""\
-            a = 3
-            if a > 3:
-                a = 4
-            elif a < 1:
-                a = 5
-            c = 5
+            a = 3          #--- 1st
+            if a > 3:      #---  |
+                a = 4      #--- 2nd
+            elif a < 1:    #--- 3rd
+                a = 5      #--- 4th
+            c = 5          #--- 5th
             """)
         )
         cfg_real = Cfg(as_tree)
 
-        b_block_0 = BasicBlock(0, as_tree.body[:2])
-        b_block_1 = BasicBlock(1, as_tree.body[1].body[0:1])
+        self.assertCfgWithBasicBlocks(cfg_real,
+                                      as_tree.body[:2],
+                                      as_tree.body[1].body[0:1],
+                                      as_tree.body[1].orelse[:1],
+                                      as_tree.body[1].orelse[0].body,
+                                      as_tree.body[2:],
+                                      block_links={'0': [1, 2], '1': [4], '2': [3, 4], '3': [4], '4': []}
+                                      )
 
-        # elif
-        b_block_2 = BasicBlock(2, as_tree.body[1].orelse[:1])
-
-        # a = 5
-        b_block_3 = BasicBlock(2, as_tree.body[1].orelse[0].body)
-
-        # c = 5
-        b_block_4 = BasicBlock(2, as_tree.body[2:])
-
-        b_block_0.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_1)
-        b_block_0.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_2)
-
-        b_block_2.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_3)
-        b_block_2.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, b_block_4)
-
-        b_block_1.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_4)
-        b_block_3.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, b_block_4)
-
-        cfg_expected = Cfg(None, b_block_0, b_block_1, b_block_2, b_block_3, b_block_4)
-        self.assertCfgEqual(cfg_real, cfg_expected)
