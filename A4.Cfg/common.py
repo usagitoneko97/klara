@@ -13,5 +13,10 @@ def is_if_stmt(ast_node):
         return True
     return False
 
+def is_while_stmt(ast_node):
+    if isinstance(ast_node, ast.While):
+        return True
+    return False
+
 def if_stmt_has_else(ast_if_node):
     pass

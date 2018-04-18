@@ -7,20 +7,22 @@ ms = textwrap.dedent
 
 
 class test_cfg(unittest.TestCase):
-    def assertCfgEqual(self, cfg_real, cfg_expected):
+    def assertCfgEqual(self, cfg_real, cfg_expected, recursion_flag=True, recursive_num=1):
         self.assertEqual(len(cfg_real.block_list), len(cfg_expected.block_list),
                          "Number of real basic block {} is not the same as expected {}".format(len(cfg_real.block_list),
                                                                                  len(cfg_expected.block_list))
                          )
         for block_list_num in range(len(cfg_real.block_list)):
             self.assertBasicBlockEqual(cfg_real.block_list[block_list_num],
-                                       cfg_expected.block_list[block_list_num])
+                                       cfg_expected.block_list[block_list_num],
+                                       recursion_flag=recursion_flag,
+                                       recursive_num=recursive_num,
+                                       block_index=block_list_num)
 
-    def assertBasicBlockEqual(self, basic_block_real, basic_block_expected, recursion_flag=True, recursive_num=1):
+    def assertBasicBlockEqual(self, basic_block_real, basic_block_expected, recursion_flag=True, recursive_num=1,
+                              block_index=0):
         self.assertEqual(len(basic_block_real.ast_list), len(basic_block_expected.ast_list),
-                         "Number of ast stmt {} is not the same as expected {}".format(len(basic_block_real.ast_list),
-                                                                                 len(basic_block_expected.ast_list))
-                         )
+                         "On basic block {}, Number of ast stmt is not the same".format(block_index))
 
         for ast_list_num in range(len(basic_block_real.ast_list)):
             self.assertEqual(basic_block_real.ast_list[ast_list_num],
@@ -33,7 +35,8 @@ class test_cfg(unittest.TestCase):
             for nxt_block_num in range(len(basic_block_real.nxt_block)):
                 if recursion_flag is True:
                     self.assertBasicBlockEqual(basic_block_real.nxt_block[nxt_block_num],
-                                               basic_block_expected.nxt_block[nxt_block_num])
+                                               basic_block_expected.nxt_block[nxt_block_num],
+                                               block_index=block_index)
                 else:
                     if recursive_num == 0:
                         return
@@ -42,7 +45,8 @@ class test_cfg(unittest.TestCase):
 
                         self.assertBasicBlockEqual(basic_block_real.nxt_block[nxt_block_num],
                                                    basic_block_expected.nxt_block[nxt_block_num], recursion_flag=False,
-                                                   recursive_num=recursive_num)
+                                                   recursive_num=recursive_num,
+                                                   block_index=block_index)
                     # for ast_list_num in range(len(basic_block_real.nxt_block[nxt_block_num].ast_list)):
                     #     self.assertEqual(basic_block_real.nxt_block[nxt_block_num].ast_list[ast_list_num],
                     #                      basic_block_expected.nxt_block[nxt_block_num].ast_list[ast_list_num])
@@ -59,13 +63,13 @@ class test_cfg(unittest.TestCase):
 
         self.assertCfgEqual(cfg_real, cfg_expected)
 
-    def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links):
+    def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links, recursion_flag=True, recursive_num=1):
         cfg_expected = Cfg()
 
         block_list = self.build_blocks(*args, block_links=block_links)
         cfg_expected.block_list.extend(block_list)
 
-        self.assertCfgEqual(cfg_real, cfg_expected)
+        self.assertCfgEqual(cfg_real, cfg_expected, recursion_flag=recursion_flag, recursive_num=recursive_num)
 
     @staticmethod
     def fill_nxt_block(cfg_expected, block_links):
@@ -220,7 +224,7 @@ class test_cfg(unittest.TestCase):
         self.assertBasicBlockEqual(while_block, expected_block_list[0], recursion_flag=False)
         self.assertBasicBlockEqual(real_tail_list[0], expected_block_list[0], recursion_flag=False)
 
-    def test_build_while_body_given_only_while(self):
+    def test_build_while_body_given_body_if(self):
         as_tree = ast.parse(ms("""\
             while a < 3:    # 1st block
                 if a < 2:   # 2nd block
@@ -240,3 +244,26 @@ class test_cfg(unittest.TestCase):
 
         self.assertBasicBlockEqual(while_block, expected_block_list[0], recursion_flag=False, recursive_num=4)
         self.assertBasicBlockEqual(real_tail_list[0], expected_block_list[0], recursion_flag=False, recursive_num=4)
+
+    def test_cfg_given_while_body_if(self):
+        as_tree = ast.parse(ms("""\
+            z = 2           # 0   block
+            while a < 3:    # 1st block
+                if a < 2:   # 2nd block
+                     z = 2  # 3rd block
+                b = 2       # 4th block
+            c = 3           # 5th block
+            """))
+
+        cfg_real = Cfg(as_tree)
+
+        self.assertCfgWithBasicBlocks(cfg_real,
+                                      as_tree.body[0:1],                    # z = 2
+                                      as_tree.body[1:2],                     # while
+                                      as_tree.body[1].body[0:1],            # if
+                                      as_tree.body[1].body[0].body[0:1],    # z = 2
+                                      as_tree.body[1].body[1:],             # b = 2
+                                      as_tree.body[2:],                     # c = 3
+                                      block_links={'0': [1], '1': [2, 5], '2': [3, 4], '3': [4], '4': [1], '5': []},
+                                      recursion_flag=False,
+                                      recursive_num=6)

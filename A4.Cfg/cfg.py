@@ -60,7 +60,7 @@ class Cfg:
         self.cur_block_id += 1
         for ast_node in ast_body:
             basic_block.append_node(ast_node)
-            if common.is_if_stmt(ast_node):
+            if common.is_if_stmt(ast_node) or common.is_while_stmt(ast_node):
                 # self.add_basic_block(basic_block)
                 yield basic_block
                 basic_block = BasicBlock(self.cur_block_id)
@@ -126,9 +126,14 @@ class Cfg:
                 all_tail_list.extend(tail_list)
 
             elif basic_block.get_block_type() == BasicBlock.BLOCK_WHILE:
-                tail_list = self.build_while_body(basic_block)
+                # separate the basic block
+                while_basic_block = BasicBlock(ast_list=[basic_block.ast_list[-1]])
+                (self.block_list[-1]).ast_list = (self.block_list[-1]).ast_list[:-1]
+                self.block_list[-1].nxt_block.append(while_basic_block)
+                self.add_basic_block(while_basic_block)
+
+                tail_list = self.build_while_body(while_basic_block)
                 all_tail_list.extend(tail_list)
-                pass
 
             else:
                 all_tail_list.append(basic_block)
