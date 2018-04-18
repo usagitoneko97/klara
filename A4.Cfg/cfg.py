@@ -108,8 +108,8 @@ class Cfg:
         return all_tail_list
 
     def parse(self, ast_body):
-        all_tail_list = []
         head = None
+        all_tail_list = []
         for basic_block in self.get_basic_block(ast_body):
 
             # link all the tail to the subsequent block
@@ -119,6 +119,7 @@ class Cfg:
                 pass
                 self.link_tail_to_cur_block(all_tail_list, basic_block)
 
+            all_tail_list = []
             self.add_basic_block(basic_block)
             if basic_block.get_block_type() == BasicBlock.BLOCK_IF:
                 tail_list = self.build_if_body(basic_block)
