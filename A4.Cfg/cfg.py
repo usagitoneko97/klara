@@ -4,6 +4,8 @@ import common
 
 class BasicBlock:
     BLOCK_IF = 0
+    BLOCK_WHILE = 1
+
     IS_TRUE_BLOCK = 0
     IS_FALSE_BLOCK = 1
 
@@ -20,6 +22,9 @@ class BasicBlock:
     def get_block_type(self):
         if isinstance(self.ast_list[-1], ast.If):
             return self.BLOCK_IF
+        elif isinstance(self.ast_list[-1], ast.While):
+            return self.BLOCK_WHILE
+
 
     def __repr__(self):
         s = ""
@@ -70,6 +75,38 @@ class Cfg:
         for tail in all_tail_list:
             tail.nxt_block.append(basic_block)
 
+    def build_if_body(self, if_block):
+        all_tail_list = []
+        ast_if_node = if_block.ast_list[-1]
+        head_returned, tail_list = self.parse(ast_if_node.body)
+
+        if_block.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, head_returned)
+        all_tail_list.extend(tail_list)
+
+        head_returned, tail_list = self.parse(ast_if_node.orelse)
+        if head_returned is not None:
+            # has an else or elif
+            if_block.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, head_returned)
+            all_tail_list.extend(tail_list)
+        else:
+            # no else
+            # link this to the next statement
+            all_tail_list.append(if_block)
+
+        return all_tail_list
+
+    def build_while_body(self, while_block):
+        all_tail_list = []
+        ast_while_node = while_block.ast_list[-1]
+        head_returned, tail_list = self.parse(ast_while_node.body)
+
+        while_block.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, head_returned)
+        for tail in tail_list:
+            # link the tail back to itself (while operation
+            tail.nxt_block.append(while_block)
+        all_tail_list.append(while_block)
+        return all_tail_list
+
     def parse(self, ast_body):
         all_tail_list = []
         head = None
@@ -84,29 +121,18 @@ class Cfg:
 
             self.add_basic_block(basic_block)
             if basic_block.get_block_type() == BasicBlock.BLOCK_IF:
-                ast_if_node = basic_block.ast_list[-1]
-                head_returned, tail_list = self.parse(ast_if_node.body)
-
-                basic_block.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, head_returned)
+                tail_list = self.build_if_body(basic_block)
                 all_tail_list.extend(tail_list)
 
-                head_returned, tail_list = self.parse(ast_if_node.orelse)
-                if head_returned is not None:
-                    # has an else or elif
-                    basic_block.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, head_returned)
-                else:
-                    # no else
-                    # link this to the next statement
-                    all_tail_list.append(basic_block)
+            elif basic_block.get_block_type() == BasicBlock.BLOCK_WHILE:
+                tail_list = self.build_while_body(basic_block)
                 all_tail_list.extend(tail_list)
+                pass
+
             else:
                 all_tail_list.append(basic_block)
 
         return head, all_tail_list
-
-
-
-
 
 
 
