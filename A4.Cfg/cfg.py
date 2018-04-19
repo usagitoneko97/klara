@@ -70,7 +70,7 @@ class Cfg:
                 self.add_basic_block(basic_block)
 
     def add_basic_block(self, basic_block):
-        if len(basic_block.ast_list) != 0:
+        if basic_block.start_line is not None:
             self.block_list.append(basic_block)
 
     def get_basic_block(self, ast_body):
@@ -114,16 +114,16 @@ class Cfg:
 
     def build_if_body(self, if_block):
         all_tail_list = []
-        ast_if_node = self.get_ast_node(if_block.end_line)
+        ast_if_node = self.get_ast_node(self.as_tree, if_block.end_line)
         head_returned, tail_list = self.parse(ast_if_node.body)
 
-        if_block.nxt_block.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
+        if_block.nxt_block_list.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
         all_tail_list.extend(tail_list)
 
         head_returned, tail_list = self.parse(ast_if_node.orelse)
         if head_returned is not None:
             # has an else or elif
-            if_block.nxt_block.insert(RawBasicBlock.IS_FALSE_BLOCK, head_returned)
+            if_block.nxt_block_list.insert(RawBasicBlock.IS_FALSE_BLOCK, head_returned)
             all_tail_list.extend(tail_list)
         else:
             # no else
@@ -162,7 +162,7 @@ class Cfg:
                 tail_list = self.build_if_body(basic_block)
                 all_tail_list.extend(tail_list)
 
-            elif basic_block.get_block_type() == RawBasicBlock.BLOCK_WHILE:
+            elif basic_block.block_end_type == 'While':
                 self.separate_and_link_last_ast()
                 tail_list = self.build_while_body(self.block_list[-1])
                 all_tail_list.extend(tail_list)
