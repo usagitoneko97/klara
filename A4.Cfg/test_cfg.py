@@ -139,6 +139,83 @@ class TestCfg(unittest.TestCase):
         self.assertBasicBlockEqual(simple_block_list[0], expected_block_0)
         self.assertBasicBlockEqual(simple_block_list[1], expected_block_1)
 
+    # ----------------- get ast node test---------------
+    def test_get_ast_node_given_2_assign(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3
+                    a = 4
+                    """)
+                            )
+
+        cfg_real = Cfg()
+        node = cfg_real.get_ast_node(as_tree, 2)
+
+        self.assertEqual(node, as_tree.body[1])
+
+    def test_get_ast_node_given_if(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3
+                    if a < 3:
+                        z = 2
+                    a = 4
+                    """)
+                            )
+
+        cfg_real = Cfg()
+        node = cfg_real.get_ast_node(as_tree, 3)
+
+        self.assertEqual(node, as_tree.body[1].body[0])
+
+    def test_get_ast_node_given_if_else(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3
+                    if a < 3:
+                        z = 2
+                    else:
+                        y = 2
+                    a = 4
+                    """)
+                            )
+
+        cfg_real = Cfg()
+        node = cfg_real.get_ast_node(as_tree, 5)
+
+        self.assertEqual(node, as_tree.body[1].orelse[0])
+
+    def test_get_ast_node_given_if_elif_else(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3
+                    if a < 3:
+                        z = 2
+                    elif z < 2:
+                        x = 2
+                    else:
+                        y = 2
+                    a = 4
+                    """)
+                            )
+
+        cfg_real = Cfg()
+        node = cfg_real.get_ast_node(as_tree, 5)
+
+        self.assertEqual(node, as_tree.body[1].orelse[0].body[0])
+
+    def test_get_ast_node_given_nested_if(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3
+                    if a < 3:
+                        z = 2
+                        if y < 2:
+                            d = 2
+                    a = 4
+                    """)
+                            )
+
+        cfg_real = Cfg()
+        node = cfg_real.get_ast_node(as_tree, 5)
+
+        self.assertEqual(node, as_tree.body[1].body[1].body[0])
+
     # ----------------- cfg test------------------
 
     def test_cfg_given_no_branch(self):

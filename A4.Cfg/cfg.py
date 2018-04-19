@@ -93,7 +93,19 @@ class Cfg:
         if basic_block.start_line is not None:
             yield basic_block
 
-        # self.add_basic_block(basic_block)
+    def get_ast_node(self, ast_tree, lineno):
+        for node in ast.iter_child_nodes(ast_tree):
+
+            if node.lineno == lineno:
+                return node
+
+            if isinstance(node, ast.If):
+                node_return = self.get_ast_node(node, lineno)
+                if node_return is not None:
+                    return node_return
+                continue
+
+        return None
 
     @staticmethod
     def link_tail_to_cur_block(all_tail_list, basic_block):
@@ -102,7 +114,7 @@ class Cfg:
 
     def build_if_body(self, if_block):
         all_tail_list = []
-        ast_if_node = if_block.ast_list[-1]
+        ast_if_node = self.get_ast_node(if_block.end_line)
         head_returned, tail_list = self.parse(ast_if_node.body)
 
         if_block.nxt_block.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
@@ -146,7 +158,7 @@ class Cfg:
             all_tail_list = []
             self.add_basic_block(basic_block)
 
-            if basic_block.get_block_type() == RawBasicBlock.BLOCK_IF:
+            if basic_block.block_end_type == 'If':
                 tail_list = self.build_if_body(basic_block)
                 all_tail_list.extend(tail_list)
 
