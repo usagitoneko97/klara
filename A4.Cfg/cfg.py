@@ -2,19 +2,18 @@ import ast
 import common
 
 
-class BasicBlock:
+class RawBasicBlock:
     BLOCK_IF = 0
     BLOCK_WHILE = 1
 
     IS_TRUE_BLOCK = 0
     IS_FALSE_BLOCK = 1
 
-    def __init__(self, block_id=0, ast_list=None):
-        self.ast_list = []
-        self.block_id = block_id
-        self.nxt_block = []
-        if ast_list is not None:
-            self.ast_list.extend(ast_list)
+    def __init__(self, start_line=None, end_line=None, block_end_type=None):
+        self._start_line = start_line
+        self._end_line = end_line
+        self._block_end_type = block_end_type
+        self.nxt_block_list = []
 
     def append_node(self, ast_node):
         self.ast_list.append(ast_node)
@@ -25,7 +24,30 @@ class BasicBlock:
         elif isinstance(self.ast_list[-1], ast.While):
             return self.BLOCK_WHILE
 
+    @property
+    def start_line(self):
+        return self._start_line
+        
+    @start_line.setter
+    def start_line(self, start_line):
+        self._start_line = start_line
 
+    @property
+    def end_line(self):
+        return self._end_line
+
+    @end_line.setter
+    def end_line(self, end_line):
+        self._end_line = end_line
+
+    @property
+    def block_end_type(self):
+        return self._block_end_type
+
+    @block_end_type.setter
+    def block_end_type(self, block_end_type):
+        self._block_end_type = block_end_type
+        
     def __repr__(self):
         s = ""
         for ast_node in self.ast_list:
@@ -40,6 +62,7 @@ class Cfg:
         self.block_list = []
         self.cur_block_id = 0
         if as_tree is not None:
+            self.as_tree = as_tree
             self.parse(as_tree.body)
 
         if len(basic_block_args) != 0:
@@ -56,16 +79,18 @@ class Cfg:
         :param ast_body: ast structure
         :return: yield all simple block
         """
-        basic_block = BasicBlock(self.cur_block_id)
-        self.cur_block_id += 1
+        basic_block = RawBasicBlock(start_line=ast_body[0].lineno)
         for ast_node in ast_body:
-            basic_block.append_node(ast_node)
+            if basic_block.start_line is None:
+                basic_block.start_line = ast_node.lineno
+            basic_block.end_line = ast_node.lineno
             if common.is_if_stmt(ast_node) or common.is_while_stmt(ast_node):
                 # self.add_basic_block(basic_block)
+                basic_block.block_end_type = ast_node.__class__.__name__
                 yield basic_block
-                basic_block = BasicBlock(self.cur_block_id)
-                self.cur_block_id += 1
-        if len(basic_block.ast_list) != 0:
+                basic_block = RawBasicBlock()
+
+        if basic_block.start_line is not None:
             yield basic_block
 
         # self.add_basic_block(basic_block)
@@ -80,13 +105,13 @@ class Cfg:
         ast_if_node = if_block.ast_list[-1]
         head_returned, tail_list = self.parse(ast_if_node.body)
 
-        if_block.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, head_returned)
+        if_block.nxt_block.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
         all_tail_list.extend(tail_list)
 
         head_returned, tail_list = self.parse(ast_if_node.orelse)
         if head_returned is not None:
             # has an else or elif
-            if_block.nxt_block.insert(BasicBlock.IS_FALSE_BLOCK, head_returned)
+            if_block.nxt_block.insert(RawBasicBlock.IS_FALSE_BLOCK, head_returned)
             all_tail_list.extend(tail_list)
         else:
             # no else
@@ -100,7 +125,7 @@ class Cfg:
         ast_while_node = while_block.ast_list[-1]
         head_returned, tail_list = self.parse(ast_while_node.body)
 
-        while_block.nxt_block.insert(BasicBlock.IS_TRUE_BLOCK, head_returned)
+        while_block.nxt_block.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
         for tail in tail_list:
             # link the tail back to itself (while operation
             tail.nxt_block.append(while_block)
@@ -112,7 +137,6 @@ class Cfg:
         all_tail_list = []
         for basic_block in self.get_basic_block(ast_body):
 
-            # link all the tail to the subsequent block
             if len(all_tail_list) == 0:
                 head = basic_block
             else:
@@ -121,18 +145,14 @@ class Cfg:
 
             all_tail_list = []
             self.add_basic_block(basic_block)
-            if basic_block.get_block_type() == BasicBlock.BLOCK_IF:
+
+            if basic_block.get_block_type() == RawBasicBlock.BLOCK_IF:
                 tail_list = self.build_if_body(basic_block)
                 all_tail_list.extend(tail_list)
 
-            elif basic_block.get_block_type() == BasicBlock.BLOCK_WHILE:
-                # separate the basic block
-                while_basic_block = BasicBlock(ast_list=[basic_block.ast_list[-1]])
-                (self.block_list[-1]).ast_list = (self.block_list[-1]).ast_list[:-1]
-                self.block_list[-1].nxt_block.append(while_basic_block)
-                self.add_basic_block(while_basic_block)
-
-                tail_list = self.build_while_body(while_basic_block)
+            elif basic_block.get_block_type() == RawBasicBlock.BLOCK_WHILE:
+                self.separate_and_link_last_ast()
+                tail_list = self.build_while_body(self.block_list[-1])
                 all_tail_list.extend(tail_list)
 
             else:
@@ -140,5 +160,9 @@ class Cfg:
 
         return head, all_tail_list
 
-
+    def separate_and_link_last_ast(self):
+        while_basic_block = RawBasicBlock(ast_list=[(self.block_list[-1]).ast_list[-1]])
+        (self.block_list[-1]).ast_list = (self.block_list[-1]).ast_list[:-1]
+        self.block_list[-1].nxt_block.append(while_basic_block)
+        self.add_basic_block(while_basic_block)
 
