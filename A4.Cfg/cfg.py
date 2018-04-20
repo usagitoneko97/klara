@@ -99,7 +99,7 @@ class Cfg:
             if node.lineno == lineno:
                 return node
 
-            if isinstance(node, ast.If):
+            if isinstance(node, ast.If) or isinstance(node, ast.While):
                 node_return = self.get_ast_node(node, lineno)
                 if node_return is not None:
                     return node_return
@@ -134,13 +134,13 @@ class Cfg:
 
     def build_while_body(self, while_block):
         all_tail_list = []
-        ast_while_node = while_block.ast_list[-1]
+        ast_while_node = self.get_ast_node(self.as_tree, while_block.end_line)
         head_returned, tail_list = self.parse(ast_while_node.body)
 
-        while_block.nxt_block.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
+        while_block.nxt_block_list.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
         for tail in tail_list:
             # link the tail back to itself (while operation
-            tail.nxt_block.append(while_block)
+            tail.nxt_block_list.append(while_block)
         all_tail_list.append(while_block)
         return all_tail_list
 
@@ -165,8 +165,9 @@ class Cfg:
                 all_tail_list.extend(tail_list)
 
             elif basic_block.block_end_type == 'While':
-                self.separate_and_link_last_ast()
-                tail_list = self.build_while_body(self.block_list[-1])
+                while_block = self.separate_while_block(basic_block)
+
+                tail_list = self.build_while_body(while_block)
                 all_tail_list.extend(tail_list)
 
             else:
@@ -174,9 +175,17 @@ class Cfg:
 
         return head, all_tail_list
 
-    def separate_and_link_last_ast(self):
-        while_basic_block = RawBasicBlock(ast_list=[(self.block_list[-1]).ast_list[-1]])
-        (self.block_list[-1]).ast_list = (self.block_list[-1]).ast_list[:-1]
-        self.block_list[-1].nxt_block.append(while_basic_block)
-        self.add_basic_block(while_basic_block)
+    @staticmethod
+    def separate_block(basic_block):
+        separated_block = RawBasicBlock(basic_block.end_line, basic_block.end_line)
+        basic_block.end_line -= 1
+        basic_block.nxt_block_list.append(separated_block)
+        return separated_block
 
+    def separate_while_block(self, basic_block):
+        while_block = self.separate_block(basic_block)
+
+        while_block.block_end_type = 'While'
+        basic_block.block_end_type = None
+        self.add_basic_block(while_block)
+        return while_block

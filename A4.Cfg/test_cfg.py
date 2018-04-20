@@ -14,13 +14,9 @@ class TestCfg(unittest.TestCase):
                          )
         for block_list_num in range(len(cfg_real.block_list)):
             self.assertBasicBlockEqual(cfg_real.block_list[block_list_num],
-                                       cfg_expected.block_list[block_list_num],
-                                       recursion_flag=recursion_flag,
-                                       recursive_num=recursive_num,
-                                       block_index=block_list_num)
+                                       cfg_expected.block_list[block_list_num],)
 
-    def assertBasicBlockEqual(self, basic_block_real, basic_block_expected, recursion_flag=True, recursive_num=1,
-                              block_index=0):
+    def assertBasicBlockEqual(self, basic_block_real, basic_block_expected, block_index=0):
 
         self.assertEqual(basic_block_real.block_end_type, basic_block_expected.block_end_type)
 
@@ -54,13 +50,13 @@ class TestCfg(unittest.TestCase):
 
         self.assertCfgEqual(cfg_real, cfg_expected)
 
-    def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links, recursion_flag=True, recursive_num=1):
+    def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links):
         cfg_expected = Cfg()
 
         block_list = self.build_blocks(*args, block_links=block_links)
         cfg_expected.block_list.extend(block_list)
 
-        self.assertCfgEqual(cfg_real, cfg_expected, recursion_flag=recursion_flag, recursive_num=recursive_num)
+        self.assertCfgEqual(cfg_real, cfg_expected)
 
     @staticmethod
     def fill_nxt_block(cfg_expected, block_links):
@@ -287,16 +283,16 @@ class TestCfg(unittest.TestCase):
                 z = 4     # 2nd block
             """))
 
-        while_block = RawBasicBlock(1, ast_list=as_tree.body)
+        while_block = RawBasicBlock(1, 1, 'While')
         cfg_handler = Cfg()
+        cfg_handler.as_tree = as_tree
         real_tail_list = cfg_handler.build_while_body(while_block)
 
-        expected_block_list = self.build_blocks(as_tree.body,
-                                                as_tree.body[0].body,
+        expected_block_list = self.build_blocks([1, 1, 'While'], [2, 2, None],
                                                 block_links={'0': [1], '1': [0]})
 
-        self.assertBasicBlockEqual(while_block, expected_block_list[0], recursion_flag=False)
-        self.assertBasicBlockEqual(real_tail_list[0], expected_block_list[0], recursion_flag=False)
+        self.assertBasicBlockEqual(while_block, expected_block_list[0])
+        self.assertBasicBlockEqual(real_tail_list[0], expected_block_list[0])
 
     def test_build_while_body_given_body_if(self):
         as_tree = ast.parse(ms("""\
@@ -306,18 +302,16 @@ class TestCfg(unittest.TestCase):
                 b = 2       # 4th block
             """))
 
-        while_block = RawBasicBlock(1, ast_list=as_tree.body)
+        while_block = RawBasicBlock(1, 1, 'While')
         cfg_handler = Cfg()
+        cfg_handler.as_tree = as_tree
         real_tail_list = cfg_handler.build_while_body(while_block)
 
-        expected_block_list = self.build_blocks(as_tree.body,                       # while
-                                                as_tree.body[0].body[0:1],          # if
-                                                as_tree.body[0].body[0].body[0:1],  # z = 2
-                                                as_tree.body[0].body[1:],           # b = 2
+        expected_block_list = self.build_blocks([1, 1, 'While'], [2, 2, 'If'], [3, 3, None], [4, 4, None],
                                                 block_links={'0': [1], '1': [2, 3], '2': [3], '3': [0]})
 
-        self.assertBasicBlockEqual(while_block, expected_block_list[0], recursion_flag=False, recursive_num=4)
-        self.assertBasicBlockEqual(real_tail_list[0], expected_block_list[0], recursion_flag=False, recursive_num=4)
+        self.assertBasicBlockEqual(while_block, expected_block_list[0])
+        self.assertBasicBlockEqual(real_tail_list[0], expected_block_list[0])
 
     def test_cfg_given_while_body_if(self):
         as_tree = ast.parse(ms("""\
@@ -332,12 +326,5 @@ class TestCfg(unittest.TestCase):
         cfg_real = Cfg(as_tree)
 
         self.assertCfgWithBasicBlocks(cfg_real,
-                                      as_tree.body[0:1],                    # z = 2
-                                      as_tree.body[1:2],                    # while
-                                      as_tree.body[1].body[0:1],            # if
-                                      as_tree.body[1].body[0].body[0:1],    # z = 2
-                                      as_tree.body[1].body[1:],             # b = 2
-                                      as_tree.body[2:],                     # c = 3
-                                      block_links={'0': [1], '1': [2, 5], '2': [3, 4], '3': [4], '4': [1], '5': []},
-                                      recursion_flag=False,
-                                      recursive_num=6)
+                                      [1, 1, None], [2, 2, 'While'], [3, 3, 'If'], [4, 4, None], [5, 5, None], [6, 6, None],
+                                      block_links={'0': [1], '1': [2, 5], '2': [3, 4], '3': [4], '4': [1], '5': []})
