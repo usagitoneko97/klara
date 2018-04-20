@@ -14,6 +14,7 @@ class RawBasicBlock:
         self._end_line = end_line
         self._block_end_type = block_end_type
         self.nxt_block_list = []
+        self.prev_block_list = []
 
     def append_node(self, ast_node):
         self.ast_list.append(ast_node)
@@ -107,23 +108,22 @@ class Cfg:
 
         return None
 
-    @staticmethod
-    def link_tail_to_cur_block(all_tail_list, basic_block):
+    def link_tail_to_cur_block(self, all_tail_list, basic_block):
         for tail in all_tail_list:
-            tail.nxt_block_list.append(basic_block)
+            self.connect_2_blocks(tail, basic_block)
 
     def build_if_body(self, if_block):
         all_tail_list = []
         ast_if_node = self.get_ast_node(self.as_tree, if_block.end_line)
         head_returned, tail_list = self.parse(ast_if_node.body)
 
-        if_block.nxt_block_list.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
+        self.connect_2_blocks(if_block, head_returned)
         all_tail_list.extend(tail_list)
 
         head_returned, tail_list = self.parse(ast_if_node.orelse)
         if head_returned is not None:
             # has an else or elif
-            if_block.nxt_block_list.insert(RawBasicBlock.IS_FALSE_BLOCK, head_returned)
+            self.connect_2_blocks(if_block, head_returned)
             all_tail_list.extend(tail_list)
         else:
             # no else
@@ -137,10 +137,8 @@ class Cfg:
         ast_while_node = self.get_ast_node(self.as_tree, while_block.end_line)
         head_returned, tail_list = self.parse(ast_while_node.body)
 
-        while_block.nxt_block_list.insert(RawBasicBlock.IS_TRUE_BLOCK, head_returned)
-        for tail in tail_list:
-            # link the tail back to itself (while operation
-            tail.nxt_block_list.append(while_block)
+        self.connect_2_blocks(while_block, head_returned)
+        self.link_tail_to_cur_block(tail_list, while_block)
         all_tail_list.append(while_block)
         return all_tail_list
 
@@ -175,11 +173,10 @@ class Cfg:
 
         return head, all_tail_list
 
-    @staticmethod
-    def separate_block(basic_block):
+    def separate_block(self, basic_block):
         separated_block = RawBasicBlock(basic_block.end_line, basic_block.end_line)
         basic_block.end_line -= 1
-        basic_block.nxt_block_list.append(separated_block)
+        self.connect_2_blocks(basic_block, separated_block)
         return separated_block
 
     def separate_while_block(self, basic_block):
@@ -189,3 +186,14 @@ class Cfg:
         basic_block.block_end_type = None
         self.add_basic_block(while_block)
         return while_block
+
+    @staticmethod
+    def connect_2_blocks(block1, block2):
+        """
+        connect block 1 to block 2
+        :param block1:
+        :param block2:
+        :return:
+        """
+        block1.nxt_block_list.append(block2)
+        block2.prev_block_list.append(block1)

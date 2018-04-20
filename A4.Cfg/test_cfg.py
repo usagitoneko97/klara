@@ -14,7 +14,8 @@ class TestCfg(unittest.TestCase):
                          )
         for block_list_num in range(len(cfg_real.block_list)):
             self.assertBasicBlockEqual(cfg_real.block_list[block_list_num],
-                                       cfg_expected.block_list[block_list_num],)
+                                       cfg_expected.block_list[block_list_num],
+                                       block_index=block_list_num)
 
     def assertBasicBlockEqual(self, basic_block_real, basic_block_expected, block_index=0):
 
@@ -29,14 +30,15 @@ class TestCfg(unittest.TestCase):
                                  basic_block_real.nxt_block_list[nxt_block_num].start_line],
                                 [basic_block_expected.nxt_block_list[nxt_block_num].end_line,
                                  basic_block_expected.nxt_block_list[nxt_block_num].end_line],
-                                block_index)
+                                block_index,
+                                nxt_or_prev='next')
 
-    def assertStartEnd(self, real_block, expected_block, block_index):
+    def assertStartEnd(self, real_block, expected_block, block_index, nxt_or_prev=''):
         self.assertEqual(real_block[0], expected_block[0],
-                         'On block {}, the start line is not the same'.format(block_index))
+                         'On block {}, the start line is not the same at {}'.format(block_index, nxt_or_prev))
 
         self.assertEqual(real_block[1], expected_block[1],
-                         'On block {}, the end line is not the same'.format(block_index))
+                         'On block {}, the end line is not the same at {}'.format(block_index, nxt_or_prev))
 
     def assertCfgWithAst(self, cfg_real, *args):
         cfg_expected = Cfg()
@@ -76,7 +78,7 @@ class TestCfg(unittest.TestCase):
         for i in range(len(block_links)):
             nxt_block_list = block_links.get(str(i))
             for nxt_block_num in nxt_block_list:
-                block_list[i].nxt_block_list.append(block_list[nxt_block_num])
+                Cfg.connect_2_blocks(block_list[i], block_list[nxt_block_num])
 
         return block_list
 
