@@ -110,7 +110,7 @@ class Cfg:
     @staticmethod
     def link_tail_to_cur_block(all_tail_list, basic_block):
         for tail in all_tail_list:
-            tail.nxt_block.append(basic_block)
+            tail.nxt_block_list.append(basic_block)
 
     def build_if_body(self, if_block):
         all_tail_list = []
@@ -147,6 +147,8 @@ class Cfg:
     def parse(self, ast_body):
         head = None
         all_tail_list = []
+        if len(ast_body) == 0:
+            return head, all_tail_list
         for basic_block in self.get_basic_block(ast_body):
 
             if len(all_tail_list) == 0:

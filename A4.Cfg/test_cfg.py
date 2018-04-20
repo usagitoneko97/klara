@@ -73,15 +73,14 @@ class TestCfg(unittest.TestCase):
     def build_blocks(*args, block_links):
         block_list = []
         for i in range(len(args)):
-            basic_block = RawBasicBlock()
-            basic_block.ast_list.extend(args[i])
+            basic_block = RawBasicBlock(args[i][0], args[i][1], args[i][2])
 
             block_list.append(basic_block)
 
         for i in range(len(block_links)):
             nxt_block_list = block_links.get(str(i))
             for nxt_block_num in nxt_block_list:
-                block_list[i].nxt_block.append(block_list[nxt_block_num])
+                block_list[i].nxt_block_list.append(block_list[nxt_block_num])
 
         return block_list
 
@@ -226,8 +225,9 @@ class TestCfg(unittest.TestCase):
         )
         cfg_real = Cfg(as_tree)
 
-        self.assertCfgWithAst(cfg_real, as_tree.body)
-        pass
+        self.assertCfgWithBasicBlocks(cfg_real,
+                                      [1, 2, None],
+                                      block_links={})
 
     def test_cfg_given_if_else_without_link_tail(self):
         as_tree = ast.parse(ms("""\
@@ -241,7 +241,7 @@ class TestCfg(unittest.TestCase):
         cfg_real = Cfg(as_tree)
 
         self.assertCfgWithBasicBlocks(cfg_real,
-                                      [0, 1], [2, 2], [4, 4],
+                                      [1, 2, 'If'], [3, 3, None], [5, 5, None],
                                       block_links={'0': [1, 2], '1': [], '2': []}
                                       )
 
@@ -258,10 +258,7 @@ class TestCfg(unittest.TestCase):
         cfg_real = Cfg(as_tree)
 
         self.assertCfgWithBasicBlocks(cfg_real,
-                                      as_tree.body[:2],
-                                      as_tree.body[1].body[0:1],
-                                      as_tree.body[1].orelse[0:1],
-                                      as_tree.body[2:],
+                                      [1, 2, 'If'], [3, 3, None], [5, 5, None], [6, 6, None],
                                       block_links={'0': [1, 2], '1': [3], '2': [3], '3': []}
                                       )
 
@@ -278,11 +275,7 @@ class TestCfg(unittest.TestCase):
         cfg_real = Cfg(as_tree)
 
         self.assertCfgWithBasicBlocks(cfg_real,
-                                      as_tree.body[:2],
-                                      as_tree.body[1].body[0:1],
-                                      as_tree.body[1].orelse[:1],
-                                      as_tree.body[1].orelse[0].body,
-                                      as_tree.body[2:],
+                                      [1, 2, 'If'], [3, 3, None], [4, 4, 'If'], [5, 5, None], [6, 6, None],
                                       block_links={'0': [1, 2], '1': [4], '2': [3, 4], '3': [4], '4': []}
                                       )
 
