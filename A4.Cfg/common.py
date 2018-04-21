@@ -20,3 +20,6 @@ def is_while_stmt(ast_node):
 
 def if_stmt_has_else(ast_if_node):
     pass
+
+def is_blocks_same(block1, block2):
+    return str(block1) == str(block2)

@@ -15,15 +15,8 @@ class RawBasicBlock:
         self._block_end_type = block_end_type
         self.nxt_block_list = []
         self.prev_block_list = []
-
-    def append_node(self, ast_node):
-        self.ast_list.append(ast_node)
-
-    def get_block_type(self):
-        if isinstance(self.ast_list[-1], ast.If):
-            return self.BLOCK_IF
-        elif isinstance(self.ast_list[-1], ast.While):
-            return self.BLOCK_WHILE
+        self.dominates_list = []
+        self.walk_record = []
 
     @property
     def start_line(self):
@@ -50,10 +43,7 @@ class RawBasicBlock:
         self._block_end_type = block_end_type
         
     def __repr__(self):
-        s = ""
-        for ast_node in self.ast_list:
-            s += ast.dump(ast_node)
-
+        s = "Block from line {} to {}".format(self.start_line, self.end_line)
         return s
 
 
@@ -61,10 +51,12 @@ class Cfg:
     def __init__(self, as_tree=None, *basic_block_args):
         self.__else_flag__ = False
         self.block_list = []
-        self.cur_block_id = 0
+        self.walk_record = []
+        self.delete_record = []
+
         if as_tree is not None:
             self.as_tree = as_tree
-            self.parse(as_tree.body)
+            self.root, _ = self.parse(as_tree.body)
 
         if len(basic_block_args) != 0:
             for basic_block in basic_block_args:
@@ -74,7 +66,21 @@ class Cfg:
         if basic_block.start_line is not None:
             self.block_list.append(basic_block)
 
-    def get_basic_block(self, ast_body):
+    def walk_block(self, basic_block):
+        """
+        yield nodes from bottom
+        :return:
+        """
+        if basic_block is None:
+            return
+        self.walk_record.append(basic_block)
+        for next_block in basic_block.nxt_block_list:
+            if next_block not in self.walk_record and next_block is not None:
+                yield from self.walk_block(next_block)
+        yield basic_block
+
+    @staticmethod
+    def get_basic_block(ast_body):
         """
         yield all simple block in the ast, non recursively
         :param ast_body: ast structure
@@ -197,3 +203,21 @@ class Cfg:
         """
         block1.nxt_block_list.append(block2)
         block2.prev_block_list.append(block1)
+
+    @staticmethod
+    def is_blocks_same(block1, block2):
+        return str(block1) == str(block2)
+
+    def delete_node(self, root,  block_to_delete):
+        if self.is_blocks_same(root, block_to_delete) or root is None:
+            return None
+
+        self.delete_record.append(root)
+        for next_block_num in range(len(root.nxt_block_list)):
+            if root.nxt_block_list[next_block_num] not in self.delete_record:
+                root.nxt_block_list[next_block_num] = self.delete_node(root.nxt_block_list[next_block_num],
+                                                                       block_to_delete)
+
+        # no child left, return yourself
+        return root
+

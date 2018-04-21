@@ -33,6 +33,13 @@ class TestCfg(unittest.TestCase):
                                 block_index,
                                 nxt_or_prev='next')
 
+    def assertBasicBlockListEqual(self, block_real, block_expected):
+        self.assertEqual(len(block_real), len(block_expected), 'the len of basic block is not the same')
+        for block_num in range(len(block_real)):
+            self.assertBasicBlockEqual(block_real[block_num], block_expected[block_num],
+                                       block_index=block_num)
+
+
     def assertStartEnd(self, real_block, expected_block, block_index, nxt_or_prev=''):
         self.assertEqual(real_block[0], expected_block[0],
                          'On block {}, the start line is not the same at {}'.format(block_index, nxt_or_prev))
@@ -330,3 +337,53 @@ class TestCfg(unittest.TestCase):
         self.assertCfgWithBasicBlocks(cfg_real,
                                       [1, 1, None], [2, 2, 'While'], [3, 3, 'If'], [4, 4, None], [5, 5, None], [6, 6, None],
                                       block_links={'0': [1], '1': [2, 5], '2': [3, 4], '3': [4], '4': [1], '5': []})
+
+    # -----------------walk basic_block test---------------
+    def test_walk_given_2_block(self):
+        as_tree = ast.parse(ms("""\
+            z = 2
+            if z < 2:
+                y = 3
+            """))
+
+        cfg_real = Cfg(as_tree)
+        # cfg_real.walk_block(cfg_real.block_list[0])
+
+        blocks_list = []
+        for blocks in cfg_real.walk_block(cfg_real.block_list[0]):
+            blocks_list.append(blocks)
+
+        expected_block_list = self.build_blocks([3, 3, None], [1, 2, 'If'],
+                                                block_links={'1': [0], '0':[]})
+
+        self.assertBasicBlockListEqual(blocks_list, expected_block_list)
+
+    def test_walk_given_recursive_block(self):
+        as_tree = ast.parse(ms("""\
+             z = 2           # 0th block
+             while a < 3:    # 1st block
+                 if a < 2:   # 2nd block
+                      z = 2  # 3rd block
+                 b = 2       # 4th block
+             c = 3           # 5th block
+             """))
+
+        cfg_real = Cfg(as_tree)
+        blocks_list = []
+        for blocks in cfg_real.walk_block(cfg_real.block_list[0]):
+            blocks_list.append(blocks)
+        pass
+
+    def test_delete_node(self):
+        as_tree = ast.parse(ms("""\
+             z = 2           # 0th block
+             while a < 3:    # 1st block
+                 if a < 2:   # 2nd block
+                      z = 2  # 3rd block
+                 b = 2       # 4th block
+             c = 3           # 5th block
+             """))
+
+        cfg_real = Cfg(as_tree)
+        cfg_real.root = cfg_real.delete_node(cfg_real.root, RawBasicBlock(1, 1))
+        pass
