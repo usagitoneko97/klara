@@ -1,11 +1,19 @@
 import copy
 import common
+from cfg import Cfg, RawBasicBlock
+
+
+class DominatorNodesList(list):
+    def get_block(self, block_to_find):
+        for block in self.__iter__():
+            if common.is_blocks_same(block, block_to_find):
+                return block
 
 
 class DominatorTree:
     def __init__(self, cfg):
         self.dominator_root = None
-        self.dominator_nodes = []
+        self.dominator_nodes = DominatorNodesList()
         self.cfg = cfg
 
     def fill_dominates(self):
@@ -25,3 +33,15 @@ class DominatorTree:
         for block in block_list:
             if common.is_blocks_same(block, block_to_remove):
                 block_list.remove(block)
+
+    def build_tree(self):
+        # TODO: clarify the code below
+        for block_in_cfg in self.cfg.walk_block(self.cfg.root):
+            block_in_dom_list = RawBasicBlock(block_in_cfg.start_line, block_in_cfg.end_line)
+            self.dominator_nodes.append(block_in_dom_list)
+            for dom_block in block_in_cfg.dominates_list:
+                dom_block_in_list = self.dominator_nodes.get_block(dom_block)
+                if not dom_block_in_list.prev_block_list:
+                    Cfg.connect_2_blocks(block_in_dom_list, dom_block_in_list)
+
+        self.dominator_root = self.dominator_nodes[-1]

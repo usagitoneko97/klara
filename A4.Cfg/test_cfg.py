@@ -7,7 +7,7 @@ ms = textwrap.dedent
 
 
 class TestCfg(unittest.TestCase):
-    def assertCfgEqual(self, cfg_real, cfg_expected, recursion_flag=True, recursive_num=1):
+    def assertCfgEqual(self, cfg_real, cfg_expected):
         self.assertEqual(len(cfg_real.block_list), len(cfg_expected.block_list),
                          "Number of real basic block {} is not the same as expected {}".format(len(cfg_real.block_list),
                                                                                  len(cfg_expected.block_list))
@@ -38,7 +38,6 @@ class TestCfg(unittest.TestCase):
         for block_num in range(len(block_real)):
             self.assertBasicBlockEqual(block_real[block_num], block_expected[block_num],
                                        block_index=block_num)
-
 
     def assertStartEnd(self, real_block, expected_block, block_index, nxt_or_prev=''):
         self.assertEqual(real_block[0], expected_block[0],
@@ -74,20 +73,6 @@ class TestCfg(unittest.TestCase):
             for nxt_block_num in nxt_block_list:
                 cfg_expected.block_list[i].nxt_block.append(cfg_expected.block_list[nxt_block_num])
 
-    @staticmethod
-    def build_blocks(*args, block_links):
-        block_list = []
-        for i in range(len(args)):
-            basic_block = RawBasicBlock(args[i][0], args[i][1], args[i][2])
-
-            block_list.append(basic_block)
-
-        for i in range(len(block_links)):
-            nxt_block_list = block_links.get(str(i))
-            for nxt_block_num in nxt_block_list:
-                Cfg.connect_2_blocks(block_list[i], block_list[nxt_block_num])
-
-        return block_list
 
 # ------------------get_simple_block----------------------------
     def test_get_simple_block_given_no_indent(self):
