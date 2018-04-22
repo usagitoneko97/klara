@@ -10,13 +10,16 @@ class RawBasicBlock:
     IS_FALSE_BLOCK = 1
 
     def __init__(self, start_line=None, end_line=None, block_end_type=None):
+        if not (isinstance(start_line, int) or not isinstance(end_line, int))\
+                and start_line is not None and end_line is not None:
+            raise TypeError
         self._start_line = start_line
         self._end_line = end_line
         self._block_end_type = block_end_type
         self.nxt_block_list = []
         self.prev_block_list = []
         self.dominates_list = []
-        self.walk_record = []
+        self.df = None
 
     @property
     def start_line(self):
@@ -24,6 +27,8 @@ class RawBasicBlock:
         
     @start_line.setter
     def start_line(self, start_line):
+        if not isinstance(start_line, int):
+            raise TypeError
         self._start_line = start_line
 
     @property
@@ -32,6 +37,8 @@ class RawBasicBlock:
 
     @end_line.setter
     def end_line(self, end_line):
+        if not isinstance(end_line, int):
+            raise TypeError
         self._end_line = end_line
 
     @property
@@ -41,10 +48,13 @@ class RawBasicBlock:
     @block_end_type.setter
     def block_end_type(self, block_end_type):
         self._block_end_type = block_end_type
-        
+
     def __repr__(self):
         s = "Block from line {} to {}".format(self.start_line, self.end_line)
         return s
+
+    def get_num_of_parents(self):
+        return len(self.prev_block_list)
 
 
 class Cfg:
@@ -53,6 +63,7 @@ class Cfg:
         self.block_list = []
         self.walk_record = []
         self.delete_record = []
+        self.find_record = []
 
         if as_tree is not None:
             self.as_tree = as_tree
@@ -220,4 +231,24 @@ class Cfg:
 
         # no child left, return yourself
         return root
+    
+    def find_node(self, block_to_find):
+        for block in self.block_list:
+            if common.is_blocks_same(block, block_to_find):
+                return block
+        return None
 
+
+def build_blocks(*args, block_links):
+    block_list = []
+    for i in range(len(args)):
+        basic_block = RawBasicBlock(args[i][0], args[i][1], args[i][2])
+
+        block_list.append(basic_block)
+
+    for i in range(len(block_links)):
+        nxt_block_list = block_links.get(str(i))
+        for nxt_block_num in nxt_block_list:
+            Cfg.connect_2_blocks(block_list[i], block_list[nxt_block_num])
+
+    return block_list

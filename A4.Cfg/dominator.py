@@ -45,3 +45,22 @@ class DominatorTree:
                     Cfg.connect_2_blocks(block_in_dom_list, dom_block_in_list)
 
         self.dominator_root = self.dominator_nodes[-1]
+
+    def fill_df(self):
+        for nodes in self.cfg.block_list:
+            if nodes.get_num_of_parents() > 1:
+                for pred_node in nodes.prev_block_list:
+                    runner = pred_node
+                    while not common.is_blocks_same(self.dominator_nodes.get_block(runner),
+                                                    self.get_idom(nodes)) \
+                            and runner is not None:
+                        runner.df = nodes
+                        runner = self.get_idom(runner)
+
+    def get_idom(self, cfg_node):
+        dom_node = self.dominator_nodes.get_block(cfg_node)
+        if dom_node.prev_block_list:
+            cfg_idom_node = self.cfg.find_node(dom_node.prev_block_list[0])
+            return cfg_idom_node
+        return None
+

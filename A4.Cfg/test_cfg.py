@@ -1,5 +1,5 @@
 import unittest
-from cfg import Cfg, RawBasicBlock
+from cfg import Cfg, RawBasicBlock, build_blocks
 import ast
 import textwrap
 
@@ -61,7 +61,7 @@ class TestCfg(unittest.TestCase):
     def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links):
         cfg_expected = Cfg()
 
-        block_list = self.build_blocks(*args, block_links=block_links)
+        block_list = build_blocks(*args, block_links=block_links)
         cfg_expected.block_list.extend(block_list)
 
         self.assertCfgEqual(cfg_real, cfg_expected)
@@ -282,7 +282,7 @@ class TestCfg(unittest.TestCase):
         cfg_handler.as_tree = as_tree
         real_tail_list = cfg_handler.build_while_body(while_block)
 
-        expected_block_list = self.build_blocks([1, 1, 'While'], [2, 2, None],
+        expected_block_list = build_blocks([1, 1, 'While'], [2, 2, None],
                                                 block_links={'0': [1], '1': [0]})
 
         self.assertBasicBlockEqual(while_block, expected_block_list[0])
@@ -301,7 +301,7 @@ class TestCfg(unittest.TestCase):
         cfg_handler.as_tree = as_tree
         real_tail_list = cfg_handler.build_while_body(while_block)
 
-        expected_block_list = self.build_blocks([1, 1, 'While'], [2, 2, 'If'], [3, 3, None], [4, 4, None],
+        expected_block_list = build_blocks([1, 1, 'While'], [2, 2, 'If'], [3, 3, None], [4, 4, None],
                                                 block_links={'0': [1], '1': [2, 3], '2': [3], '3': [0]})
 
         self.assertBasicBlockEqual(while_block, expected_block_list[0])
@@ -338,7 +338,7 @@ class TestCfg(unittest.TestCase):
         for blocks in cfg_real.walk_block(cfg_real.block_list[0]):
             blocks_list.append(blocks)
 
-        expected_block_list = self.build_blocks([3, 3, None], [1, 2, 'If'],
+        expected_block_list = build_blocks([3, 3, None], [1, 2, 'If'],
                                                 block_links={'1': [0], '0':[]})
 
         self.assertBasicBlockListEqual(blocks_list, expected_block_list)
