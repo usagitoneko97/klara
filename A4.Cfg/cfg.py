@@ -9,7 +9,7 @@ class RawBasicBlock:
     IS_TRUE_BLOCK = 0
     IS_FALSE_BLOCK = 1
 
-    def __init__(self, start_line=None, end_line=None, block_end_type=None):
+    def __init__(self, start_line=None, end_line=None, block_end_type=None, name=None):
         if not (isinstance(start_line, int) or not isinstance(end_line, int))\
                 and start_line is not None and end_line is not None:
             raise TypeError
@@ -20,6 +20,7 @@ class RawBasicBlock:
         self.prev_block_list = []
         self.dominates_list = []
         self.df = None
+        self.name = name
 
     @property
     def start_line(self):
@@ -105,10 +106,12 @@ class Cfg:
             if common.is_if_stmt(ast_node) or common.is_while_stmt(ast_node):
                 # self.add_basic_block(basic_block)
                 basic_block.block_end_type = ast_node.__class__.__name__
+                basic_block.name = 'L' + str(basic_block.start_line)
                 yield basic_block
                 basic_block = RawBasicBlock()
 
         if basic_block.start_line is not None:
+            basic_block.name = 'L' + str(basic_block.start_line)
             yield basic_block
 
     def get_ast_node(self, ast_tree, lineno):
