@@ -31,7 +31,7 @@ b = x + y
 
 The code above will generate multiple basic blocks, since it has a conditional statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
 
-![cfg_ssa_intro]()
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
 To transform the entire CFG into SSA form, one problem will occur. 
 
@@ -56,17 +56,17 @@ x_3 = Φ(x_1, x_2)
 b_0 = x_3 + y_0
 ```
 
-![cfg_ssa_intro_after_ssa]()
+![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg)
 
 ## Minimal SSA 
 
 There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at start of every single basic block. But that could be result in excess amount of unnecessaries phi function. One can argue that phi function can be inserted at every blocks that have joint points (multiple parents), but consider CFG below: 
 
-![cfg_ssa_intro]()
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
 Phi function for variable `y` should not be insert at `B4` since `B2` and `B3` had not declare variable `y`. But phi function of `x` had to be insert just before `B4` since it has been declared in both of the blocks `B2` and `B3`. 
 
-![cfg_ssa_intro_after_ssa]()
+![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg)
 
 Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of the representation and algorithm that are required. Section here will explain all the algorithm that are required to built compute a minimal SSA. 
 
@@ -92,7 +92,7 @@ dominator of w dominates u.
 #### Introduction
 As stated in terminology section above, A node u is said to *dominate* a node w w.r.t source vertex S if all the paths from S to w in the graph must pass through node u. Take for example the graph below, Assume the source is `B1`:
 
-![cfg_ssa_intro]()
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
 First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes to `B3`. On `B4` even though it has 2 path going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B3`. 
 
@@ -113,14 +113,14 @@ They are a few ways to calculate the dominance relationship between nodes. One o
 
 Given a node n in a flow graph, the set of nodes that strictly dominate n is given by (Dom(n) − n). The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in section above is shown below: 
 
-![dominance tree]()
+![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg)
 
 
 ### Dominance Frontier
 
 In a simplified manner of explanation, the dominance frontier of a node `n` can be view as, from `n`'s point of view, going through his child, DF node is the first node that `n` doesn't *strictly dominates*. For example, consider following CFG. 
 
-![DF_example]()
+![DF_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/DF_example.svg)
 
 Assume that DF of `B5` need to be found, it will iterate thorough both of the child, `B6` and `B8`. Since `B5` dominates both of them, they are not dominance frontier of `B5`. Then it will move on to `B7`, and `B5` still dominates `B7`. On block `B3` however, `B5` does not strictly dominates `B3` hence `B3` is the dominance frontier of `B5`. 
 
