@@ -2,6 +2,18 @@ import ast
 import common
 
 
+class BlockList(list):
+    def get_block(self, block_to_find):
+        for block in self.__iter__():
+            if common.is_blocks_same(block, block_to_find):
+                return block
+
+    def get_block_by_name(self, name):
+        for block in self.__iter__():
+            if block.name == name:
+                return block
+
+
 class RawBasicBlock:
     BLOCK_IF = 0
     BLOCK_WHILE = 1

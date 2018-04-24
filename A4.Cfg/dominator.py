@@ -1,19 +1,12 @@
 import copy
 import common
-from cfg import Cfg, RawBasicBlock
-
-
-class DominatorNodesList(list):
-    def get_block(self, block_to_find):
-        for block in self.__iter__():
-            if common.is_blocks_same(block, block_to_find):
-                return block
+from cfg import Cfg, RawBasicBlock, BlockList
 
 
 class DominatorTree:
     def __init__(self, cfg):
         self.dominator_root = None
-        self.dominator_nodes = DominatorNodesList()
+        self.dominator_nodes = BlockList()
         self.cfg = cfg
 
     def fill_dominates(self):

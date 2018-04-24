@@ -1,5 +1,5 @@
 import unittest
-from dominator import DominatorTree
+from dominator import DominatorTree, BlockList
 from cfg import Cfg, build_blocks, RawBasicBlock
 import ast
 import textwrap
@@ -14,15 +14,16 @@ class AssertTrueBasicBlock(Exception):
 
 class TestDominator(unittest.TestCase):
     def build_blocks_arb(self, block_links):
-        block_list = []
+        block_list = BlockList()
         for i in range(len(block_links)):
             basic_block = RawBasicBlock(i, i, None)
+            basic_block.name = chr(65 + i)
             block_list.append(basic_block)
 
-        for i in range(len(block_links)):
-            nxt_block_list = block_links.get(str(i))
-            for nxt_block_num in nxt_block_list:
-                Cfg.connect_2_blocks(block_list[i], block_list[nxt_block_num])
+        for key, value in block_links.items():
+            key_block = block_list.get_block_by_name(key)
+            for value_block_str in value:
+                Cfg.connect_2_blocks(key_block, block_list.get_block_by_name(value_block_str))
 
         return block_list
 
@@ -101,10 +102,29 @@ class TestDominator(unittest.TestCase):
 
             self.fail('Two basic blocks are not equal at num {}'.format(block_num))
 
+    def test_build_blocks_arb(self):
+        blocks = self.build_blocks_arb({'A': ['B', 'C'], 'B': [], 'C': []})
+        print(blocks)
+
     def test_dominator_tree_given_complex_block(self):
-        blocks = self.build_blocks_arb(block_links={'0': [1], '1': [2, 5], '2': [3],
-                                                    '3': [4, 1], '4': [], '5': [6, 8],
-                                                    '6': [7], '7': [3], '8': [7]})
+        """
+                 A
+                 |
+                 B   <------|
+              /    \        |
+             C      F       |
+             |    /  \      |
+             |    G   I     |
+             |    \   /     |
+             |      H       |
+              \    /        |
+                D-----------|
+                |
+                E
+        """
+        blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
+                                                    'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
+                                                    'G': ['H'], 'H': ['D'], 'I': ['H']})
 
         cfg_real = Cfg()
         cfg_real.block_list = blocks
@@ -113,16 +133,29 @@ class TestDominator(unittest.TestCase):
         dom_tree.fill_dominates()
         dom_tree.build_tree()
 
-        expected_blocks = self.build_blocks_arb(block_links={'0': [1], '1': [2, 3, 5], '2': [], '3': [4], '4': [],
-                                                             '5': [6, 7, 8], '6': [], '7': [], '8': []})
+        expected_blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D', 'F'], 'C': [], 'D': ['E'],
+                                                             'E': [], 'F': ['G', 'H', 'I'], 'G': [], 'H': [], 'I': []})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)
 
     def test_dominator_tree_given_13_blocks(self):
-        blocks = self.build_blocks_arb(block_links={'0': [1, 2, 7], '1': [3], '2': [1, 3, 5], '3': [4],
-                                                    '4': [6], '5': [6], '6': [5, 12], '7': [8, 9],
-                                                    '8': [11], '9': [10, 11], '10': [11], '11': [12],
-                                                    '12': [0, 11]})
+        """
+                |---------> R
+                |      /    |            \
+                |     A <-- B            C
+                |     |    / \           | \
+                |     D <--   E  <-      |  ----  G
+                |     |       |   |      F      /  \
+                |     L       |   |      |      |  J
+                |     \       |   |       \     |  |
+                |       ----> H --|         I <----|
+                |             \             /
+                ----------------------> K ---/
+        """
+        blocks = self.build_blocks_arb(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
+                                                    'E': ['G'], 'F': ['G'], 'G': ['F', 'M'], 'H': ['I', 'J'],
+                                                    'I': ['L'], 'J': ['K', 'L'], 'K': ['L'], 'L': ['M'],
+                                                    'M': ['A', 'L']})
 
         cfg_real = Cfg()
         cfg_real.block_list = blocks
@@ -131,10 +164,10 @@ class TestDominator(unittest.TestCase):
         dom_tree.fill_dominates()
         dom_tree.build_tree()
 
-        expected_blocks = self.build_blocks_arb(block_links={'0': [1, 2, 3, 5, 6, 7, 11, 12],
-                                                             '1': [], '2': [], '3': [4], '4': [],
-                                                             '5': [], '6': [], '7': [8, 9], '8': [],
-                                                             '9': [10], '10': [], '11': [], '12': []})
+        expected_blocks = self.build_blocks_arb(block_links={'A': ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M'],
+                                                             'B': [], 'C': [], 'D': ['E'], 'E': [],
+                                                             'F': [], 'G': [], 'H': ['I', 'J'], 'I': [],
+                                                             'J': ['K'], 'K': [], 'L': [], 'M': []})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)
 
@@ -142,10 +175,10 @@ class TestDominator(unittest.TestCase):
         as_tree = ast.parse(ms("""\
             a = 3           # 1st
             if a > 3:       #  |
-                a = 4       # 2nd
+                a = E       # 2nd
             else:           # 3rd
-                z = 5       #  |
-            y = 5           # 4th
+                z = F       #  |
+            y = F           # Eth
             """)
                             )
         cfg_real = Cfg(as_tree)
@@ -164,8 +197,8 @@ class TestDominator(unittest.TestCase):
              while a < 3:    # 1st block
                  if a < 2:   # 2nd block
                       z = 2  # 3rd block
-                 b = 2       # 4th block
-             c = 3           # 5th block
+                 b = 2       # Eth block
+             c = 3           # Fth block
             """)
                             )
         cfg_real = Cfg(as_tree)
@@ -185,10 +218,10 @@ class TestDominator(unittest.TestCase):
         as_tree = ast.parse(ms("""\
             a = 3           # 1st
             if a > 3:       #  |
-                a = 4       # 2nd
+                a = E       # 2nd
             else:           # 3rd
-                z = 5       #  |
-            y = 5           # 4th
+                z = F       #  |
+            y = F           # Eth
             """)
                             )
         cfg_real = Cfg(as_tree)
@@ -209,8 +242,8 @@ class TestDominator(unittest.TestCase):
              while a < 3:    # 1st block
                  if a < 2:   # 2nd block
                       z = 2  # 3rd block
-                 b = 2       # 4th block
-             c = 3           # 5th block
+                 b = 2       # Eth block
+             c = 3           # Fth block
             """)
                             )
         cfg_real = Cfg(as_tree)
@@ -230,10 +263,10 @@ class TestDominator(unittest.TestCase):
         as_tree = ast.parse(ms("""\
             a = 3           # 1st
             if a > 3:       #  |
-                a = 4       # 2nd
+                a = E       # 2nd
             else:           # 3rd
-                z = 5       #  |
-            y = 5           # 4th
+                z = F       #  |
+            y = F           # Eth
             """)
                             )
         cfg_real = Cfg(as_tree)
@@ -250,8 +283,8 @@ class TestDominator(unittest.TestCase):
              while a < 3:    # 1st block
                  if a < 2:   # 2nd block
                       z = 2  # 3rd block
-                 b = 2       # 4th block
-             c = 3           # 5th block
+                 b = 2       # Eth block
+             c = 3           # Fth block
             """)
                             )
         cfg_real = Cfg(as_tree)
