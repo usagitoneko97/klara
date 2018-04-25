@@ -26,7 +26,7 @@ else:
 b = x + y
 ```
 
-The code above will generate multiple basic blocks, since it has a branching statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
+The code above will generate multiple basic blocks since it has a branching statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
@@ -43,10 +43,10 @@ else:
     a = 3
 ```
 
-The recursive function will require to return the head basic block and the tail basic block to the caller. The caller can then use the head and tail return to connects both of the blocks. I.e., in *If* statement, the caller will pass the body of If to the recursive function , and will connects itself with the head returned, and connects the tail to the next basic block. At the end of the operation, it will return the head and tail for the list of ast statement. 
+The recursive function will require returning the head basic block and the tail basic block to the caller. The caller can then use the head and tail return to connects both of the blocks. I.e., in *If* statement, the caller will pass the body of If to the recursive function, and will connect itself with the head returned, and connects the tail to the next basic block. At the end of the operation, it will return the head and tail for the list of ast statement. 
 
 ## Introduction to SSA
-Static single assignment (SSA) had been discussed previously on [problems when redefining occurs](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs). SSA helped to solve that particular problem. To recall, to solve the problem, the code had transformed to ssa form.
+Static single assignment (SSA) had been discussed previously on [problems when redefining occurs](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs). SSA helped to solve that particular problem. To recall, to solve the problem, the code had transformed to SSA form.
 
 ```python
 a = x + y                       
@@ -87,7 +87,7 @@ b = x + y
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
-To transform a CFG, especially a branching of basic blocks, to SSA form is not as straight forward as as above. The code below will shows the problem. 
+To transform a CFG, especially a branching of basic blocks, to SSA form is not as straightforward as above. The code below will demonsta the problem. 
 
 ```python
 a_0 = x_0 + y_0                       
@@ -98,7 +98,7 @@ else:
 b_0 = x_? + y_0
 ```
 
-At the last statement of the code, the use of x could be refer to either `x_1` or `x_2` depending on the execution to fall into one of the 2 blocks. To resolve this, a special statement is inserted before the last statement, called a **Φ (Phi) function**. This statement will generate a new definition of x called x_3 by "choosing" either x_1 or x_2. 
+At the last statement of the code, the use of x could be referring to either `x_1` or `x_2` depending on the execution to fall into one of the 2 blocks. To resolve this, a special statement is inserted before the last statement, called a **Φ (Phi) function**. This statement will generate a new definition of x called x_3 by "choosing" either x_1 or x_2. 
 
 ```python
 a_0 = x_0 + y_0                       
@@ -114,15 +114,15 @@ b_0 = x_3 + y_0
 
 ## Minimal SSA 
 
-There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at start of every single basic block. But that could be result in excess amount of unnecessaries phi function. One can argue that phi function can be inserted at every blocks that have joint points (multiple parents), but consider CFG below: 
+There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at the start of every single basic block. But that could result in an excess amount of unnecessaries phi function. One can argue that phi function can be inserted at every block that have joint points (multiple parents), but consider CFG below: 
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
- Phi function of `x` had to be insert just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be insert at `B4` since `B2` and `B3` had not declare variable `y`.
+ Phi function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
 ![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg)
 
-Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. Section here will explain all the algorithm that are required to compute a minimal SSA. 
+Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
 ### Terminology
 
@@ -148,7 +148,7 @@ As stated in terminology section above, A node u is said to *dominate* a node w 
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
-First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes to `B3`. On `B4` even though it has 2 path going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B3`. 
+First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes for `B3`. On `B4` even though it has 2 paths going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B3`. 
 
 To find the dominated nodes list of `B2`, we look for the children of `B2`. To reach `B4`, the programs can take the path on the right side and not pass through `B2`, so `B1` does not **dominates** `B2`. 
 
@@ -164,18 +164,18 @@ The complete list of dominace relationship is shown below:
 
 #### Algorithm
 
-They are a few ways to calculate the dominance relationship between nodes. One of the easiest way is, for each node `w`, remove the node from the graph and perform a [DFS](https://en.wikipedia.org/wiki/Depth-first_search) from source node and all the nodes that are not visited by DFS is the nodes that dominated by `w`. 
+They are a few ways to calculate the dominance relationship between nodes. One of the easiest ways is, for each node `w`, remove the node from the graph and perform a [DFS](https://en.wikipedia.org/wiki/Depth-first_search) from source node and all the nodes that are not visited by DFS are the nodes that dominated by `w`. 
 
 ### Dominator Tree
 
 #### Introduction
-Given a node n in a flow graph, the set of nodes that strictly dominate n is given by (Dom(n) − n). The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in section above is shown below: 
+Given a node n in a flow graph, the set of nodes that strictly dominate n is given by (Dom(n) − n). The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in the section above is shown below: 
 
 
 ![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg)
 #### Algorithm
 
-The algorithm for constructin the dominance tree is fairly simple. Consider a slightly complex dominance relationship of tree. 
+The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. 
 
 ![dominator_tree_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example.svg)
 
@@ -189,7 +189,7 @@ And the dominance relationship between nodes is shown below:
 
 **B3** : []
 
-To built the tree, first go down to the bottom of the tree and start to build the dominator tree from bottom to the top. For every node `u` starting from bottom, `u` will be added in the dominator tree, and will attach node that `u` dominates and doesn't have a parent. This will result in **B0** does not have **B2** and **B3** as it's child.
+To build the tree, first go down to the bottom of the tree and start to build the dominator tree from bottom to the top. For every node `u` starting from the bottom, `u` will be added to the dominator tree, and will attach node that `u` dominates and doesn't have a parent. This will result in **B0** does not have **B2** and **B3** as it's child.
 
 The dominator tree:
 
@@ -201,7 +201,7 @@ In a simplified manner of explanation, the dominance frontier of a node `n` can 
 
 ![DF_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/DF_example.svg)
 
-Assume that DF of `B5` need to be found, it will iterate thorough both of the child, `B6` and `B8`. Since `B5` dominates both of them, they are not dominance frontier of `B5`. Then it will move on to `B7`, and `B5` still dominates `B7`. On block `B3` however, `B5` does not strictly dominates `B3` hence `B3` is the dominance frontier of `B5`. 
+Assume that DF of `B5` needs to be found, it will iterate through both of the child, `B6` and `B8`. Since `B5` dominates both of them, they are not dominance frontier of `B5`. Then it will move on to `B7`, and `B5` still dominates `B7`. On block `B3` however, `B5` does not strictly dominates `B3` hence `B3` is the dominance frontier of `B5`. 
 
 Pseudocode for calculating DF is provided below: 
 
