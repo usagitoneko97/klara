@@ -1,5 +1,50 @@
 # Static Single Assignment
 
+## Basic blocks
+
+### Introduction to Control Flow Graph (CFG) and basic blocks
+Basic block simply means a straight-line code sequence with no branches except the entry and the exit. 
+
+E.g., 
+```python
+a = x + y                       
+b = x + y            
+a = 17               
+c = x + y 
+```
+
+The code above can be group into a block, namely `Basic Block`. 
+
+Now take a look at the code below. 
+
+```python
+a = x + y                       
+if b < 3:
+    x = 0
+else:
+    x = 1
+b = x + y
+```
+
+The code above will generate multiple basic blocks, since it has a branching statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
+
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
+
+### Transforming SSA to CFG
+
+Transforming SSA to CFG (multiple basic blocks) will required a recursive algorithm, since the program could be nested branch statement. For example, 
+
+```python
+x = a + b
+if x < 2:
+    if a < 2:
+        a = 2
+else:
+    a = 3
+```
+
+The recursive function will require to return the head basic block and the tail basic block to the caller. The caller can then use the head and tail return to connects both of the blocks. I.e., in *If* statement, the caller will pass the body of If to the recursive function , and will connects itself with the head returned, and connects the tail to the next basic block. At the end of the operation, it will return the head and tail for the list of ast statement. 
+
 ## Introduction to SSA
 Static single assignment (SSA) had been discussed previously on [problems when redefining occurs](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs). SSA helped to solve that particular problem. To recall, to solve the problem, the code had transformed to ssa form.
 
@@ -9,6 +54,7 @@ b = x + y
 a = 17               
 c = x + y 
 ```
+
 will transform to:
 ```python
 a_0 = x_0 + y_0                       
@@ -16,7 +62,17 @@ b_0 = x_0 + y_0
 a_1 = 17               
 c_0 = x_0 + y_0 
 ```
-Transforming the code above to SSA is primarily a simple matter of replacing the target of each assignment with a new variable and with a new version. The code above can be group into a block, namely `Basic Block`. Basic block simply means a straight-line code sequence with no branches except the entry and the exit. 
+
+And will obtain:
+
+```python
+a_0 = x_0 + y_0                       
+b_0 = a_0
+a_1 = 17               
+c_0 = a_0
+```
+
+Transforming the code above to SSA is primarily a simple matter of replacing the target of each assignment with a new variable and with a new version.
 
 Now consider the code below:
 
@@ -29,11 +85,9 @@ else:
 b = x + y
 ```
 
-The code above will generate multiple basic blocks, since it has a conditional statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
-
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
-To transform the entire CFG into SSA form, one problem will occur. 
+To transform a CFG, especially a branching of basic blocks, to SSA form is not as straight forward as as above. The code below will shows the problem. 
 
 ```python
 a_0 = x_0 + y_0                       
@@ -64,11 +118,11 @@ There are many ways to insert phi function. The easiest way of inserting phi fun
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
 
-Phi function for variable `y` should not be insert at `B4` since `B2` and `B3` had not declare variable `y`. But phi function of `x` had to be insert just before `B4` since it has been declared in both of the blocks `B2` and `B3`. 
+ Phi function of `x` had to be insert just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be insert at `B4` since `B2` and `B3` had not declare variable `y`.
 
 ![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg)
 
-Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of the representation and algorithm that are required. Section here will explain all the algorithm that are required to built compute a minimal SSA. 
+Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. Section here will explain all the algorithm that are required to compute a minimal SSA. 
 
 ### Terminology
 
@@ -101,20 +155,45 @@ To find the dominated nodes list of `B2`, we look for the children of `B2`. To r
 The complete list of dominace relationship is shown below:
 
 **B1** : [**B2**, **B3**, **B4**]
+
 **B2** : []
+
 **B3** : []
+
 **B4** : []
 
 #### Algorithm
-They are a few ways to calculate the dominance relationship between nodes. One of the easiest way is, for each node `w`, remove the node from the graph and perform a DFS from source node and all the nodes that are not visited by DFS is the nodes that dominated by `w`. 
 
+They are a few ways to calculate the dominance relationship between nodes. One of the easiest way is, for each node `w`, remove the node from the graph and perform a [DFS](https://en.wikipedia.org/wiki/Depth-first_search) from source node and all the nodes that are not visited by DFS is the nodes that dominated by `w`. 
 
 ### Dominator Tree
 
+#### Introduction
 Given a node n in a flow graph, the set of nodes that strictly dominate n is given by (Dom(n) − n). The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in section above is shown below: 
 
-![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg)
 
+![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg)
+#### Algorithm
+
+The algorithm for constructin the dominance tree is fairly simple. Consider a slightly complex dominance relationship of tree. 
+
+![dominator_tree_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example.svg)
+
+And the dominance relationship between nodes is shown below:
+
+**B0** : [**B1**, **B2**, **B3**]
+
+**B1** : [**B2**, **B3**]
+
+**B2** : []
+
+**B3** : []
+
+To built the tree, first go down to the bottom of the tree and start to build the dominator tree from bottom to the top. For every node `u` starting from bottom, `u` will be added in the dominator tree, and will attach node that `u` dominates and doesn't have a parent. This will result in **B0** does not have **B2** and **B3** as it's child.
+
+The dominator tree:
+
+![dominator_tree_example_result](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example_result.svg)  
 
 ### Dominance Frontier
 
@@ -130,7 +209,7 @@ Pseudocode for calculating DF is provided below:
 for each node b
     if the number of immediate predecessors of b ≥ 2
         for each p in immediate predecessors of b
-            runner := p
+            runner := p.
             while runner ≠ idom(b)
                 add b to runner’s dominance frontier set
                 runner := idom(runner)
