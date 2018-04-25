@@ -28,7 +28,7 @@ b = x + y
 
 The code above will generate multiple basic blocks since it has a branching statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
 ### Transforming SSA to CFG
 
@@ -85,7 +85,7 @@ else:
 b = x + y
 ```
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
 To transform a CFG, especially a branching of basic blocks, to SSA form is not as straightforward as above. The code below will demonsta the problem. 
 
@@ -110,17 +110,17 @@ x_3 = Φ(x_1, x_2)
 b_0 = x_3 + y_0
 ```
 
-![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg)
+![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png)
 
 ## Minimal SSA 
 
 There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at the start of every single basic block. But that could result in an excess amount of unnecessaries phi function. One can argue that phi function can be inserted at every block that have joint points (multiple parents), but consider CFG below: 
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
  Phi function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
-![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg)
+![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png)
 
 Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
@@ -146,7 +146,7 @@ dominator of w dominates u.
 #### Introduction
 As stated in terminology section above, A node u is said to *dominate* a node w w.r.t source vertex S if all the paths from S to w in the graph must pass through node u. Take for example the graph below, Assume the source is `B1`:
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg)
+![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
 First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes for `B3`. On `B4` even though it has 2 paths going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B3`. 
 
@@ -172,12 +172,12 @@ They are a few ways to calculate the dominance relationship between nodes. One o
 Given a node n in a flow graph, the set of nodes that strictly dominate n is given by (Dom(n) − n). The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in the section above is shown below: 
 
 
-![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg)
+![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg.png)
 #### Algorithm
 
 The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. 
 
-![dominator_tree_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example.svg)
+![dominator_tree_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example.svg.png)
 
 And the dominance relationship between nodes is shown below:
 
@@ -193,7 +193,7 @@ To build the tree, first go down to the bottom of the tree and start to build th
 
 The dominator tree:
 
-![dominator_tree_example_result](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example_result.svg)  
+![dominator_tree_example_result](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example_result.svg.png)  
 
 ### Dominance Frontier
 

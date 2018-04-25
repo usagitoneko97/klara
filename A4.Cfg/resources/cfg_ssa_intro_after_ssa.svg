@@ -16,7 +16,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="cfg_ssa_intro_after_ssa.svg">
+   sodipodi:docname="cfg_ssa_intro_after_ssa.svg"
+   inkscape:export-filename="/home/usagitoneko/PycharmProjects/astAssignment/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <marker
@@ -131,11 +134,11 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="176.42699"
-     inkscape:cy="198.86127"
+     inkscape:cx="151.78413"
+     inkscape:cy="183.86127"
      inkscape:document-units="px"
      inkscape:current-layer="g4264"
      showgrid="false"
