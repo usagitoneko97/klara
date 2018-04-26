@@ -116,7 +116,7 @@ b_0 = x_3 + y_0
 
 There are many ways to insert Φ-function. The easiest way of inserting Φ-function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
 
-![cfg_ssa_intro](resources/cfg_ssa_intro.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
  Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
@@ -146,7 +146,7 @@ dominator of `w` dominates `u`.
 #### Introduction
 As stated in terminology section above, a node `u` is said to *dominate* a node `w` w.r.t the source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
-![cfg_ssa_intro](resources/cfg_ssa_intro.svg.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
 To find the dominated nodes of `B1`, each node reachable from `B1` is visited. Let's start with `B2`. It is clear that there is only 1 path to reach `B2` and the path must pass through `B1`. So `B2` is one of the dominated nodes of `B1`. The same applies to `B3`. For `B4`, there are 2 paths and both have to pass through `B1` as well. So `B4` is also the dominated node of `B1`.   
 
@@ -158,7 +158,7 @@ To find the dominated nodes of `B2`, the same process is applied. Note however, 
 
 So, the dominator tree becomes:
 
-![dominance tree](resources/dominance_Tree.svg.png)
+![dominanator tree](resources/dominator_tree.svg)
 
 #### Algorithm
 
