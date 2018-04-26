@@ -148,9 +148,9 @@ As stated in terminology section above, A node `u` is said to *dominate* a node 
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
-First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes for `B3`. On `B4` even though it has 2 paths going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B3`. 
+First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes for `B3`. On `B4` even though it has 2 paths going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B4`. 
 
-To find the dominated nodes list of `B2`, we look for the children of `B2`. To reach `B4`, the programs can take the path on the right side and not pass through `B2`, so `B1` does not **dominates** `B2`. 
+To find the dominated nodes list of `B2`, we look for the children of `B2`. To reach `B4`, the programs can take the path on the right side and not pass through `B2`, so `B2` does not **dominates** `B4`. 
 
 The complete list of dominace relationship is shown below:
 
