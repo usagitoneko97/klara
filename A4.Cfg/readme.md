@@ -114,15 +114,15 @@ b_0 = x_3 + y_0
 
 ## Minimal SSA 
 
-There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
+There are many ways to insert Φ-function. The easiest way of inserting Φ-function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.png)
 
- Phi function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
+ Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
 ![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png)
 
-Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
+Minimal SSA basically means the SSA form that contains the minimum Φ-function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
 ### Terminology
 
