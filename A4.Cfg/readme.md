@@ -144,27 +144,21 @@ dominator of `w` dominates `u`.
 ### Dominance
 
 #### Introduction
-As stated in terminology section above, A node `u` is said to *dominate* a node `w` w.r.t source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
+As stated in terminology section above, a node `u` is said to *dominate* a node `w` w.r.t the source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.svg.png)
 
-First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes for `B3`. On `B4` even though it has 2 paths going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B3`. 
+To find the dominated nodes of `B1`, each node reachable from `B1` is visited. Let's start with `B2`. It is clear that there is only 1 path to reach `B2` and the path must pass through `B1`. So `B2` is one of the dominated nodes of `B1`. The same applies to `B3`. For `B4`, there are 2 paths and both have to pass through `B1` as well. So `B4` is also the dominated node of `B1`.   
 
-To find the dominated nodes list of `B2`, we look for the children of `B2`. To reach `B4`, the programs can take the path on the right side and not pass through `B2`, so `B1` does not **dominates** `B2`. 
+To find the dominated nodes of `B2`, the same process is applied. Note however, `B1` is not reachable from `B2`, so it cannot be dominated by the latter. For `B4`, there are 2 paths, namely, `B1->B2->B4` and `B1->B3->B4`. The second path does not pass through `B2` and therefore `B2` does not **dominate** `B4`. As the result `B1` does not dominate any node.
 
-The complete list of dominace relationship is shown below:
+`B3` is similar to `B2`. It does not dominate any node too.
 
-**B1** : [**B2**, **B3**, **B4**]
+`B4` does not have any outgoing link, so there is no node reachable from it, hence it does not dominate any node.
 
-**B2** : []
+So, the dominator tree becomes:
 
-**B3** : []
-
-**B4** : []
-
-The dominator tree can then be built from this list. Dominator tree will be discussed in detail on the Dominator Tree section below. 
-
-![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg.png)
+![dominance tree](resources/dominance_Tree.svg.png)
 
 #### Algorithm
 
