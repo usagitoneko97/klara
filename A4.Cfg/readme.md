@@ -146,7 +146,7 @@ dominator of `w` dominates `u`.
 #### Introduction
 As stated in terminology section above, a node `u` is said to *dominate* a node `w` w.r.t the source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
-![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
+![cfg_ssa_intro](resources/cfg.svg)
 
 To find the dominated nodes of `B1`, each node reachable from `B1` is visited. Let's start with `B2`. It is clear that there is only 1 path to reach `B2` and the path must pass through `B1`. So `B2` is one of the dominated nodes of `B1`. The same applies to `B3`. For `B4`, there are 2 paths and both have to pass through `B1` as well. So `B4` is also the dominated node of `B1`.   
 
