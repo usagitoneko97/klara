@@ -114,15 +114,15 @@ b_0 = x_3 + y_0
 
 ## Minimal SSA 
 
-There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
+There are many ways to insert Φ-function. The easiest way of inserting Φ-function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
- Phi function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
+ Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
 ![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png)
 
-Minimal SSA basically means the SSA form that contains the minimum phi function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
+Minimal SSA basically means the SSA form that contains the minimum Φ-function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
 ### Terminology
 
@@ -144,27 +144,23 @@ dominator of `w` dominates `u`.
 ### Dominance
 
 #### Introduction
-As stated in terminology section above, A node `u` is said to *dominate* a node `w` w.r.t source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
+As stated in terminology section above, a node `u` is said to *dominate* a node `w` w.r.t the source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
-First, we will find a list of dominated nodes by `B1`. On `B2`, it's clear that the only path to `B2` passes through `B1`, so we can safely say that `B1` dominates `B2`. The same goes for `B3`. On `B4` even though it has 2 paths going to `B4`, 2 of the path has to pass through `B1`, so `B1` dominates `B4`. 
+![cfg_ssa_intro](resources/cfg.svg)
 
-To find the dominated nodes list of `B2`, we look for the children of `B2`. To reach `B4`, the programs can take the path on the right side and not pass through `B2`, so `B2` does not **dominates** `B4`. 
 
-The complete list of dominace relationship is shown below:
+To find the dominated nodes of `B1`, each node reachable from `B1` is visited. Let's start with `B2`. It is clear that there is only 1 path to reach `B2` and the path must pass through `B1`. So `B2` is one of the dominated nodes of `B1`. The same applies to `B3`. For `B4`, there are 2 paths and both have to pass through `B1` as well. So `B4` is also the dominated node of `B1`.   
 
-**B1** : [**B2**, **B3**, **B4**]
+To find the dominated nodes of `B2`, the same process is applied. Note however, `B1` is not reachable from `B2`, so it cannot be dominated by the latter. For `B4`, there are 2 paths, namely, `B1->B2->B4` and `B1->B3->B4`. The second path does not pass through `B2` and therefore `B2` does not **dominate** `B4`. As the result `B1` does not dominate any node.
 
-**B2** : []
+`B3` is similar to `B2`. It does not dominate any node too.
 
-**B3** : []
+`B4` does not have any outgoing link, so there is no node reachable from it, hence it does not dominate any node.
 
-**B4** : []
+So, the dominator tree becomes:
 
-The dominator tree can then be built from this list. Dominator tree will be discussed in detail on the Dominator Tree section below. 
-
-![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg.png)
+![dominanator tree](resources/dominator_tree.svg)
 
 #### Algorithm
 
