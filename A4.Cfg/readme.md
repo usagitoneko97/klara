@@ -2,7 +2,7 @@
 
 ## Basic blocks
 
-### Introduction to Control Flow Graph (CFG) and basic blocks
+### Introduction to Control Flow Graph (CFG) and Basic Blocks
 Basic block simply means a straight-line code sequence with no branches except the entry and the exit. 
 
 E.g., 
@@ -45,8 +45,8 @@ else:
 
 The recursive function will require returning the head basic block and the tail basic block to the caller. The caller can then use the head and tail return to connects both of the blocks. I.e., in *If* statement, the caller will pass the body of If to the recursive function, and will connect itself with the head returned, and connects the tail to the next basic block. At the end of the operation, it will return the head and tail for the list of ast statement. 
 
-## Introduction to SSA
-Static single assignment (SSA) had been discussed previously on [problems when redefining occurs](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs). SSA helped to solve that particular problem. To recall, to solve the problem, the code had transformed to SSA form.
+## Revisiting SSA
+Static single assignment(SSA) had been discussed previously on [problems when redefining occurs](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs). SSA helped to solve that particular problem. To recall, to solve the problem, the code had transformed to SSA form.
 
 ```python
 a = x + y                       
@@ -87,7 +87,7 @@ b = x + y
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
-To transform a CFG, especially a branching of basic blocks, to SSA form is not as straightforward as above. The code below will demonsta the problem. 
+To transform a CFG, especially a branching of basic blocks, to SSA form is not as straightforward as above. The code below will demonstrate the problem. 
 
 ```python
 a_0 = x_0 + y_0                       
@@ -98,7 +98,7 @@ else:
 b_0 = x_? + y_0
 ```
 
-At the last statement of the code, the use of x could be referring to either `x_1` or `x_2` depending on the execution to fall into one of the 2 blocks. To resolve this, a special statement is inserted before the last statement, called a **Φ (Phi) function**. This statement will generate a new definition of x called x_3 by "choosing" either x_1 or x_2. 
+At the last statement of the code, the use of `x` could be referring to either `x_1` or `x_2` depending on the execution to fall into one of the 2 blocks. To resolve this, a special statement is inserted before the last statement, called a **Φ (Phi) function**. This statement will generate a new definition of `x` called `x_3` by "choosing" either `x_1` or `x_2`. 
 
 ```python
 a_0 = x_0 + y_0                       
@@ -114,7 +114,7 @@ b_0 = x_3 + y_0
 
 ## Minimal SSA 
 
-There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at the start of every single basic block. But that could result in an excess amount of unnecessaries phi function. One can argue that phi function can be inserted at every block that have joint points (multiple parents), but consider CFG below: 
+There are many ways to insert phi function. The easiest way of inserting phi function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
@@ -126,15 +126,15 @@ Minimal SSA basically means the SSA form that contains the minimum phi function.
 
 ### Terminology
 
-- **Dominate** - A node u is said to *dominate* a node w w.r.t
-source vertex S if all the paths from S to w in the graph must pass through
+- **Dominate** - A node `u` is said to *dominate* a node w w.r.t
+source vertex `s` if all the paths from `s` to `w` in the graph must pass through
 node u.
 
-- **Immediate Dominator** - A node u is said to be an *immediate dominator*
-of a node w (denoted as idom(w)) if u dominates w and every other
-dominator of w dominates u.
+- **Immediate Dominator** - A node `u` is said to be an *immediate dominator*
+of a node `w` (denoted as `idom(w)`) if `u` dominates `w` and every other
+dominator of `w` dominates `u`.
 
-- **Strictly Dominates** - A node `d` is said to *strictly dominates* node `n` if d dominates `n` and `d` does not equal `n`
+- **Strictly Dominates** - A node `d` is said to *strictly dominates* node `n` if `d` dominates `n` and `d` does not equal `n`
 
 - **dominance frontier** - The *dominance frontier* of a node `d` is the set of all nodes `n` such that d dominates an immediate predecessor of `n`, but `d` does not strictly dominate `n`.
 
@@ -144,7 +144,7 @@ dominator of w dominates u.
 ### Dominance
 
 #### Introduction
-As stated in terminology section above, A node u is said to *dominate* a node w w.r.t source vertex S if all the paths from S to w in the graph must pass through node u. Take for example the graph below, Assume the source is `B1`:
+As stated in terminology section above, A node `u` is said to *dominate* a node `w` w.r.t source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
 ![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
 
@@ -162,6 +162,10 @@ The complete list of dominace relationship is shown below:
 
 **B4** : []
 
+The dominator tree can then be built from this list. Dominator tree will be discussed in detail on the Dominator Tree section below. 
+
+![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg.png)
+
 #### Algorithm
 
 They are a few ways to calculate the dominance relationship between nodes. One of the easiest ways is, for each node `w`, remove the node from the graph and perform a [DFS](https://en.wikipedia.org/wiki/Depth-first_search) from source node and all the nodes that are not visited by DFS are the nodes that dominated by `w`. 
@@ -169,7 +173,7 @@ They are a few ways to calculate the dominance relationship between nodes. One o
 ### Dominator Tree
 
 #### Introduction
-Given a node n in a flow graph, the set of nodes that strictly dominate n is given by (Dom(n) − n). The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in the section above is shown below: 
+Given a node n in a flow graph, the set of nodes that strictly dominate `n` is given by `(Dom(n) − n)`. The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in the section above is shown below: 
 
 
 ![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg.png)
@@ -216,3 +220,4 @@ for each node b
 ```
 
 ### Placing φ-Functions
+With dominance frontier, the phi function can be now place strategically. But in order to further minimize the number of phi function, liva variable analysis can be use to find out whether the phi function for that particular variable is needed or not. 
