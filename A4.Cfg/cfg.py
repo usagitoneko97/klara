@@ -1,5 +1,6 @@
 import ast
 import common
+import copy
 
 
 class BlockList(list):
@@ -31,7 +32,7 @@ class RawBasicBlock:
         self.nxt_block_list = []
         self.prev_block_list = []
         self.dominates_list = []
-        self.df = None
+        self.df = []
         self.name = name
 
     @property
@@ -63,7 +64,7 @@ class RawBasicBlock:
         self._block_end_type = block_end_type
 
     def __repr__(self):
-        s = "Block from line {} to {}".format(self.start_line, self.end_line)
+        s = "Block {} from line {} to {}".format(self.name, self.start_line, self.end_line)
         return s
 
     def get_num_of_parents(self):
@@ -77,6 +78,7 @@ class Cfg:
         self.walk_record = []
         self.delete_record = []
         self.find_record = []
+        self.dominator_tree = DominatorTree()
 
         if as_tree is not None:
             self.as_tree = as_tree
@@ -95,13 +97,9 @@ class Cfg:
         yield nodes from bottom
         :return:
         """
-        if basic_block is None:
-            return
-        self.walk_record.append(basic_block)
-        for next_block in basic_block.nxt_block_list:
-            if next_block not in self.walk_record and next_block is not None:
-                yield from self.walk_block(next_block)
-        yield basic_block
+        self.walk_record = []
+        for block in common.walk_block(self.walk_record, basic_block):
+            yield block
 
     @staticmethod
     def get_basic_block(ast_body):
@@ -247,10 +245,70 @@ class Cfg:
         # no child left, return yourself
         return root
     
-    def find_node(self, block_to_find):
-        for block in self.block_list:
-            if common.is_blocks_same(block, block_to_find):
-                return block
+    def build_dominator_tree(self):
+        self.dominator_tree.build(self.root, self.block_list)
+
+
+class DominatorTree:
+    def __init__(self, cfg=None):
+        self.dominator_root = None
+        self.dominator_nodes = BlockList()
+        if cfg is not None:
+            self.cfg = cfg
+
+    def build(self, root, block_list):
+        self.fill_dominates(root, block_list)
+        self.build_tree(root)
+        self.fill_df(block_list)
+
+    def fill_dominates(self, cfg_root, block_list):
+        for removed_block_num in (range(len(block_list))):
+            dom_root = copy.deepcopy(cfg_root)
+            dom_block_list = copy.copy(block_list)
+            # remove the block
+            # walk again
+            dom_root = common.delete_node(dom_root, block_list[removed_block_num])
+
+            for not_dom_block in common.walk_block(dom_root):
+                self.remove_block_from_list(dom_block_list, not_dom_block)
+
+            self.remove_block_from_list(dom_block_list, block_list[removed_block_num])
+            block_list[removed_block_num].dominates_list.extend(dom_block_list)
+            del dom_root
+
+    def remove_block_from_list(self, block_list, block_to_remove):
+        for block in block_list:
+            if common.is_blocks_same(block, block_to_remove):
+                block_list.remove(block)
+
+    def build_tree(self, root):
+        # TODO: clarify the code below
+        for block_in_cfg in common.walk_block(root):
+            block_in_dom_list = RawBasicBlock(block_in_cfg.start_line, block_in_cfg.end_line)
+            self.dominator_nodes.append(block_in_dom_list)
+            for dom_block in block_in_cfg.dominates_list:
+                dom_block_in_dom_list = self.dominator_nodes.get_block(dom_block)
+                if not dom_block_in_dom_list.prev_block_list:
+                    Cfg.connect_2_blocks(block_in_dom_list, dom_block_in_dom_list)
+
+        self.dominator_root = self.dominator_nodes[-1]
+
+    def fill_df(self, block_list):
+        for nodes in block_list:
+            if nodes.get_num_of_parents() > 1:
+                for pred_node in nodes.prev_block_list:
+                    runner = pred_node
+                    while not common.is_blocks_same(self.dominator_nodes.get_block(runner),
+                                                    self.get_idom(block_list, nodes)) \
+                            and runner is not None:
+                        runner.df.append(nodes)
+                        runner = self.get_idom(block_list, runner)
+
+    def get_idom(self, block_list, cfg_node):
+        dom_node = self.dominator_nodes.get_block(cfg_node)
+        if dom_node.prev_block_list:
+            cfg_idom_node = common.find_node(block_list, dom_node.prev_block_list[0])
+            return cfg_idom_node
         return None
 
 

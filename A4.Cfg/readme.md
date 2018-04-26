@@ -28,7 +28,7 @@ b = x + y
 
 The code above will generate multiple basic blocks since it has a branching statement. The basic blocks will then linked between themselves, and form a network of basic blocks, name **Control Flow Graph (CFG)**. 
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
 ### Transforming SSA to CFG
 
@@ -85,7 +85,7 @@ else:
 b = x + y
 ```
 
-![cfg_ssa_intro](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro.svg.png)
+![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
 To transform a CFG, especially a branching of basic blocks, to SSA form is not as straightforward as above. The code below will demonstrate the problem. 
 
@@ -110,7 +110,7 @@ x_3 = Φ(x_1, x_2)
 b_0 = x_3 + y_0
 ```
 
-![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png)
+![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa.svg.png)
 
 ## Minimal SSA 
 
@@ -120,7 +120,7 @@ There are many ways to insert Φ-function. The easiest way of inserting Φ-funct
 
  Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
-![cfg_ssa_intro_after_ssa](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/cfg_ssa_intro_after_ssa.svg.png)
+![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa.svg.png)
 
 Minimal SSA basically means the SSA form that contains the minimum Φ-function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
@@ -172,12 +172,14 @@ They are a few ways to calculate the dominance relationship between nodes. One o
 Given a node n in a flow graph, the set of nodes that strictly dominate `n` is given by `(Dom(n) − n)`. The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in the section above is shown below: 
 
 
-![dominance tree](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominance_Tree.svg.png)
+![dominance tree](resources/dominator_tree.svg)
+
+T
 #### Algorithm
 
 The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. 
 
-![dominator_tree_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example.svg.png)
+![dominator_tree_example](resources/dominator_tree_example.svg.png)
 
 And the dominance relationship between nodes is shown below:
 
@@ -193,13 +195,13 @@ To build the tree, first go down to the bottom of the tree and start to build th
 
 The dominator tree:
 
-![dominator_tree_example_result](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/dominator_tree_example_result.svg.png)  
+![dominator_tree_example_result](resources/dominator_tree_example_result.svg.png)  
 
 ### Dominance Frontier
 
 In a simplified manner of explanation, the dominance frontier of a node `n` can be view as, from `n`'s point of view, going through his child, DF node is the first node that `n` doesn't *strictly dominates*. For example, consider following CFG. 
 
-![DF_example](https://github.com/usagitoneko97/python-ast/blob/master/A4.Cfg/resources/DF_example.svg)
+![DF_example](resources/DF_example.svg)
 
 Assume that DF of `B5` needs to be found, it will iterate through both of the child, `B6` and `B8`. Since `B5` dominates both of them, they are not dominance frontier of `B5`. Then it will move on to `B7`, and `B5` still dominates `B7`. On block `B3` however, `B5` does not strictly dominates `B3` hence `B3` is the dominance frontier of `B5`. 
 
@@ -216,4 +218,4 @@ for each node b
 ```
 
 ### Placing φ-Functions
-With dominance frontier, the phi function can be now place strategically. But in order to further minimize the number of phi function, liva variable analysis can be use to find out whether the phi function for that particular variable is needed or not. 
+With dominance frontier, the phi function can be now place strategically. But in order to further minimize the number of phi function, liva variable analysis can be use to find out whether the phi function for that particular variable is needed or not.
