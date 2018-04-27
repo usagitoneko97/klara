@@ -73,3 +73,8 @@ def find_node(block_list, block_to_find):
             return block
     return None
 
+
+def remove_block_from_list(block_list, block_to_remove):
+    for block in block_list:
+        if is_blocks_same(block, block_to_remove):
+            block_list.remove(block)

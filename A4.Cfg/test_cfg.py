@@ -2,6 +2,7 @@ import unittest
 from cfg import Cfg, RawBasicBlock, build_blocks
 import ast
 import textwrap
+import common
 
 ms = textwrap.dedent
 
@@ -332,14 +333,13 @@ class TestCfg(unittest.TestCase):
             """))
 
         cfg_real = Cfg(as_tree)
-        # cfg_real.walk_block(cfg_real.block_list[0])
 
         blocks_list = []
-        for blocks in cfg_real.walk_block(cfg_real.block_list[0]):
+        for blocks in common.walk_block(cfg_real.block_list[0]):
             blocks_list.append(blocks)
 
         expected_block_list = build_blocks([3, 3, None], [1, 2, 'If'],
-                                                block_links={'1': [0], '0':[]})
+                                           block_links={'1': [0], '0': []})
 
         self.assertBasicBlockListEqual(blocks_list, expected_block_list)
 
@@ -355,7 +355,7 @@ class TestCfg(unittest.TestCase):
 
         cfg_real = Cfg(as_tree)
         blocks_list = []
-        for blocks in cfg_real.walk_block(cfg_real.block_list[0]):
+        for blocks in common.walk_block(cfg_real.block_list[0]):
             blocks_list.append(blocks)
         pass
 
@@ -370,5 +370,5 @@ class TestCfg(unittest.TestCase):
              """))
 
         cfg_real = Cfg(as_tree)
-        cfg_real.root = cfg_real.delete_node(cfg_real.root, RawBasicBlock(1, 1))
+        cfg_real.root = common.delete_node(cfg_real.root, RawBasicBlock(1, 1))
         pass

@@ -2,6 +2,8 @@ import ast
 import common
 import copy
 
+from common import remove_block_from_list
+
 
 class BlockList(list):
     def get_block(self, block_to_find):
@@ -75,9 +77,6 @@ class Cfg:
     def __init__(self, as_tree=None, *basic_block_args):
         self.__else_flag__ = False
         self.block_list = []
-        self.walk_record = []
-        self.delete_record = []
-        self.find_record = []
         self.dominator_tree = DominatorTree()
 
         if as_tree is not None:
@@ -91,15 +90,6 @@ class Cfg:
     def add_basic_block(self, basic_block):
         if basic_block.start_line is not None:
             self.block_list.append(basic_block)
-
-    def walk_block(self, basic_block):
-        """
-        yield nodes from bottom
-        :return:
-        """
-        self.walk_record = []
-        for block in common.walk_block(self.walk_record, basic_block):
-            yield block
 
     @staticmethod
     def get_basic_block(ast_body):
@@ -227,23 +217,6 @@ class Cfg:
         """
         block1.nxt_block_list.append(block2)
         block2.prev_block_list.append(block1)
-
-    @staticmethod
-    def is_blocks_same(block1, block2):
-        return str(block1) == str(block2)
-
-    def delete_node(self, root,  block_to_delete):
-        if self.is_blocks_same(root, block_to_delete) or root is None:
-            return None
-
-        self.delete_record.append(root)
-        for next_block_num in range(len(root.nxt_block_list)):
-            if root.nxt_block_list[next_block_num] not in self.delete_record:
-                root.nxt_block_list[next_block_num] = self.delete_node(root.nxt_block_list[next_block_num],
-                                                                       block_to_delete)
-
-        # no child left, return yourself
-        return root
     
     def build_dominator_tree(self):
         self.dominator_tree.build(self.root, self.block_list)
@@ -270,16 +243,11 @@ class DominatorTree:
             dom_root = common.delete_node(dom_root, block_list[removed_block_num])
 
             for not_dom_block in common.walk_block(dom_root):
-                self.remove_block_from_list(dom_block_list, not_dom_block)
+                remove_block_from_list(dom_block_list, not_dom_block)
 
-            self.remove_block_from_list(dom_block_list, block_list[removed_block_num])
+            remove_block_from_list(dom_block_list, block_list[removed_block_num])
             block_list[removed_block_num].dominates_list.extend(dom_block_list)
             del dom_root
-
-    def remove_block_from_list(self, block_list, block_to_remove):
-        for block in block_list:
-            if common.is_blocks_same(block, block_to_remove):
-                block_list.remove(block)
 
     def build_tree(self, root):
         # TODO: clarify the code below
