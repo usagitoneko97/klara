@@ -1,4 +1,4 @@
-# Static Single Assignment
+# Control Flow Graph
 
 ## Basic blocks
 
@@ -219,3 +219,64 @@ for each node b
 
 ### Placing φ-Functions
 With dominance frontier, the phi function can be now place strategically. But in order to further minimize the number of phi function, liva variable analysis can be use to find out whether the phi function for that particular variable is needed or not.
+
+## Creating a test
+Section here will discuss on how to create a test fixture and ways to assert it. 
+
+### Generate test inputs
+
+In this moments, there are 2 types of test input. The first type is an AST type. AST is the actual input of the CFG class and can be build like this:
+
+```python
+import ast
+as_tree = ast.parse(ms("""\
+            a = 3           # 1st
+            if a > 3:       #  |
+                a = E       # 2nd
+            else:           # 3rd
+                z = F       #  |
+            y = F           # Eth
+            """)
+                            )
+cfg_real = Cfg(as_tree)
+```
+AST can be used in testing the building of basic block, but when comes down to testing the dominator tree or the DF, it's very hard to construct a complex linkage of basic block. Therefore the test file provide also the method for building a complex basic block. 
+
+```python
+"""
+                Note: '|' with no arrows means pointing down
+
+                 A                   
+               /   \                 
+              B     C         
+               \   /                 
+                 D                   
+"""
+blocks = self.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []})
+```
+
+Note that by default, it will create the number of blocks depending on the number of entry of the *block_links* dictionary, and the default name of basic blocks will start from `A` and incremented by 1 ascii character. 
+
+### Asserting test output
+The test file `test_dominator.py` had included several assert method. 
+
+*To assert the dominance relationship*
+```python
+self.assertDominatorEqual(cfg_real, {'A': ['B', 'C', 'D'],
+                                     'B': [],
+                                     'C': [],
+                                     'D': []})
+```
+
+*To assert 2 lists of basic blocks*
+```python
+expected_blocks_list = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['A']})
+
+self.assertBasicBlockListEqual(real_blocks_list, expected_blocks)
+```
+
+*To assert the DF of the blocks*
+```python
+self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
+                              'E': ['F'], 'F': ['B']})
+```

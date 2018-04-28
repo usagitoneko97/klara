@@ -218,7 +218,7 @@ class Cfg:
         block1.nxt_block_list.append(block2)
         block2.prev_block_list.append(block1)
     
-    def build_dominator_tree(self):
+    def fill_df(self):
         self.dominator_tree.build(self.root, self.block_list)
 
 

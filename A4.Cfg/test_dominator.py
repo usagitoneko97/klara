@@ -110,6 +110,15 @@ class TestDominator(unittest.TestCase):
 
 # ----------------------- fill dominate test----------------
     def test_fill_dominate_given_if_else(self):
+        """
+                Note: '|' with no arrows means pointing down
+
+                 A                      Expected Dominator
+               /   \                   A: [B, C, D]
+              B     C      ------>     B: []
+               \   /                   C: []
+                 D                     D: []
+        """
         blocks = self.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []})
         cfg_real = Cfg()
         cfg_real.block_list = blocks
@@ -125,6 +134,21 @@ class TestDominator(unittest.TestCase):
         self.assertDominatorEqual(cfg_real, expected_dominator)
 
     def test_fill_dominate_given_while(self):
+        """
+        Note: '|' with no arrows means pointing down
+
+                A
+                |
+                B     <-----
+               / \         |                            A': ['B', 'C', 'D', 'E', 'F'],
+              C   |        |                            B': ['C', 'D', 'E', 'F'],
+             / |  |        |    Expected dominator      C': ['D', 'E'],
+            D  |  |        |        ---->               D': [],
+            |  /  |        |                            E': [],
+            E     |        |                            F': []}
+            \    /         |
+              F   ----------
+        """
         blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
                                                     'D': ['E'], 'E': ['F'], 'F': ['B']})
         cfg_real = Cfg()
@@ -147,6 +171,8 @@ class TestDominator(unittest.TestCase):
     def test_dominator_tree_given_complex_block(self):
         # TODO: plot the expected dominator block
         """
+                Note: '|' with no arrows means pointing down
+
                  A                                        A
                  |                                        |
                  B   <------|                             B
@@ -179,17 +205,23 @@ class TestDominator(unittest.TestCase):
 
     def test_dominator_tree_given_13_blocks(self):
         """
-                |---------> R
-                |      /    |            \
-                |     A <-- B            C
-                |     |    / \           | \
-                |     D <--   E  <-      |  ----  G
-                |     |       |   |      F      /  \
-                |     L       |   |      |      |  J
-                |     \       |   |       \     |  |
-                |       ----> H --|         I <----|
-                |             \             /
-                ----------------------> K ---/
+                Note: '|' with no arrows means pointing down
+
+                +---------> R
+                |           |
+                |     +-----+------------+
+                |     |     |            |
+                |     A <-- B            C---------+
+                |     |    / \           |         |
+                |     D --+   E <-+      |         G
+                |     |       |   |      F        / \
+                |     L       |   |      |       |  J
+                |     |       |   |       \      |  |
+                |     +------ H --+         I ---+--+
+                |             |             |
+                |             +---------+   |
+                |                       |   |
+                +---------------------- K --+
         """
         blocks = self.build_blocks_arb(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
                                                     'E': ['G'], 'F': ['G'], 'G': ['F', 'M'], 'H': ['I', 'J'],
@@ -213,6 +245,8 @@ class TestDominator(unittest.TestCase):
 # ---------------------- Dominance Frontier test------------------------
     def test_fill_df_given_6_block_with_loop(self):
         """
+        Note: '|' with no arrows means pointing down
+
                 A (None)
                 |                                       DF(A) : None
                 B (B) <-----                            DF(B) : B
@@ -241,16 +275,17 @@ class TestDominator(unittest.TestCase):
 
     def test_fill_df_given_7_blocks(self):
         """
+        Note: '|' with no arrows means pointing down
              H
              |
-             A  <---          DF(A) = None,
+             A  <---          DF(A) = A,
             / \    |          DF(B) = G,
            B   E ---          DF(C) = F
           / \  |              DF(D) = F
-         C   D |              DF(E) = G
+         C   D |              DF(E) = A, G
           \ /  |              DF(F) = G
            F   |              DF(G) = None
-            \  |
+            \  |              DF(H) = None
               G
         """
         blocks = self.build_blocks_arb(block_links={'H': ['A'], 'A': ['B', 'E'], 'B': ['C', 'D'], 'C': ['F'], 'D': ['F'],
@@ -275,42 +310,6 @@ class TestDominator(unittest.TestCase):
     # ----------------- functional tests--------------------------
     # -------------- test build dominator tree----------------
 
-    def test_fill_df_given_if_else(self):
-        as_tree = ast.parse(ms("""\
-            a = 3           # 1st
-            if a > 3:       #  |
-                a = E       # 2nd
-            else:           # 3rd
-                z = F       #  |
-            y = F           # Eth
-            """)
-                            )
-        cfg_real = Cfg(as_tree)
-        dom_tree = DominatorTree()
-        dom_tree.fill_dominates(cfg_real.root, cfg_real.block_list)
-        dom_tree.build_tree(cfg_real.root)
-        dom_tree.fill_df(cfg_real.block_list)
-
-        self.assertDfEqual(dom_tree, [], [6, 6], [6, 6], [])
-
-    def test_fill_df_given_while(self):
-        as_tree = ast.parse(ms("""\
-             z = 2           # 0th block
-             while a < 3:    # 1st block
-                 if a < 2:   # 2nd block
-                      z = 2  # 3rd block
-                 b = 2       # 4th block
-             c = 3           # 5th block
-            """)
-                            )
-        cfg_real = Cfg(as_tree)
-        dom_tree = DominatorTree(cfg_real)
-        dom_tree.fill_dominates()
-        dom_tree.build_tree()
-        dom_tree.fill_df()
-
-        self.assertDfEqual(dom_tree, [], [2, 2], [2, 2], [5, 5], [2, 2], [],)
-
     def test_build_dominator_tree_given_1_lvl(self):
         as_tree = ast.parse(ms("""\
             a = 3           # 1st
@@ -322,16 +321,14 @@ class TestDominator(unittest.TestCase):
             """)
                             )
         cfg_real = Cfg(as_tree)
-        dom_tree = DominatorTree(cfg_real)
-        dom_tree.fill_dominates()
-        dom_tree.build_tree()
+        cfg_real.fill_df()
 
         expected_block_list = build_blocks([6, 6, None], [3, 3, None],
                                            [5, 5, None], [1, 2, None],
                                            block_links={'3': [1, 2, 0], '2': [],
                                                         '1': [], '0': []})
 
-        self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_block_list)
+        self.assertBasicBlockListEqual(cfg_real.dominator_tree.dominator_nodes, expected_block_list)
 
     def test_build_dominator_tree_given_2_lvl(self):
         as_tree = ast.parse(ms("""\
@@ -344,14 +341,12 @@ class TestDominator(unittest.TestCase):
             """)
                             )
         cfg_real = Cfg(as_tree)
-        dom_tree = DominatorTree(cfg_real)
-        dom_tree.fill_dominates()
-        dom_tree.build_tree()
+        cfg_real.fill_df()
 
         expected_block_list = build_blocks([5, 5, None], [4, 4, None], [3, 3, None],
                                            [6, 6, None], [2, 2, None], [1, 1, None],
                                            block_links={'5': [4], '4': [2, 3], '2': [1, 0],
                                                         '1': [], '0': [], '3': []})
         
-        self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_block_list)
+        self.assertBasicBlockListEqual(cfg_real.dominator_tree.dominator_nodes, expected_block_list)
         pass
