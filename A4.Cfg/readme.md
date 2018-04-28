@@ -268,14 +268,14 @@ self.assertDominatorEqual(cfg_real, {'A': ['B', 'C', 'D'],
                                      'D': []})
 ```
 
-*To assert 2 lists of basic blocks*
+*To assert 2 lists of basic blocks* :
 ```python
 expected_blocks_list = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['A']})
 
 self.assertBasicBlockListEqual(real_blocks_list, expected_blocks)
 ```
 
-*To assert the DF of the blocks*
+*To assert the DF of the blocks* :
 ```python
 self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
                               'E': ['F'], 'F': ['B']})

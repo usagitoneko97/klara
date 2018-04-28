@@ -68,9 +68,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.7"
-     inkscape:cx="-274.57933"
-     inkscape:cy="212.78648"
+     inkscape:zoom="1.979899"
+     inkscape:cx="163.70995"
+     inkscape:cy="186.06778"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -91,7 +91,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -225,7 +225,7 @@
              id="tspan4228-0-5"
              x="72.164085"
              y="188.70261"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:1.25;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#6c5353;stroke-width:0.99999994px">B5</tspan></text>
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:1.25;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#6c5353;stroke-width:0.99999994px">B4</tspan></text>
         <ellipse
            style="fill:none;fill-opacity:1;stroke:#0037a4;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
            id="path5038-78-3"
@@ -271,7 +271,7 @@
            y="188.70261"
            x="72.164085"
            id="tspan4228-0"
-           sodipodi:role="line">B5</tspan></text>
+           sodipodi:role="line">B3</tspan></text>
       <ellipse
          ry="17.745535"
          rx="18.080359"
@@ -294,7 +294,7 @@
            y="188.70261"
            x="72.164085"
            id="tspan4228-0-7"
-           sodipodi:role="line">B5</tspan></text>
+           sodipodi:role="line">B6</tspan></text>
       <ellipse
          ry="17.745535"
          rx="18.080359"
@@ -317,7 +317,7 @@
            y="188.70261"
            x="72.164085"
            id="tspan4228-0-6"
-           sodipodi:role="line">B5</tspan></text>
+           sodipodi:role="line">B7</tspan></text>
       <ellipse
          ry="17.745535"
          rx="18.080359"
