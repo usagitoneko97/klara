@@ -110,7 +110,7 @@ x_3 = Φ(x_1, x_2)
 b_0 = x_3 + y_0
 ```
 
-![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa.svg.png)
+![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa_1.svg)
 
 ## Minimal SSA 
 
@@ -120,7 +120,7 @@ There are many ways to insert Φ-function. The easiest way of inserting Φ-funct
 
  Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
-![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa.svg.png)
+![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa_1.svg)
 
 Minimal SSA basically means the SSA form that contains the minimum Φ-function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
@@ -179,7 +179,7 @@ Given a node n in a flow graph, the set of nodes that strictly dominate `n` is g
 
 The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. Assume that the source is **B0**. 
 
-![dominator_tree_example](resources/dominator_tree_example.svg.png)
+![dominator_tree_example](resources/dominator_tree_example.svg)
 
 And the dominance relationship between nodes is shown below:
 
@@ -195,7 +195,7 @@ To build the tree, first go down to the bottom of the tree and start to build th
 
 The dominator tree:
 
-![dominator_tree_example_result](resources/dominator_tree_example_result.svg.png)  
+![dominator_tree_example_result](resources/dominator_tree_example_result.svg)  
 
 ### Dominance Frontier
 

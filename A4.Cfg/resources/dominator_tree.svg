@@ -11,12 +11,12 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="49.488605mm"
-   height="36.903419mm"
-   viewBox="0 0 175.35333 130.76015"
+   height="37.508183mm"
+   viewBox="0 0 175.35333 132.90301"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="dominance_Tree2.svg"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="dominator_tree.svg"
    inkscape:export-filename="/home/usagitoneko/PycharmProjects/astAssignment/A4.Cfg/resources/cfg_ssa_intro.svg.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
@@ -46,9 +46,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.7"
-     inkscape:cx="-72.268049"
-     inkscape:cy="65.157769"
+     inkscape:zoom="1.4"
+     inkscape:cx="43.7955"
+     inkscape:cy="55.724064"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -57,9 +57,9 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:window-width="1920"
-     inkscape:window-height="1017"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-height="1022"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata7">
@@ -78,35 +78,33 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(72.711428,-76.984972)">
-    <path
-       style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m -3.9169064,98.13343 c -19.5194196,5.25119 -46.0800396,23.35523 -49.8309496,62.67311"
-       id="path4752-7"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Californian FB';-inkscape-font-specification:'Californian FB';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="1.7669573"
        y="102.41117"
-       id="text4226"><tspan
+       id="text4226"
+       sodipodi:linespacing="0%"><tspan
          sodipodi:role="line"
          id="tspan4228"
          x="1.7669573"
          y="102.41117"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:1.25;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#6c5353">B1</tspan></text>
-    <path
-       style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m -55.884676,147.76612 2.13682,13.04042 5.114,-12.18464"
-       id="path4752-9-5"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="ccc" />
-    <path
-       style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 13.435535,113.32224 13.15816,165.61589"
-       id="path4752-7-5"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+    <g
+       id="g4184">
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4752-7"
+         d="m -3.9169064,98.13343 c -19.5194196,5.25119 -46.0800396,23.35523 -49.8309496,62.67311"
+         style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="ccc"
+         inkscape:connector-curvature="0"
+         id="path4752-9-5"
+         d="m -55.884676,147.76612 2.13682,13.04042 5.114,-12.18464"
+         style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
     <ellipse
        style="fill:none;fill-opacity:1;stroke:#0037a4;stroke-width:1.87500012;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path5038"
@@ -126,18 +124,29 @@
        id="path4752-9-5-9"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccc" />
-    <path
-       style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 9.7387952,155.26445 3.2681248,12.80383 4.029739,-12.5849"
-       id="path4752-9-5-7"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="ccc" />
+    <g
+       id="g4165"
+       transform="translate(0,0.71428571)">
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4752-7-5"
+         d="M 13.435535,113.32224 13.15816,165.61589"
+         style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="ccc"
+         inkscape:connector-curvature="0"
+         id="path4752-9-5-7"
+         d="m 9.7387952,155.26445 3.2681248,12.80383 4.029739,-12.5849"
+         style="fill:none;stroke:#29d1e0;stroke-width:1.87499988;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:0%;font-family:'Californian FB';-inkscape-font-specification:'Californian FB';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.99999994px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="-65.153534"
        y="188.22911"
-       id="text4226-2"><tspan
+       id="text4226-2"
+       sodipodi:linespacing="0%"><tspan
          sodipodi:role="line"
          id="tspan4228-2"
          x="-65.153534"
@@ -150,30 +159,40 @@
        cy="181.48595"
        rx="18.080359"
        ry="17.745535" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:0%;font-family:'Californian FB';-inkscape-font-specification:'Californian FB';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.99999994px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="0.66422153"
-       y="195.80525"
-       id="text4226-4"><tspan
-         sodipodi:role="line"
-         id="tspan4228-20"
-         x="0.66422153"
-         y="195.80525"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:1.25;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#6c5353;stroke-width:0.99999994px">B4</tspan></text>
-    <ellipse
-       style="fill:none;fill-opacity:1;stroke:#0037a4;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="path5038-7"
-       cx="12.124182"
-       cy="189.06209"
-       rx="18.080359"
-       ry="17.745535" />
+    <g
+       id="g4155"
+       transform="translate(-1.0714286,-4.2457143e-6)">
+      <g
+         id="g4160"
+         transform="translate(2.8571429,2.1428571)">
+        <text
+           sodipodi:linespacing="0%"
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:0%;font-family:'Californian FB';-inkscape-font-specification:'Californian FB';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.99999994px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="0.66422153"
+           y="195.80525"
+           id="text4226-4"><tspan
+             sodipodi:role="line"
+             id="tspan4228-20"
+             x="0.66422153"
+             y="195.80525"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:1.25;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#6c5353;stroke-width:0.99999994px">B4</tspan></text>
+        <ellipse
+           style="fill:none;fill-opacity:1;stroke:#0037a4;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="path5038-7"
+           cx="12.124182"
+           cy="189.06209"
+           rx="18.080359"
+           ry="17.745535" />
+      </g>
+    </g>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:0%;font-family:'Californian FB';-inkscape-font-specification:'Californian FB';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.99999994px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="72.164085"
        y="188.70261"
-       id="text4226-06"><tspan
+       id="text4226-06"
+       sodipodi:linespacing="0%"><tspan
          sodipodi:role="line"
          id="tspan4228-0"
          x="72.164085"
