@@ -174,10 +174,10 @@ Given a node n in a flow graph, the set of nodes that strictly dominate `n` is g
 
 ![dominance tree](resources/dominator_tree.svg)
 
-T
+
 #### Algorithm
 
-The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. 
+The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. Assume that the source is **B0**. 
 
 ![dominator_tree_example](resources/dominator_tree_example.svg.png)
 
@@ -199,7 +199,7 @@ The dominator tree:
 
 ### Dominance Frontier
 
-In a simplified manner of explanation, the dominance frontier of a node `n` can be view as, from `n`'s point of view, going through his child, DF node is the first node that `n` doesn't *strictly dominates*. For example, consider following CFG. 
+In a simplified manner of explanation, the dominance frontier of a node `n` can be view as, from `n`'s point of view, going through his child, DF node is the first node that `n` doesn't *strictly dominates*. For example, consider following CFG. Assume that the source is **B0**. 
 
 ![DF_example](resources/DF_example.svg)
 
