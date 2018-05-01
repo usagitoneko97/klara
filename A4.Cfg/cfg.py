@@ -39,6 +39,7 @@ class RawBasicBlock:
         self.name = name
         self.var_kill = set()
         self.ue_var = set()
+        self.phi = []
 
     @property
     def start_line(self):
@@ -74,6 +75,12 @@ class RawBasicBlock:
 
     def get_num_of_parents(self):
         return len(self.prev_block_list)
+
+    def insert_phi(self, var):
+        self.phi.append(var)
+
+    def has_phi(self, var):
+        return var in self.phi
 
 
 class Cfg:
@@ -247,6 +254,14 @@ class Cfg:
                         if block not in self.block_set[target]:
                             self.block_set[target].append(block)
 
+    def ins_phi_function_semi_pruned(self):
+        for var in self.globals_var:
+            worklist = copy.copy(self.block_set[var])
+            for block in worklist:
+                for df_block in block.df:
+                    if not df_block.has_phi(var):
+                        df_block.insert_phi(var)
+                        worklist.append(df_block)
 
 class DominatorTree:
     def __init__(self, cfg=None):

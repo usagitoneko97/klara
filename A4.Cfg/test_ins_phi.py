@@ -56,3 +56,24 @@ class TestInsPhi(unittest.TestCase):
         expected_block_set = {'x': [cfg_real.block_list[1]], 'a': [cfg_real.block_list[0]],
                               'y': [cfg_real.block_list[1]]}
         self.assertDictEqual(cfg_real.block_set, expected_block_set)
+
+    # ----------------- test phi function insertion--------------
+    def test_insert_phi_function(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3           # 1st
+                    if a > 3:       #  |
+                        a = 3       # 2nd
+                        b = 3
+                    else:           # 3rd
+                        z = 4       #  |
+                    # expected phi func for 'a' here
+                    y = a           # 4th
+                    """)
+                            )
+        cfg_real = Cfg(as_tree)
+        cfg_real.fill_df()
+        cfg_real.gather_initial_info()
+        cfg_real.ins_phi_function_semi_pruned()
+
+        expected_phi_list_for_block_3 = ['a']
+        self.assertListEqual(cfg_real.block_list[-1].phi, expected_phi_list_for_block_3)
