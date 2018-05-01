@@ -1,8 +1,8 @@
+from common import ms
+
 from cfg import RawBasicBlock, Cfg
 import unittest
-import textwrap
 import ast
-ms = textwrap.dedent
 
 
 class TestVarAst(unittest.TestCase):

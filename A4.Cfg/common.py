@@ -1,5 +1,7 @@
 import ast
 
+import textwrap
+ms = textwrap.dedent
 
 def is_call_func(ast_node):
     if isinstance(ast_node, ast.Expr):

@@ -37,6 +37,8 @@ class RawBasicBlock:
         self.dominates_list = []
         self.df = []
         self.name = name
+        self.var_kill = set()
+        self.ue_var = set()
 
     @property
     def start_line(self):
@@ -227,6 +229,16 @@ class Cfg:
             ast_stmt = self.get_ast_node(self.as_tree, i)
             var_ast = VarAst(ast_stmt)
             yield var_ast.targets_var, var_ast.values_var
+
+    def gather_initial_info(self):
+        for block in self.block_list:
+            for targets, values in self.get_var_ast(block):
+                for value in values:
+                    if value not in block.var_kill:
+                        block.ue_var.add(value)
+                block.var_kill |= set(targets)
+
+
 
 
 class DominatorTree:
