@@ -1,8 +1,9 @@
+from var_ast import VarAst
+from common import remove_block_from_list
+
 import ast
 import common
 import copy
-
-from common import remove_block_from_list
 
 
 class BlockList(list):
@@ -220,6 +221,12 @@ class Cfg:
     
     def fill_df(self):
         self.dominator_tree.build(self.root, self.block_list)
+
+    def get_var_ast(self, block):
+        for i in range(block.start_line, block.end_line + 1):
+            ast_stmt = self.get_ast_node(self.as_tree, i)
+            var_ast = VarAst(ast_stmt)
+            yield var_ast.targets_var, var_ast.values_var
 
 
 class DominatorTree:

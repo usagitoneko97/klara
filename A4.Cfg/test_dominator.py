@@ -1,8 +1,8 @@
 import unittest
-from cfg import Cfg, build_blocks, RawBasicBlock, DominatorTree, BlockList
+from cfg import Cfg, build_blocks, DominatorTree
 import ast
 import textwrap
-
+import test_helper as th
 ms = textwrap.dedent
 
 
@@ -11,20 +11,6 @@ class AssertTrueBasicBlock(Exception):
 
 
 class TestDominator(unittest.TestCase):
-    def build_blocks_arb(self, block_links):
-        block_list = BlockList()
-        for i in range(len(block_links)):
-            basic_block = RawBasicBlock(i, i, None)
-            basic_block.name = chr(65 + i)
-            block_list.append(basic_block)
-
-        for key, value in block_links.items():
-            key_block = block_list.get_block_by_name(key)
-            for value_block_str in value:
-                Cfg.connect_2_blocks(key_block, block_list.get_block_by_name(value_block_str))
-
-        return block_list
-
     def assertDfEqual(self, cfg, expected_df_dict):
         self.assertEqual(len(cfg.block_list), len(expected_df_dict),
                          "the number of blocks is not the same")
@@ -105,7 +91,7 @@ class TestDominator(unittest.TestCase):
             self.fail('Two basic blocks are not equal at num {}'.format(block_num))
 
     def test_build_blocks_arb(self):
-        blocks = self.build_blocks_arb({'A': ['B', 'C'], 'B': [], 'C': []})
+        blocks = th.build_blocks_arb({'A': ['B', 'C'], 'B': [], 'C': []})
         print(blocks)
 
 # ----------------------- fill dominate test----------------
@@ -119,7 +105,7 @@ class TestDominator(unittest.TestCase):
                \   /                   C: []
                  D                     D: []
         """
-        blocks = self.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []})
+        blocks = th.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []})
         cfg_real = Cfg()
         cfg_real.block_list = blocks
         cfg_real.root = blocks[0]
@@ -149,7 +135,7 @@ class TestDominator(unittest.TestCase):
             \    /         |
               F   ----------
         """
-        blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
                                                     'D': ['E'], 'E': ['F'], 'F': ['B']})
         cfg_real = Cfg()
         cfg_real.block_list = blocks
@@ -187,7 +173,7 @@ class TestDominator(unittest.TestCase):
                 |
                 E
         """
-        blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
                                                     'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
                                                     'G': ['H'], 'H': ['D'], 'I': ['H']})
 
@@ -198,7 +184,7 @@ class TestDominator(unittest.TestCase):
         dom_tree.fill_dominates(cfg_real.root, cfg_real.block_list)
         dom_tree.build_tree(cfg_real.root)
 
-        expected_blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D', 'F'], 'C': [], 'D': ['E'],
+        expected_blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D', 'F'], 'C': [], 'D': ['E'],
                                                              'E': [], 'F': ['G', 'H', 'I'], 'G': [], 'H': [], 'I': []})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)
@@ -223,7 +209,7 @@ class TestDominator(unittest.TestCase):
                 |                       |   |
                 +---------------------- K --+
         """
-        blocks = self.build_blocks_arb(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
+        blocks = th.build_blocks_arb(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
                                                     'E': ['G'], 'F': ['G'], 'G': ['F', 'M'], 'H': ['I', 'J'],
                                                     'I': ['L'], 'J': ['K', 'L'], 'K': ['L'], 'L': ['M'],
                                                     'M': ['A', 'L']})
@@ -235,7 +221,7 @@ class TestDominator(unittest.TestCase):
         dom_tree.fill_dominates(cfg_real.root, cfg_real.block_list)
         dom_tree.build_tree(cfg_real.root)
 
-        expected_blocks = self.build_blocks_arb(block_links={'A': ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M'],
+        expected_blocks = th.build_blocks_arb(block_links={'A': ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M'],
                                                              'B': [], 'C': [], 'D': ['E'], 'E': [],
                                                              'F': [], 'G': [], 'H': ['I', 'J'], 'I': [],
                                                              'J': ['K'], 'K': [], 'L': [], 'M': []})
@@ -259,7 +245,7 @@ class TestDominator(unittest.TestCase):
             \    /         |
              F(B) ----------
         """
-        blocks = self.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
                                                     'D': ['E'], 'E': ['F'], 'F': ['B']})
 
         cfg_real = Cfg()
@@ -288,7 +274,7 @@ class TestDominator(unittest.TestCase):
             \  |              DF(H) = None
               G
         """
-        blocks = self.build_blocks_arb(block_links={'H': ['A'], 'A': ['B', 'E'], 'B': ['C', 'D'], 'C': ['F'], 'D': ['F'],
+        blocks = th.build_blocks_arb(block_links={'H': ['A'], 'A': ['B', 'E'], 'B': ['C', 'D'], 'C': ['F'], 'D': ['F'],
                                                     'E': ['G', 'A'], 'F': ['G'], 'G': []})
 
         cfg_real = Cfg()
@@ -299,7 +285,7 @@ class TestDominator(unittest.TestCase):
         dom_tree.build_tree(cfg_real.root)
         dom_tree.fill_df(cfg_real.block_list)
 
-        expected_blocks = self.build_blocks_arb(block_links={'A': ['B', 'E', 'G'], 'B': ['C', 'D', 'F'],
+        expected_blocks = th.build_blocks_arb(block_links={'A': ['B', 'E', 'G'], 'B': ['C', 'D', 'F'],
                                                              'C': [], 'D': [], 'E': [], 'F': [], 'G': [], 'H': ['A']})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)
