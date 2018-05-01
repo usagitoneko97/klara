@@ -81,6 +81,8 @@ class Cfg:
         self.__else_flag__ = False
         self.block_list = []
         self.dominator_tree = DominatorTree()
+        self.globals_var = set()
+        self.block_set = {}
 
         if as_tree is not None:
             self.as_tree = as_tree
@@ -236,9 +238,14 @@ class Cfg:
                 for value in values:
                     if value not in block.var_kill:
                         block.ue_var.add(value)
+                        self.globals_var.add(value)
                 block.var_kill |= set(targets)
-
-
+                for target in targets:
+                    if self.block_set.get(target) is None:
+                        self.block_set[target] = [block]
+                    else:
+                        if block not in self.block_set[target]:
+                            self.block_set[target].append(block)
 
 
 class DominatorTree:

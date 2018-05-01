@@ -27,11 +27,19 @@ class TestInsPhi(unittest.TestCase):
         self.assertSetEqual(cfg_real.block_list[0].ue_var, expected_ue_var)
         self.assertSetEqual(cfg_real.block_list[0].var_kill, expected_var_kill)
 
+        expected_globals_var = {'b'}
+        self.assertSetEqual(cfg_real.globals_var, expected_globals_var)
+
+        expected_block_set = {'x': [cfg_real.block_list[0]], 'a': [cfg_real.block_list[0]],
+                              'y': [cfg_real.block_list[0]]}
+        self.assertDictEqual(cfg_real.block_set, expected_block_set)
+
     def test_initial_info_given_3_simple_stmt_given_if(self):
         as_tree = ast.parse(ms("""\
             a = 3    
             if c < 3:       
-                y = a + b         
+                y = a + b
+                x, y = a, b         
             """)
                             )
 
@@ -39,6 +47,12 @@ class TestInsPhi(unittest.TestCase):
         cfg_real.gather_initial_info()
 
         expected_ue_var = ({'c'}, {'a', 'b'})
-        expected_var_kill = ({'a'}, {'y'})
-
+        expected_var_kill = ({'a'}, {'y', 'x'})
         self.assertUeVarKill(cfg_real.block_list, expected_ue_var, expected_var_kill)
+
+        expected_globals_var = {'b', 'a', 'c'}
+        self.assertSetEqual(cfg_real.globals_var, expected_globals_var)
+
+        expected_block_set = {'x': [cfg_real.block_list[1]], 'a': [cfg_real.block_list[0]],
+                              'y': [cfg_real.block_list[1]]}
+        self.assertDictEqual(cfg_real.block_set, expected_block_set)
