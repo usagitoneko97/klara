@@ -155,7 +155,6 @@ class TestDominator(unittest.TestCase):
 
 # ------------------ dominator tree test----------------------------
     def test_dominator_tree_given_complex_block(self):
-        # TODO: plot the expected dominator block
         """
                 Note: '|' with no arrows means pointing down
 
@@ -174,8 +173,8 @@ class TestDominator(unittest.TestCase):
                 E
         """
         blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
-                                                    'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
-                                                    'G': ['H'], 'H': ['D'], 'I': ['H']})
+                                                  'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
+                                                  'G': ['H'], 'H': ['D'], 'I': ['H']})
 
         cfg_real = Cfg()
         cfg_real.block_list = blocks
