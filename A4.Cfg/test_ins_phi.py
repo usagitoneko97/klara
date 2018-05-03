@@ -16,6 +16,11 @@ class TestInsPhi(unittest.TestCase):
             real_block = block_list.get_block_by_name(block_name)
             self.assertSetEqual(real_block.phi, expected_phi_list)
 
+    def assertLiveOutEqual(self, block_list, expected_live_out_dict):
+        for block_name, expected_live_out_set in expected_live_out_dict.items():
+            real_block = block_list.get_block_by_name(block_name)
+            self.assertSetEqual(real_block.live_out, expected_live_out_set)
+
     def test_initial_info_given_3_simple_stmt_expect_ue_a_vk_a_y_x(self):
         as_tree = ast.parse(ms("""\
             a = 3           
@@ -64,7 +69,7 @@ class TestInsPhi(unittest.TestCase):
         self.assertDictEqual(cfg_real.block_set, expected_block_set)
 
     # ------------------- test phi function insertion-----------------------
-    def test_insert_phi_function_(self):
+    def test_insert_phi_function_semi_pruned(self):
         """
                         Note: '|' with no arrows means pointing down
 
@@ -141,6 +146,175 @@ class TestInsPhi(unittest.TestCase):
                              'I': set()}
 
         self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
+
+    def test_insert_phi_function_pruned(self):
+        """
+                        Note: '|' with no arrows means pointing down
+
+                         A
+                         |
+                         B   <------|
+                      /    \        |
+                     C      F       |
+                     |    /  \      |
+                     |    G   I     |
+                     |    \   /     |
+                     |      H       |
+                      \    /        |
+                        D-----------|
+                        |
+                        E
+                """
+        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
+                                                              'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
+                                                              'G': ['H'], 'H': ['D'], 'I': ['H']},
+                                                 code={'A': ms("""\
+                                                            i = 1
+                                                            """),
+                                                       'B': ms("""\
+                                                            a = temp_0
+                                                            c = temp_1
+                                                            if a < c:
+                                                                pass
+                                                            """),
+                                                       'C': ms("""\
+                                                            b = temp_2
+                                                            c = temp_3
+                                                            d = temp_4
+                                                            """),
+                                                       'D': ms("""\
+                                                            y = a + b
+                                                            z = c + d
+                                                            i = i + 1
+                                                            if i < 100:
+                                                                pass
+                                                            """),
+                                                       'E': "return\n",
+                                                       'F': ms("""\
+                                                            a = temp_5
+                                                            d = temp_6
+                                                            if a < d:
+                                                                pass
+                                                            """),
+                                                       'G': ms("""\
+                                                            d = temp
+                                                            """),
+                                                       'H': ms("""\
+                                                            b = temp
+                                                            """),
+                                                       'I': ms("""\
+                                                            c = temp
+                                                            """)
+                                                       })
+        as_tree = ast.parse(ast_string)
+        cfg_real = Cfg()
+        cfg_real.block_list = blocks
+        cfg_real.as_tree = as_tree
+        cfg_real.root = cfg_real.block_list[0]
+        cfg_real.fill_df()
+        cfg_real.gather_initial_info()
+        cfg_real.compute_live_out()
+        cfg_real.ins_phi_function_pruned()
+
+        expected_phi_list = {'A': set(),
+                             'B': {'i'},
+                             'C': set(),
+                             'D': {'a', 'b', 'c', 'd'},
+                             'E': set(),
+                             'F': set(),
+                             'G': set(),
+                             'H': {'c', 'd'},
+                             'I': set()}
+
+        self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
+
+    # ------------------ test recompute_liveout----------------------------
+    def test_recompute_liveout(self):
+        # Given: UEVAR(B) = 'c'
+        # Expect: LIVEOUT(A) = 'c'
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks[1].ue_var.add('c')
+        self.assertTrue(blocks[0].recompute_liveout())
+
+        self.assertSetEqual(blocks[0].live_out, {'c'})
+
+        # Given: UEVAR(B) = 'c',
+        #        LIVEOUT(B) = 'd'
+        #        VARKILL(B) = None
+        # Expect: LIVEOUT(A) = 'c, 'd'
+
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks[1].ue_var.add('c')
+        blocks[1].live_out.add('d')
+        self.assertTrue(blocks[0].recompute_liveout())
+
+        self.assertSetEqual(blocks[0].live_out, {'c', 'd'})
+
+        # Given: UEVAR(B) = 'c',
+        #        LIVEOUT(B) = 'd'
+        #        VARKILL(B) = 'd'
+        # Expect: LIVEOUT(A) = 'c'
+
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks[1].ue_var.add('c')
+        blocks[1].live_out.add('d')
+        blocks[1].var_kill.add('d')
+        self.assertTrue(blocks[0].recompute_liveout())
+
+        self.assertSetEqual(blocks[0].live_out, {'c'})
+
+        # Given: LIVEOUT(A) = 'c'
+        #        UEVAR(B) = 'c',
+        #        LIVEOUT(B) = 'd'
+        #        VARKILL(B) = 'd'
+        # Expect: LIVEOUT(A) = 'c' (no changed)
+
+        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks[0].live_out.add('c')
+        blocks[1].ue_var.add('c')
+        blocks[1].live_out.add('d')
+        blocks[1].var_kill.add('d')
+        self.assertFalse(blocks[0].recompute_liveout())
+
+        self.assertSetEqual(blocks[0].live_out, {'c'})
+
+    # -------------------- test compute liveout------------------------------
+    def test_compute_liveout_given_5_blocks(self):
+        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D'], 'C': ['D'],
+                                                              'D': ['E', 'B'], 'E': []},
+                                                 code={'A': ms("""\
+                                                                    i = 1
+                                                                    """),
+                                                       'B': ms("""\
+                                                                    if i < 0:
+                                                                        pass
+                                                                    """),
+                                                       'C': ms("""\
+                                                                    s = 0
+                                                                    """),
+                                                       'D': ms("""\
+                                                                    s = s + i
+                                                                    i = i + 1
+                                                                    if i < 0:
+                                                                        pass
+                                                                    """),
+                                                       'E': ms("""\
+                                                                    if s < 3:
+                                                                        pass
+                                                                    """)
+                                                       })
+        as_tree = ast.parse(ast_string)
+        cfg_real = Cfg()
+        cfg_real.block_list = blocks
+        cfg_real.as_tree = as_tree
+        cfg_real.root = cfg_real.block_list[0]
+        cfg_real.gather_initial_info()
+        cfg_real.compute_live_out()
+
+        expected_live_out = {'A': {'s', 'i'}, 'B': {'s', 'i'}, 'C': {'s', 'i'},
+                             'D': {'s', 'i'}, 'E': set()}
+
+        self.assertLiveOutEqual(cfg_real.block_list, expected_live_out)
 
     # ----------------- functional test phi function insertion--------------
     def test_insert_phi_function(self):

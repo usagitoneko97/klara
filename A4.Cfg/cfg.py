@@ -39,6 +39,7 @@ class RawBasicBlock:
         self.name = name
         self.var_kill = set()
         self.ue_var = set()
+        self.live_out = set()
         self.phi = set()
 
     @property
@@ -81,6 +82,20 @@ class RawBasicBlock:
 
     def has_phi(self, var):
         return var in self.phi
+
+    def recompute_liveout(self):
+        """
+        recompute the liveout of this block
+        :return: True if changed, False if not changed
+        """
+        new_liveout = set()
+        for nxt_block in self.nxt_block_list:
+            new_liveout.update(nxt_block.ue_var)
+            new_liveout.update(nxt_block.live_out-(nxt_block.live_out & nxt_block.var_kill))
+        if len(new_liveout - self.live_out) == 0:
+            return False
+        self.live_out = new_liveout
+        return True
 
 
 class Cfg:
@@ -254,6 +269,14 @@ class Cfg:
                         if block not in self.block_set[target]:
                             self.block_set[target].append(block)
 
+    def compute_live_out(self):
+        changed_flag = True
+        while changed_flag:
+            changed_flag = False
+            for blocks in self.block_list:
+                if blocks.recompute_liveout():
+                    changed_flag = True
+
     def ins_phi_function_semi_pruned(self):
         for var in self.globals_var:
             worklist = copy.copy(self.block_set.get(var))
@@ -264,6 +287,46 @@ class Cfg:
                             df_block.insert_phi(var)
                             worklist.append(df_block)
 
+    def ins_phi_function_pruned(self):
+        no_phi_block = NoPhiDict()
+        for var in self.globals_var:
+            worklist = copy.copy(self.block_set.get(var))
+            if worklist is not None:
+                for block in worklist:
+                    for df_block in block.df:
+                        if not df_block.has_phi(var) and not no_phi_block.is_contain_var_no_phi_block(var, df_block):
+                            if self.need_phi(var, df_block):
+                                df_block.insert_phi(var)
+                            else:
+                                no_phi_block.ins_no_phi_block(var, df_block)
+                            worklist.append(df_block)
+
+    @staticmethod
+    def need_phi(var, block):
+        if var not in block.ue_var:
+            if var in block.var_kill:
+                    return False
+            else:
+                if var in block.live_out:
+                    return True
+                else:
+                    return False
+        else:
+            return True
+
+
+class NoPhiDict(dict):
+    def ins_no_phi_block(self, var, block):
+        if self.get(var) is None:
+            self.__setitem__(var, [block])
+        else:
+            self.get(var).append(block)
+
+    def is_contain_var_no_phi_block(self, var, block):
+        if self.get(var) is None:
+            return False
+        else:
+            return block in self.get(var)
 
 class DominatorTree:
     def __init__(self, cfg=None):
