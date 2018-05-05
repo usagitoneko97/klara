@@ -136,7 +136,7 @@ class TestDominator(unittest.TestCase):
               F   ----------
         """
         blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
-                                                    'D': ['E'], 'E': ['F'], 'F': ['B']})
+                                                  'D': ['E'], 'E': ['F'], 'F': ['B']})
         cfg_real = Cfg()
         cfg_real.block_list = blocks
         cfg_real.root = blocks[0]
@@ -209,9 +209,9 @@ class TestDominator(unittest.TestCase):
                 +---------------------- K --+
         """
         blocks = th.build_blocks_arb(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
-                                                    'E': ['G'], 'F': ['G'], 'G': ['F', 'M'], 'H': ['I', 'J'],
-                                                    'I': ['L'], 'J': ['K', 'L'], 'K': ['L'], 'L': ['M'],
-                                                    'M': ['A', 'L']})
+                                                  'E': ['G'], 'F': ['G'], 'G': ['F', 'M'], 'H': ['I', 'J'],
+                                                  'I': ['L'], 'J': ['K', 'L'], 'K': ['L'], 'L': ['M'],
+                                                  'M': ['A', 'L']})
 
         cfg_real = Cfg()
         cfg_real.block_list = blocks
@@ -221,9 +221,9 @@ class TestDominator(unittest.TestCase):
         dom_tree.build_tree(cfg_real.root)
 
         expected_blocks = th.build_blocks_arb(block_links={'A': ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M'],
-                                                             'B': [], 'C': [], 'D': ['E'], 'E': [],
-                                                             'F': [], 'G': [], 'H': ['I', 'J'], 'I': [],
-                                                             'J': ['K'], 'K': [], 'L': [], 'M': []})
+                                                           'B': [], 'C': [], 'D': ['E'], 'E': [],
+                                                           'F': [], 'G': [], 'H': ['I', 'J'], 'I': [],
+                                                           'J': ['K'], 'K': [], 'L': [], 'M': []})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)
 

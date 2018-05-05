@@ -238,7 +238,7 @@ class TestInsPhi(unittest.TestCase):
                                                             var = 3
                                                             """),
                                                        'C': ms("""\
-                                                            var = 4
+                                                            pass
                                                             """),
                                                        'D': ms("""\
                                                             if var < 3:
@@ -256,14 +256,9 @@ class TestInsPhi(unittest.TestCase):
         cfg_real.ins_phi_function_pruned()
 
         expected_phi_list = {'A': set(),
-                             'B': {'i'},
+                             'B': set(),
                              'C': set(),
-                             'D': {'a', 'b', 'c', 'd'},
-                             'E': set(),
-                             'F': set(),
-                             'G': set(),
-                             'H': {'c', 'd'},
-                             'I': set()}
+                             'D': {'var'}}
 
         self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
 

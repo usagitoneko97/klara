@@ -3,12 +3,12 @@ from common import *
 
 
 class SsaCode:
-    def __init__(self, as_tree=None):
+    def __init__(self, as_tree=None, counter_dict=None, stack_dict=None):
         self.code_list = []
-        self.var_version_list = dict()
-        self.counter = dict()
+        self.var_version_list = stack_dict if stack_dict is not None else dict()
+        self.counter = counter_dict if counter_dict is not None else dict()
         if as_tree is not None:
-            self.add_ssa(as_tree)
+            self.add_ast(as_tree)
 
     def __repr__(self):
         s = ""
@@ -97,26 +97,38 @@ class SsaCode:
     def get_line_ssa(self, line):
         return self.code_list[line]
 
-    def add_ssa(self, as_tree):
+    def add_ast(self, as_tree):
         for assign_node in as_tree.body:
-            target, left, op, right = self.get_stmt_param_from_ast(assign_node)
-            left_var, right_var = None, None
+            self.add_ast_node(assign_node)
 
-            if left is not None:
-                left_var = SsaVariable(left, self.get_version(left))
-            if right is not None:
-                right_var = SsaVariable(right, self.get_version(right))
+    def add_ast_node(self, ast_node):
+        target, left, op, right = self.get_stmt_param_from_ast(ast_node)
+        left_var, right_var = None, None
 
-            target_var = SsaVariable(target, self.update_version(target))
+        if left is not None:
+            left_var = SsaVariable(left, self.get_version(left))
+        if right is not None:
+            right_var = SsaVariable(right, self.get_version(right))
 
-            assign_ssa = Ssa(target_var, left_var, op, right_var)
-            self.code_list.append(assign_ssa)
+        target_var = SsaVariable(target, self.update_version(target))
+
+        assign_ssa = Ssa(target_var, left_var, op, right_var)
+        self.code_list.append(assign_ssa)
 
     @staticmethod
     def _get_assign_class(as_tree):
         for i in range(len(as_tree.body)):
             if isinstance(as_tree.body[i], ast.Assign):
                 yield as_tree.body[i]
+
+    def get_phi_functions(self):
+        for ssa in self.code_list:
+            if type(ssa) is PhiFunction:
+                yield ssa
+
+    def fill_phi_param(self):
+        for phi_func in self.get_phi_functions():
+            phi_func.fill_phi_param()
 
 
 class Ssa:
@@ -168,3 +180,11 @@ class SsaVariable:
             return self.var + '_' + str(self.version_num)
 
 
+class PhiFunction(Ssa):
+    def __init__(self, var, target=None, left_oprd=None, right_oprd=None):
+        super().__init__(target, left_oprd, 'Phi', right_oprd)
+        self.var = var
+
+    def fill_param(self, param):
+        self.left_oprd = param if self.left_oprd is None else self.left_oprd
+        self.right_oprd = param if self.right_oprd is None else self.right_oprd

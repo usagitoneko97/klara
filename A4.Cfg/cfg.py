@@ -1,5 +1,6 @@
 from var_ast import VarAst
 from common import remove_block_from_list
+from A3_LVN.Version2.ssa import SsaCode, SsaVariable, PhiFunction
 
 import ast
 import common
@@ -29,6 +30,7 @@ class RawBasicBlock:
         if not (isinstance(start_line, int) or not isinstance(end_line, int))\
                 and start_line is not None and end_line is not None:
             raise TypeError
+        self.name = name
         self._start_line = start_line
         self._end_line = end_line
         self._block_end_type = block_end_type
@@ -36,11 +38,11 @@ class RawBasicBlock:
         self.prev_block_list = []
         self.dominates_list = []
         self.df = []
-        self.name = name
         self.var_kill = set()
         self.ue_var = set()
         self.live_out = set()
         self.phi = set()
+        self.ssa_code = SsaCode()
 
     @property
     def start_line(self):
@@ -313,6 +315,26 @@ class Cfg:
                     return False
         else:
             return True
+
+    def rename_to_ssa(self, counter_dict, stack_dict, block):
+        block.ssa_code = SsaCode(stack_dict=stack_dict, counter_dict=counter_dict)
+
+        for phi_func in block.ssa_code.get_phi_functions():
+            phi_func.target = SsaVariable(phi_func.var, block.ssa_code.update_version(phi_func.var))
+
+        for i in range(block.start_line, block.end_line + 1):
+            ast_node = self.get_ast_node(self.as_tree, i)
+            block.ssa_code.add_ast_node(ast_node)
+
+        for cfg_succ_block in block.nxt_block:
+            for phi_var in cfg_succ_block.phi:
+                cfg_succ_block.ssa_code.fill_phi_param(phi_var)
+
+        for dom_succ_block in (common.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
+            self.rename_to_ssa(counter_dict, stack_dict, common.find_node(self.block_list, dom_succ_block))
+
+        for operation in block.ssa_code.code_list:
+            stack_dict.remove(operation.target.version_number)
 
 
 class NoPhiDict(dict):

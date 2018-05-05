@@ -1,25 +1,33 @@
-from pkgutil import simplegeneric
+class Stack:
+    def __init__(self, i=None):
+        if i is not None:
+            self.items = [i]
+        else:
+            self.items = []
+
+    def isEmpty(self):
+        return self.items == []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        return self.items.pop()
+
+    def remove(self, item):
+        self.items.remove(item)
+
+    def peek(self):
+        return self.items[len(self.items) - 1]
+
+    def size(self):
+        return len(self.items)
 
 
-@simplegeneric
-def foo(arg):
-    print(arg)
-    pass
-
-
-@foo.register(int)
-def _(arg):
-    print("integer: {}".format(arg))
-
-
-@foo.register(str)
-def _(arg):
-    print("string : {}".format(arg))
-
-
-def main():
-    foo(1.234)
-
-
-if __name__ == '__main__':
-    main()
+s = Stack()
+s.push(0)
+s.push(1)
+s.push(5)
+s.push(3)
+s.remove(5)
+pass
