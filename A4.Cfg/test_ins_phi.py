@@ -228,6 +228,48 @@ class TestInsPhi(unittest.TestCase):
 
         self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
 
+    def test_insert_phi_function_pruned_4_blocks(self):
+
+        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []},
+                                                 code={'A': ms("""\
+                                                            pass
+                                                            """),
+                                                       'B': ms("""\
+                                                            var = 3
+                                                            """),
+                                                       'C': ms("""\
+                                                            var = 4
+                                                            """),
+                                                       'D': ms("""\
+                                                            if var < 3:
+                                                                pass
+                                                            """)
+                                                       })
+        as_tree = ast.parse(ast_string)
+        cfg_real = Cfg()
+        cfg_real.block_list = blocks
+        cfg_real.as_tree = as_tree
+        cfg_real.root = cfg_real.block_list[0]
+        cfg_real.fill_df()
+        cfg_real.gather_initial_info()
+        cfg_real.compute_live_out()
+        cfg_real.ins_phi_function_pruned()
+
+        expected_phi_list = {'A': set(),
+                             'B': {'i'},
+                             'C': set(),
+                             'D': {'a', 'b', 'c', 'd'},
+                             'E': set(),
+                             'F': set(),
+                             'G': set(),
+                             'H': {'c', 'd'},
+                             'I': set()}
+
+        self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
+
+
+
+
     # ------------------ test recompute_liveout----------------------------
     def test_recompute_liveout(self):
         # Given: UEVAR(B) = 'c'

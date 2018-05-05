@@ -6,6 +6,7 @@ class SsaCode:
     def __init__(self, as_tree=None):
         self.code_list = []
         self.var_version_list = dict()
+        self.counter = dict()
         if as_tree is not None:
             self.add_ssa(as_tree)
 
@@ -70,11 +71,14 @@ class SsaCode:
         :return:
         """
         if var not in self.var_version_list:
-            self.var_version_list[var] = 0
+            self.var_version_list[var] = Stack(0)
+            self.counter[var] = 1
             version_number = 0
         else:
-            self.var_version_list[var] += 1
-            version_number = self.var_version_list[var]
+            i = self.counter[var]
+            self.counter[var] += 1
+            self.var_version_list[var].push(i)
+            version_number = i
         return version_number
 
     def get_version(self, var):
@@ -84,9 +88,10 @@ class SsaCode:
         :return:
         """
         if var in self.var_version_list:
-            return self.var_version_list[var]
+            return self.var_version_list[var].peek()
         else:
-            self.var_version_list.__setitem__(var, 0)
+            self.var_version_list[var] = Stack(0)
+            self.counter[var] = 1
             return 0
 
     def get_line_ssa(self, line):

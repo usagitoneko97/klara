@@ -20,6 +20,11 @@ class TestSsa(unittest.TestCase):
             else:
                 self.assert_ssa(ssa_list[i], target_list[i], left_oprd_list[i], right_oprd_list[i], None)
 
+    def assertVariableVersionStack(self, real_dict, expected_dict):
+        self.assertEqual(len(real_dict), len(expected_dict))
+        for var, stack in real_dict.items():
+            self.assertListEqual(stack.items, expected_dict[var])
+
     def test_SsaVariable_generation(self):
         ssa_var = SsaVariable('a')
         self.assertEqual(str(ssa_var), 'a_0')
@@ -32,18 +37,18 @@ class TestSsa(unittest.TestCase):
             z = a + y"""))
 
         ssa_code = SsaCode(as_tree)
-        expected_ssa_dict = {'z': 0, 'a': 0, 'y': 0}
+        expected_ssa_dict = {'z': [0], 'a': [0], 'y': [0]}
         self.assertEqual(str(ssa_code), "z_0 = a_0 Add y_0\n")
-        self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+        self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_generation_number(self):
         as_tree = ast.parse(ms("""\
             z = 4"""))
 
         ssa_code = SsaCode(as_tree)
-        expected_ssa_dict = {'z': 0, 4: 0}
+        expected_ssa_dict = {'z': [0], 4: [0]}
         self.assertEqual(str(ssa_code), "z_0 = 4\n")
-        self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+        self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_generation_2_stmt(self):
         as_tree = ast.parse(ms("""\
@@ -51,12 +56,12 @@ class TestSsa(unittest.TestCase):
             x = b + c"""))
 
         ssa_code = SsaCode(as_tree)
-        expected_ssa_dict = {'z': 0, 'a': 0, 'y': 0, 'x': 0, 'b': 0, 'c': 0}
+        expected_ssa_dict = {'z': [0], 'a': [0], 'y': [0], 'x': [0], 'b': [0], 'c': [0]}
         self.assertEqual(str(ssa_code), ms("""\
         z_0 = a_0 Add y_0
         x_0 = b_0 Add c_0
         """))
-        self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+        self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_generation_2_stmt_expect_update_target(self):
         as_tree = ast.parse(ms("""\
@@ -64,9 +69,9 @@ class TestSsa(unittest.TestCase):
             z = a"""))
 
         ssa_code = SsaCode(as_tree)
-        expected_ssa_dict = {'z': 1, 'a': 0, 'y': 0}
+        expected_ssa_dict = {'z': [0, 1], 'a': [0], 'y': [0]}
         self.assertEqual(str(ssa_code), "z_0 = a_0 Add y_0\nz_1 = a_0\n")
-        self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+        self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_generation_2_stmt_expect_update_target_multiple_time(self):
         as_tree = ast.parse(ms("""\
@@ -76,7 +81,7 @@ class TestSsa(unittest.TestCase):
             a = y"""))
 
         ssa_code = SsaCode(as_tree)
-        expected_ssa_dict = {'z': 2, 'a': 1, 'y': 0}
+        expected_ssa_dict = {'z': [0, 1, 2], 'a': [0, 1], 'y': [0]}
         self.assertEqual(str(ssa_code), ms("""\
         z_0 = a_0 Add y_0
         z_1 = a_0 Add y_0
@@ -84,7 +89,7 @@ class TestSsa(unittest.TestCase):
         a_1 = y_0
         """))
 
-        self.assertDictEqual(ssa_code.var_version_list, expected_ssa_dict)
+        self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_all_valid_expressions(self):
         as_tree = ast.parse(ms("""\

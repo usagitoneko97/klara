@@ -1,11 +1,24 @@
-def get_something(x):
-    if x == 1:
-        return "something"
-    return None
+from pkgutil import simplegeneric
+
+
+@simplegeneric
+def foo(arg):
+    print(arg)
+    pass
+
+
+@foo.register(int)
+def _(arg):
+    print("integer: {}".format(arg))
+
+
+@foo.register(str)
+def _(arg):
+    print("string : {}".format(arg))
+
 
 def main():
-    x = get_something(0) or "another thing"
-    print(x)
+    foo(1.234)
 
 
 if __name__ == '__main__':
