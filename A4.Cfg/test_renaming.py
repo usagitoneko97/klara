@@ -59,5 +59,24 @@ class TestRenaming(unittest.TestCase):
 
         self.assertSsaList(ssa_code.code_list, ssa_expected_list)
 
+    def test_rename_given_4_blocks(self):
+        as_tree = ast.parse(ms("""\
+                    a = 3           # 1st
+                    if a > 3:       #  |
+                        a = 3       # 2nd
+                        b = 3
+                    else:           # 3rd
+                        z = 4       #  |
+                    # expected phi func for 'a' here
+                    y = a           # 4th
+                    """)
+                            )
+        cfg_real = Cfg(as_tree)
+        cfg_real.fill_df()
+        cfg_real.gather_initial_info()
+        cfg_real.ins_phi_function_semi_pruned()
+        cfg_real.rename_to_ssa()
 
+        self.assertSsa(cfg_real.block_list[-1].ssa_code.code_list[0],
+                       Ssa('a_2', 'a_1', 'Phi', 'a_0'))
 

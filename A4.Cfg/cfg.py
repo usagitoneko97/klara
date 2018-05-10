@@ -311,7 +311,10 @@ class Cfg:
         else:
             return True
 
-    def rename_to_ssa(self, counter_dict, stack_dict, block):
+    def rename_to_ssa(self):
+        self._rename_to_ssa(dict(), dict(), self.root)
+
+    def _rename_to_ssa(self, counter_dict, stack_dict, block):
         block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
 
         for phi_func in block.ssa_code.get_all_phi_functions():
@@ -326,7 +329,7 @@ class Cfg:
             cfg_succ_block.fill_phi()
 
         for dom_succ_block in (CfgCommon.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
-            self.rename_to_ssa(counter_dict, stack_dict, CfgCommon.find_node(self.block_list, dom_succ_block))
+            self._rename_to_ssa(counter_dict, stack_dict, CfgCommon.find_node(self.block_list, dom_succ_block))
 
         for operation in block.ssa_code.code_list:
             if operation.target is not None:

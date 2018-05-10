@@ -372,5 +372,5 @@ class TestInsPhi(unittest.TestCase):
         expected_phi_list_for_block_3 = {'a'}
         self.assertSetEqual(cfg_real.block_list[-1].phi, expected_phi_list_for_block_3)
 
-        cfg_real.rename_to_ssa(dict(), dict(), cfg_real.root)
+        cfg_real.rename_to_ssa()
         pass
