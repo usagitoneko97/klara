@@ -1,16 +1,15 @@
 from var_ast import VarAst
-from common import remove_block_from_list
+from cfg_common import remove_block_from_list, get_ast_node
 from A3_LVN.Version2.ssa import SsaCode, SsaVariable, PhiFunction
 
-import ast
-import common
+import cfg_common as CfgCommon
 import copy
 
 
 class BlockList(list):
     def get_block(self, block_to_find):
         for block in self.__iter__():
-            if common.is_blocks_same(block, block_to_find):
+            if CfgCommon.is_blocks_same(block, block_to_find):
                 return block
 
     def get_block_by_name(self, name):
@@ -99,6 +98,16 @@ class RawBasicBlock:
         self.live_out = new_liveout
         return True
 
+    def fill_phi(self):
+        for phi_var in self.phi:
+            existing_phi = self.ssa_code.get_phi_function(phi_var)
+            if existing_phi is not None:
+                existing_phi.fill_param(SsaVariable(phi_var, self.ssa_code.get_version(phi_var)))
+            else:
+                new_phi = PhiFunction(phi_var)
+                new_phi.fill_param(SsaVariable(phi_var, self.ssa_code.get_version(phi_var)))
+                self.ssa_code.code_list.insert(0, new_phi)
+
 
 class Cfg:
     def __init__(self, as_tree=None, *basic_block_args):
@@ -132,7 +141,7 @@ class Cfg:
             if basic_block.start_line is None:
                 basic_block.start_line = ast_node.lineno
             basic_block.end_line = ast_node.lineno
-            if common.is_if_stmt(ast_node) or common.is_while_stmt(ast_node):
+            if CfgCommon.is_if_stmt(ast_node) or CfgCommon.is_while_stmt(ast_node):
                 # self.add_basic_block(basic_block)
                 basic_block.block_end_type = ast_node.__class__.__name__
                 basic_block.name = 'L' + str(basic_block.start_line)
@@ -143,27 +152,13 @@ class Cfg:
             basic_block.name = 'L' + str(basic_block.start_line)
             yield basic_block
 
-    def get_ast_node(self, ast_tree, lineno):
-        for node in ast.iter_child_nodes(ast_tree):
-
-            if node.lineno == lineno:
-                return node
-
-            if isinstance(node, ast.If) or isinstance(node, ast.While):
-                node_return = self.get_ast_node(node, lineno)
-                if node_return is not None:
-                    return node_return
-                continue
-
-        return None
-
     def link_tail_to_cur_block(self, all_tail_list, basic_block):
         for tail in all_tail_list:
             self.connect_2_blocks(tail, basic_block)
 
     def build_if_body(self, if_block):
         all_tail_list = []
-        ast_if_node = self.get_ast_node(self.as_tree, if_block.end_line)
+        ast_if_node = get_ast_node(self.as_tree, if_block.end_line)
         head_returned, tail_list = self.parse(ast_if_node.body)
 
         self.connect_2_blocks(if_block, head_returned)
@@ -183,7 +178,7 @@ class Cfg:
 
     def build_while_body(self, while_block):
         all_tail_list = []
-        ast_while_node = self.get_ast_node(self.as_tree, while_block.end_line)
+        ast_while_node = get_ast_node(self.as_tree, while_block.end_line)
         head_returned, tail_list = self.parse(ast_while_node.body)
 
         self.connect_2_blocks(while_block, head_returned)
@@ -252,7 +247,7 @@ class Cfg:
 
     def get_var_ast(self, block):
         for i in range(block.start_line, block.end_line + 1):
-            ast_stmt = self.get_ast_node(self.as_tree, i)
+            ast_stmt = get_ast_node(self.as_tree, i)
             var_ast = VarAst(ast_stmt)
             yield var_ast.targets_var, var_ast.values_var
 
@@ -317,24 +312,25 @@ class Cfg:
             return True
 
     def rename_to_ssa(self, counter_dict, stack_dict, block):
-        block.ssa_code = SsaCode(stack_dict=stack_dict, counter_dict=counter_dict)
+        block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
 
-        for phi_func in block.ssa_code.get_phi_functions():
+        for phi_func in block.ssa_code.get_all_phi_functions():
             phi_func.target = SsaVariable(phi_func.var, block.ssa_code.update_version(phi_func.var))
 
         for i in range(block.start_line, block.end_line + 1):
-            ast_node = self.get_ast_node(self.as_tree, i)
+            ast_node = get_ast_node(self.as_tree, i)
             block.ssa_code.add_ast_node(ast_node)
 
-        for cfg_succ_block in block.nxt_block:
-            for phi_var in cfg_succ_block.phi:
-                cfg_succ_block.ssa_code.fill_phi_param(phi_var)
+        for cfg_succ_block in block.nxt_block_list:
+            cfg_succ_block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
+            cfg_succ_block.fill_phi()
 
-        for dom_succ_block in (common.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
-            self.rename_to_ssa(counter_dict, stack_dict, common.find_node(self.block_list, dom_succ_block))
+        for dom_succ_block in (CfgCommon.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
+            self.rename_to_ssa(counter_dict, stack_dict, CfgCommon.find_node(self.block_list, dom_succ_block))
 
         for operation in block.ssa_code.code_list:
-            stack_dict.remove(operation.target.version_number)
+            if operation.target is not None:
+                (stack_dict[operation.target.var]).remove(operation.target.version_num)
 
 
 class NoPhiDict(dict):
@@ -349,6 +345,7 @@ class NoPhiDict(dict):
             return False
         else:
             return block in self.get(var)
+
 
 class DominatorTree:
     def __init__(self, cfg=None):
@@ -368,9 +365,9 @@ class DominatorTree:
             dom_block_list = copy.copy(block_list)
             # remove the block
             # walk again
-            dom_root = common.delete_node(dom_root, block_list[removed_block_num])
+            dom_root = CfgCommon.delete_node(dom_root, block_list[removed_block_num])
 
-            for not_dom_block in common.walk_block(dom_root):
+            for not_dom_block in CfgCommon.walk_block(dom_root):
                 remove_block_from_list(dom_block_list, not_dom_block)
 
             remove_block_from_list(dom_block_list, block_list[removed_block_num])
@@ -379,7 +376,7 @@ class DominatorTree:
 
     def build_tree(self, root):
         # TODO: clarify the code below
-        for block_in_cfg in common.walk_block(root):
+        for block_in_cfg in CfgCommon.walk_block(root):
             block_in_dom_list = RawBasicBlock(block_in_cfg.start_line, block_in_cfg.end_line)
             self.dominator_nodes.append(block_in_dom_list)
             for dom_block in block_in_cfg.dominates_list:
@@ -394,8 +391,8 @@ class DominatorTree:
             if nodes.get_num_of_parents() > 1:
                 for pred_node in nodes.prev_block_list:
                     runner = pred_node
-                    while not common.is_blocks_same(self.dominator_nodes.get_block(runner),
-                                                    self.get_idom(block_list, nodes)) \
+                    while not CfgCommon.is_blocks_same(self.dominator_nodes.get_block(runner),
+                                                        self.get_idom(block_list, nodes)) \
                             and runner is not None:
                         runner.df.append(nodes)
                         runner = self.get_idom(block_list, runner)
@@ -403,7 +400,7 @@ class DominatorTree:
     def get_idom(self, block_list, cfg_node):
         dom_node = self.dominator_nodes.get_block(cfg_node)
         if dom_node.prev_block_list:
-            cfg_idom_node = common.find_node(block_list, dom_node.prev_block_list[0])
+            cfg_idom_node = CfgCommon.find_node(block_list, dom_node.prev_block_list[0])
             return cfg_idom_node
         return None
 

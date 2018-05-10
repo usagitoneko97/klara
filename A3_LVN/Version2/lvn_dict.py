@@ -1,4 +1,4 @@
-from common import *
+from cfg_common import *
 
 
 class VariableDict(dict):

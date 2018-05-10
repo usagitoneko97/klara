@@ -1,5 +1,6 @@
 import ast
 from common import *
+from var_ast import VarAst
 
 
 class SsaCode:
@@ -102,18 +103,24 @@ class SsaCode:
             self.add_ast_node(assign_node)
 
     def add_ast_node(self, ast_node):
-        target, left, op, right = self.get_stmt_param_from_ast(ast_node)
-        left_var, right_var = None, None
+        params = VarAst(ast_node)
 
-        if left is not None:
-            left_var = SsaVariable(left, self.get_version(left))
-        if right is not None:
-            right_var = SsaVariable(right, self.get_version(right))
+        if params.left_operand is not None:
+            left_var = SsaVariable(params.left_operand, self.get_version(params.left_operand))
+        else:
+            left_var = params.left_operand
 
-        target_var = SsaVariable(target, self.update_version(target))
+        if params.right_operand is not None:
+            right_var = SsaVariable(params.right_operand, self.get_version(params.right_operand))
+        else:
+            right_var = params.right_operand
 
-        assign_ssa = Ssa(target_var, left_var, op, right_var)
-        self.code_list.append(assign_ssa)
+        if len(params.targets_var) != 0:
+            target_var = SsaVariable(params.get_target(), self.update_version(params.get_target()))
+        else:
+            target_var = None
+        ssa_stmt = Ssa(target_var, left_var, params.body_op, right_var, target_operator=params.target_op)
+        self.code_list.append(ssa_stmt)
 
     @staticmethod
     def _get_assign_class(as_tree):
@@ -121,19 +128,28 @@ class SsaCode:
             if isinstance(as_tree.body[i], ast.Assign):
                 yield as_tree.body[i]
 
-    def get_phi_functions(self):
+    def get_all_phi_functions(self):
         for ssa in self.code_list:
             if type(ssa) is PhiFunction:
                 yield ssa
 
-    def fill_phi_param(self):
-        for phi_func in self.get_phi_functions():
-            phi_func.fill_phi_param()
+    def get_phi_function(self, var):
+        for phi_func in self.get_all_phi_functions():
+            if phi_func.var == var:
+                return phi_func
 
+    def fill_phi_param(self):
+        for phi_func in self.get_all_phi_functions():
+            phi_func.fill_param()
+
+    def reload_stack_and_counter(self, stack, counter):
+        self.var_version_list = stack
+        self.counter = counter
 
 class Ssa:
-    def __init__(self, target, left, op, right, lvn_tuple=None):
+    def __init__(self, target, left, op, right, lvn_tuple=None, target_operator="Assign"):
         self.target = target
+        self.target_operator = target_operator
         self.left_oprd = left
         self.operator = op
         self.right_oprd = right
@@ -163,6 +179,9 @@ class SsaVariable:
             self.version_num = version_num
 
     def __repr__(self):
+        if self.var is None:
+            return None
+
         if is_num(self.var):
             return str(self.var)
 
@@ -186,5 +205,10 @@ class PhiFunction(Ssa):
         self.var = var
 
     def fill_param(self, param):
-        self.left_oprd = param if self.left_oprd is None else self.left_oprd
-        self.right_oprd = param if self.right_oprd is None else self.right_oprd
+        if param.var != self.var:
+            raise TypeError
+        if self.left_oprd is None:
+            self.left_oprd = param
+            return
+        else:
+            self.right_oprd = param

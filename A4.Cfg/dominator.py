@@ -1,4 +1,4 @@
 import copy
-import common
+import cfg_common
 from cfg import Cfg, RawBasicBlock, BlockList
 

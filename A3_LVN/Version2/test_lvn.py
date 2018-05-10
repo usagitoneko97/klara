@@ -1,5 +1,6 @@
 import unittest
 import ast
+from cfg_common import *
 from common import *
 
 from ssa import SsaCode, SsaVariable

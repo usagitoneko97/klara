@@ -1,5 +1,6 @@
 from ssa import Ssa, SsaCode, SsaVariable
 from lvn_dict import LvnDict
+from cfg_common import *
 from common import *
 from algebraic_identities import AlgIdent
 

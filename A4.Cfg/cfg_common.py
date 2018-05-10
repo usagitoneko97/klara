@@ -81,3 +81,24 @@ def remove_block_from_list(block_list, block_to_remove):
         if is_blocks_same(block, block_to_remove):
             block_list.remove(block)
             return
+
+
+def get_ast_node(ast_tree, lineno):
+    """
+    get single ast statement from the line number
+    :param ast_tree: the whole ast
+    :param lineno: line number of the statement
+    :return: ast object
+    """
+    for node in ast.iter_child_nodes(ast_tree):
+
+        if node.lineno == lineno:
+            return node
+
+        if isinstance(node, ast.If) or isinstance(node, ast.While):
+            node_return = get_ast_node(node, lineno)
+            if node_return is not None:
+                return node_return
+            continue
+
+    return None

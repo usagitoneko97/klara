@@ -2,7 +2,8 @@ import unittest
 from cfg import Cfg, RawBasicBlock, build_blocks
 import ast
 import textwrap
-import common
+import cfg_common
+from cfg_common import get_ast_node
 
 ms = textwrap.dedent
 
@@ -138,7 +139,7 @@ class TestCfg(unittest.TestCase):
                             )
 
         cfg_real = Cfg()
-        node = cfg_real.get_ast_node(as_tree, 2)
+        node = get_ast_node(as_tree, 2)
 
         self.assertEqual(node, as_tree.body[1])
 
@@ -152,7 +153,7 @@ class TestCfg(unittest.TestCase):
                             )
 
         cfg_real = Cfg()
-        node = cfg_real.get_ast_node(as_tree, 3)
+        node = get_ast_node(as_tree, 3)
 
         self.assertEqual(node, as_tree.body[1].body[0])
 
@@ -168,7 +169,7 @@ class TestCfg(unittest.TestCase):
                             )
 
         cfg_real = Cfg()
-        node = cfg_real.get_ast_node(as_tree, 5)
+        node = get_ast_node(as_tree, 5)
 
         self.assertEqual(node, as_tree.body[1].orelse[0])
 
@@ -186,7 +187,7 @@ class TestCfg(unittest.TestCase):
                             )
 
         cfg_real = Cfg()
-        node = cfg_real.get_ast_node(as_tree, 5)
+        node = get_ast_node(as_tree, 5)
 
         self.assertEqual(node, as_tree.body[1].orelse[0].body[0])
 
@@ -202,7 +203,7 @@ class TestCfg(unittest.TestCase):
                             )
 
         cfg_real = Cfg()
-        node = cfg_real.get_ast_node(as_tree, 5)
+        node = get_ast_node(as_tree, 5)
 
         self.assertEqual(node, as_tree.body[1].body[1].body[0])
 
@@ -335,7 +336,7 @@ class TestCfg(unittest.TestCase):
         cfg_real = Cfg(as_tree)
 
         blocks_list = []
-        for blocks in common.walk_block(cfg_real.block_list[0]):
+        for blocks in cfg_common.walk_block(cfg_real.block_list[0]):
             blocks_list.append(blocks)
 
         expected_block_list = build_blocks([3, 3, None], [1, 2, 'If'],
@@ -355,7 +356,7 @@ class TestCfg(unittest.TestCase):
 
         cfg_real = Cfg(as_tree)
         blocks_list = []
-        for blocks in common.walk_block(cfg_real.block_list[0]):
+        for blocks in cfg_common.walk_block(cfg_real.block_list[0]):
             blocks_list.append(blocks)
         pass
 
@@ -370,5 +371,5 @@ class TestCfg(unittest.TestCase):
              """))
 
         cfg_real = Cfg(as_tree)
-        cfg_real.root = common.delete_node(cfg_real.root, RawBasicBlock(1, 1))
+        cfg_real.root = cfg_common.delete_node(cfg_real.root, RawBasicBlock(1, 1))
         pass

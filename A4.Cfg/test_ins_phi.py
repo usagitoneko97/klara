@@ -1,6 +1,6 @@
 import unittest
 import ast
-from common import ms
+from cfg_common import ms
 from cfg import Cfg
 import test_helper as th
 
@@ -262,9 +262,6 @@ class TestInsPhi(unittest.TestCase):
 
         self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
 
-
-
-
     # ------------------ test recompute_liveout----------------------------
     def test_recompute_liveout(self):
         # Given: UEVAR(B) = 'c'
@@ -317,6 +314,7 @@ class TestInsPhi(unittest.TestCase):
 
     # -------------------- test compute liveout------------------------------
     def test_compute_liveout_given_5_blocks(self):
+
         blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D'], 'C': ['D'],
                                                               'D': ['E', 'B'], 'E': []},
                                                  code={'A': ms("""\
@@ -373,3 +371,6 @@ class TestInsPhi(unittest.TestCase):
 
         expected_phi_list_for_block_3 = {'a'}
         self.assertSetEqual(cfg_real.block_list[-1].phi, expected_phi_list_for_block_3)
+
+        cfg_real.rename_to_ssa(dict(), dict(), cfg_real.root)
+        pass

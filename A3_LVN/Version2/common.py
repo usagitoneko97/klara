@@ -54,3 +54,6 @@ class Stack:
 
     def size(self):
         return len(self.items)
+
+    def remove(self, item):
+        self.items.remove(item)

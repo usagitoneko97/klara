@@ -1,7 +1,7 @@
 import unittest
 import ast
 from ssa import Ssa, SsaVariable, SsaCode
-from common import *
+from cfg_common import *
 
 
 class TestSsa(unittest.TestCase):
@@ -104,6 +104,8 @@ class TestSsa(unittest.TestCase):
         )
 
         ssa_code = SsaCode(as_tree)
+        print(str(ssa_code))
+
         self.assertEqual(str(ssa_code), ms("""\
         a_0 = b_0 Add c_0
         d_0 = 2 Mult e_0
@@ -115,7 +117,10 @@ class TestSsa(unittest.TestCase):
         n_0 = o_0 BitXor 2
         """))
 
-    def test_ssa_all_valid_expressions(self):
+
+
+
+    def test_ssa_repeated_expression(self):
         as_tree = ast.parse(ms("""\
             c = d + e
             e = 5
