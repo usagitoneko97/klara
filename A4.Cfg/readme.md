@@ -280,3 +280,224 @@ self.assertBasicBlockListEqual(real_blocks_list, expected_blocks)
 self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
                               'E': ['F'], 'F': ['B']})
 ```
+
+## Live Variable Analysis
+
+### Terminology
+
+- **UEVAR** - those variables that are used in the current block before any redefinition in the current block.
+- **VARKILL** - contains all the variables that are defined in current block
+- **LIVEOUT** - contains all the variables that are live on exit from the block
+- **BlockSets** - contains the information on where the variable is being defined. 
+- **Globals** - sets of variable that are live across multiple blocks
+- **Worklist(x)** - worklist of variable `x` contains all the block that defined `x`. 
+
+### Basic concept of Live Variable Analysis
+
+#### UEVAR and VARKILL
+The concept of Uevar and Varkill is simple. Consider the following code.
+
+```python
+b = 3
+a = b + c
+```
+
+| Uevar   |  varkill   |
+| :---:   |  :---:     |
+|   'c'   |     'b', 'a'|
+The Uevar and Varkill of the blocks above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, thus `c` is the **Uevar** of that particular block. But `b` is not even though it is being referenced since the definition of `b` exist in the block. The **Varkill** of that block is `b` and `a`. 
+
+#### LIVEOUT
+**Liveout** set of a particular block will contain variables that will live on exit from that block. The formal definition of Liveout is shown below. 
+
+![liveoutEQ](resources/liveoutEQ.png)
+
+Basically, the equation can be broken down to 2 parts, **Uevar(m)**, and **(Liveout(m) ∩ ~Varkill(m))**. To simplify the explanation, consider the following example. 
+
+![liveoutsimpleex](resources/liveoutsimpleex.svg.png)
+
+It is obvious that the variable `a` in **B2** is required from the parents of that block, specifically **B1** in this case, hence the `a` is included in  **Uevar**. Therefore **Liveout** of **B1** has to include `a` since it is live outside of the block. To simplify,  *Liveout of the current block has to include the union of all Uevar of the successor/child blocks.*, as described in the first part of the equation. 
+
+![liveoutsimpleex](resources/liveoutsimpleexWlo.svg.png)
+
+To describe and explain the second part of the equation, consider following example. 
+
+![liveoutsimpleex](resources/liveoutcomplexex.svg.png)
+
+The variable `a` in block **B3** is required since `a` is in the set of **UEVAR**. The variable `a` is however, not coming from the block **B2**, but from block **B1**. So the variable `a` has to be pass from block **B1** to **B3**. Hence *Liveout(B1) += Liveout(B2)*, and Liveout(B2) = 'a'. The algorithm for computing are called fixed point iterative method and is discussed in the section below. 
+
+![liveoutsimpleex](resources/liveoutcomplexexRes.svg.png)
+
+
+But it's not always the liveout of the child block is the liveout of the current block. From the example below: 
+
+![liveoutsimpleex](resources/liveoutcomplexvarkillex.svg.png)
+
+The variable `a` from block **B3** will be refer to `a` in block **B2** but not **B1** since `a` is being redefined in block **B2**. With that being said, the final form of the equation for the second part will be:
+
+*Liveout of the current block has to include the union of all Liveout of the successor/child blocks and not killed by the successor/child blocks.*
+
+```
+v ∈ LiveOut(m) ∩ ~VarKill(m).
+```
+ 
+### Inserting Phi function using Pruned or semi-pruned form of SSA. 
+
+The advantage of semi-pruned compare with pruned SSA is that it avoids the computation of **Liveout** which can result in shorter inserting time for phi function. But the downside of that is it may generate redundant phi function. 
+
+#### Semipruned SSA
+To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. Phi function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that phi function for that variable was not necessary. 
+
+In the process of computing the globals set, it also constructs, for each variable, a list of all blocks that contain a definition of that name, and it's called **Blocks Set**.  
+
+Example: 
+
+![glob_block_ex](resources/globals_and_block_set_ex.svg.png)
+
+Globals
+>    ['d', 'e', 'c', 'a', 'f']
+
+Blocks set
+
+|   'c'   | 'a'   |   'b'|  'f'  |  'z'  |   'd'|
+| :---:   |  :---:| :---: |:---: | :---: | :----:|
+| B1, B3  | B1   | B2| B2| B3 | B3
+
+In very brief explanation of inserting phi function in semi-pruned SSA form, the program will only insert the phi function for the variable in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the phi function. I.e., say variable `d` in globals need to insert phi function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert phi function in Dominance frontier of B3, DF(B3). 
+
+#### Pruned SSA
+To answer the question on why pruned SSA can further minimize the phi function required from semi-pruned SSA, consider examples below. 
+
+![pruned_ssa_ex](resources/pruned_ssa_diff_ex.svg.png)
+
+In semi-pruned SSA, because of the `a` is being referenced in B2, so `a` will be a member of globals. The definition of `a` in block **B3** will force a phi function in block **B4**. But the phi function in block **B4** may be redundant since `a` does not being referenced in that block, nor does not liveout of the block. So pruned SSA will combine the information of liveout of the blocks to determine the insertion of phi function, which in this case, the phi function for `a` will not get inserted. 
+
+The actual algorithm for inserting Phi function in pruned SSA form is more or less the same as semi-pruned. The only additional step is, a verification is required just before the phi function is inserted. Recall from above, just before the insertion of phi function in DF(B3), called DF3, a verification is needed to determine whether or not to insert the phi function, and it is represented below:
+
+Say variable `a` is the phi function that needed to be inserted in block `B`, then 
+
+`a` must be a member of Uevar(B) ∪ (Liveout(B) ∩ ~Varkill(B)), or
+
+`a` must be a member of Liveout(parent(B))
+
+### The algorithm for computing live variable
+
+The algorithm for computing UEVar and VarKILL is very straight forward. For every statement that can be represented in the form of x = y + z, the algorithm checks if the variable `y` and `z` do not exist in the VarKILL set, then add them in the UEVar set. Variable `x` will be added in VarKILL set. 
+
+```
+Globals ← ∅
+Initialize all the Blocks sets to ∅
+for each block b
+    VarKill ← ∅
+    for each operation i in b, in order
+        assume that op i is ‘‘x ← y op z’’
+        if y ∉ VarKill then
+            Globals ← Globals ∪ {y}
+        if z ∉ VarKill then
+            Globals ← Globals ∪ {z}
+        VarKill ← VarKill ∪ {x}
+        Blocks(x) ← Blocks(x) ∪ {b}
+```
+
+For computing Liveout, however, needed an iterative fixed-point method. Using back the example previously, 
+
+![liveoutsimpleex](resources/liveoutcomplexex.svg.png)
+
+On the first iteration, all the liveout is initializd to empty. Liveout of block **B1** is empty since **B2** doesn't have any UEVar. It will need the second iteration to update the Liveout of **B2**, only then, the liveout of **B1** will update to include variable `a`. 
+
+The algorithm is given below:
+```
+// assume CFG has N blocks
+// numbered 0 to N - 1
+for i ← 0 to N - 1
+    LiveOut( i ) ← ∅
+changed ← true
+while (changed)
+    changed ← false
+    for i ← 0 to N - 1
+        recompute LiveOut( i )
+        if LiveOut( i ) changed then
+            changed ← true
+```
+
+Where `recompute LIVEOUT` is simply solving the equation. 
+
+![liveoutEQ](resources/liveoutEQ.png)
+
+### The algorithm for inserting phi function. 
+
+#### Basic concept
+Recall from above, to insert the phi function, either pruned or semi-pruned SSA form, we need to gather 2 information, which is **Globals** and **BlockSet**. Apart from that, **WorkList** is introduced to represent all the block that defines the variable that is currently working on. To illustrate the importance of worklist, consider following example:
+
+![work_list_importance_example](resources/worklist_importance_example.svg.png)
+
+Definition of `a` in block **B3** will force a phi function for `a` in block **B4**. The phi function that inserted in block **B4** will in turn force a phi function in block **B5**. Worklist is used to simplify the process of inserting phi function. The **blocksets** and **worklist** for example above is shown below. 
+
+Globals
+>    ['a']
+
+Blocks set
+
+|   'a'   | 'b'   |   'f'|  'g'  |
+| :---:   |  :---:| :---: |:---: |
+| B3  | B2, B4   | B5| B1|
+
+The algorithm will initialize the worklist to Blocks('a'), which contains **B3**. The definition in **B3** causes it to insert a phi function at the start of each block in DF(B3) = B4. This insertion in B4 also places B4 in the worklist and B3 will be removed from the worklist. This process will continue for the rest of the blocks in the worklist. This is the basic concept of how the worklist is used to place the phi function. 
+
+In the case where DF(B1) is equal to B1, it will cause an infinite loop of inserting phi function. So the algorithm will be responsible for:
+
+- **Semipruned SSA** - stop the insertion of phi function once the phi function of that variable has already existed inside the block, or 
+- **Pruned SSA** - each block has only 1 attempt of inserting the phi function for a variable, whether the phi function has inserted or not. (The condition in semi-pruned SSA cannot be used in pruned SSA since phi function may not be inserted in pruned SSA, while in semi-pruned SSA, phi function will definitely be inserted to the DF of all the block in the block list.)
+
+The next section will discuss on the placement of phi function based on the flavor of SSA. 
+
+#### The algorithm
+The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. The differences are pruned required an additional check before placing phi function, and the stopping condition may be different which are discussed above.
+
+
+The algorithm for insertion of phi function for semi-pruned SSA. 
+
+```
+for each name x ∈ Globals
+    WorkList ← Blocks(x)
+    for each block b ∈ WorkList
+        for each block d in df(b)
+            if d has no φ-function for x then
+                insert a φ-function for x in d
+                WorkList ← WorkList ∪ {d}
+```
+
+The algorithm for the additional check is:
+
+```
+Assume block and variable of the phi function to be inserted is represented by blk, var
+
+need_phi(blk, var):
+    total_liveout ← {}
+    for parent_blk in blk.parents:
+        total_liveout ← total_liveout ∪ (liveout of parent_blk)
+
+    if var ∈ total_liveout then
+        return True
+    else:
+        return False
+
+```
+
+The algorithm for insertion of phi function for pruned SSA. 
+
+```
+for each name x ∈ Globals
+    WorkList ← Blocks(x)
+    for each block b ∈ WorkList
+        for each block d in df(b)
+            if d has not been visited by x then
+                if need_phi(b, x) then
+                    insert a φ-function for x in d
+                    WorkList ← WorkList ∪ {d}
+```
+
+Once the phi function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
+## Renaming of SSA
+
+### Terminology
