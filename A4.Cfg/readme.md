@@ -114,11 +114,11 @@ b_0 = x_3 + y_0
 
 ## Minimal SSA 
 
-There are many ways to insert Φ-function. The easiest way of inserting Φ-function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries phi function. Consider the CFG below: 
+There are many ways to insert Φ-function. The easiest way of inserting Φ-function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries φ-function. Consider the CFG below: 
 
 ![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
- Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But phi function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
+ Φ-function of `x` had to be inserted just before `B4` since it has been declared in both of the blocks `B2` and `B3`. But φ-function for variable `y` should not be inserted at `B4` since `B2` and `B3` had not declared variable `y`.
 
 ![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa_1.svg)
 
@@ -218,7 +218,7 @@ for each node b
 ```
 
 ### Placing φ-Functions
-With dominance frontier, the phi function can be now place strategically. But in order to further minimize the number of phi function, liva variable analysis can be use to find out whether the phi function for that particular variable is needed or not.
+With dominance frontier, the φ-function can be now place strategically. But in order to further minimize the number of φ-function, liva variable analysis can be use to find out whether the φ-function for that particular variable is needed or not.
 
 ## Creating a test
 Section here will discuss on how to create a test fixture and ways to assert it. 
@@ -341,12 +341,12 @@ The variable `a` from block **B3** will be refer to `a` in block **B2** but not 
 v ∈ LiveOut(m) ∩ ~VarKill(m).
 ```
  
-### Inserting Phi function using Pruned or semi-pruned form of SSA. 
+### Inserting φ-function using Pruned or semi-pruned form of SSA. 
 
-The advantage of semi-pruned compare with pruned SSA is that it avoids the computation of **Liveout** which can result in shorter inserting time for phi function. But the downside of that is it may generate redundant phi function. 
+The advantage of semi-pruned compare with pruned SSA is that it avoids the computation of **Liveout** which can result in shorter inserting time for φ-function. But the downside of that is it may generate redundant φ-function. 
 
 #### Semipruned SSA
-To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. Phi function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that phi function for that variable was not necessary. 
+To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. φ-function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that φ-function for that variable was not necessary. 
 
 In the process of computing the globals set, it also constructs, for each variable, a list of all blocks that contain a definition of that name, and it's called **Blocks Set**.  
 
@@ -363,18 +363,18 @@ Blocks set
 | :---:   |  :---:| :---: |:---: | :---: | :----:|
 | B1, B3  | B1   | B2| B2| B3 | B3
 
-In very brief explanation of inserting phi function in semi-pruned SSA form, the program will only insert the phi function for the variable in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the phi function. I.e., say variable `d` in globals need to insert phi function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert phi function in Dominance frontier of B3, DF(B3). 
+In very brief explanation of inserting φ-function in semi-pruned SSA form, the program will only insert the φ-function for the variable in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the φ-function. I.e., say variable `d` in globals need to insert φ-function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert φ-function in Dominance frontier of B3, DF(B3). 
 
 #### Pruned SSA
-To answer the question on why pruned SSA can further minimize the phi function required from semi-pruned SSA, consider examples below. 
+To answer the question on why pruned SSA can further minimize the φ-function required from semi-pruned SSA, consider examples below. 
 
 ![pruned_ssa_ex](resources/pruned_ssa_diff_ex.svg.png)
 
-In semi-pruned SSA, because of the `a` is being referenced in B2, so `a` will be a member of globals. The definition of `a` in block **B3** will force a phi function in block **B4**. But the phi function in block **B4** may be redundant since `a` does not being referenced in that block, nor does not liveout of the block. So pruned SSA will combine the information of liveout of the blocks to determine the insertion of phi function, which in this case, the phi function for `a` will not get inserted. 
+In semi-pruned SSA, because of the `a` is being referenced in B2, so `a` will be a member of globals. The definition of `a` in block **B3** will force a φ-function in block **B4**. But the φ-function in block **B4** may be redundant since `a` does not being referenced in that block, nor does not liveout of the block. So pruned SSA will combine the information of liveout of the blocks to determine the insertion of φ-function, which in this case, the φ-function for `a` will not get inserted. 
 
-The actual algorithm for inserting Phi function in pruned SSA form is more or less the same as semi-pruned. The only additional step is, a verification is required just before the phi function is inserted. Recall from above, just before the insertion of phi function in DF(B3), called DF3, a verification is needed to determine whether or not to insert the phi function, and it is represented below:
+The actual algorithm for inserting φ-function in pruned SSA form is more or less the same as semi-pruned. The only additional step is, a verification is required just before the φ-function is inserted. Recall from above, just before the insertion of φ-function in DF(B3), called DF3, a verification is needed to determine whether or not to insert the φ-function, and it is represented below:
 
-Say variable `a` is the phi function that needed to be inserted in block `B`, then 
+Say variable `a` is the φ-function that needed to be inserted in block `B`, then 
 
 `a` must be a member of Uevar(B) ∪ (Liveout(B) ∩ ~Varkill(B)), or
 
@@ -424,14 +424,14 @@ Where `recompute LIVEOUT` is simply solving the equation.
 
 ![liveoutEQ](resources/liveoutEQ.png)
 
-### The algorithm for inserting phi function. 
+### The algorithm for inserting φ-function. 
 
 #### Basic concept
-Recall from above, to insert the phi function, either pruned or semi-pruned SSA form, we need to gather 2 information, which is **Globals** and **BlockSet**. Apart from that, **WorkList** is introduced to represent all the block that defines the variable that is currently working on. To illustrate the importance of worklist, consider following example:
+Recall from above, to insert the φ-function, either pruned or semi-pruned SSA form, we need to gather 2 information, which is **Globals** and **BlockSet**. Apart from that, **WorkList** is introduced to represent all the block that defines the variable that is currently working on. To illustrate the importance of worklist, consider following example:
 
 ![work_list_importance_example](resources/worklist_importance_example.svg.png)
 
-Definition of `a` in block **B3** will force a phi function for `a` in block **B4**. The phi function that inserted in block **B4** will in turn force a phi function in block **B5**. Worklist is used to simplify the process of inserting phi function. The **blocksets** and **worklist** for example above is shown below. 
+Definition of `a` in block **B3** will force a φ-function for `a` in block **B4**. The φ-function that inserted in block **B4** will in turn force a φ-function in block **B5**. Worklist is used to simplify the process of inserting φ-function. The **blocksets** and **worklist** for example above is shown below. 
 
 Globals
 >    ['a']
@@ -442,20 +442,20 @@ Blocks set
 | :---:   |  :---:| :---: |:---: |
 | B3  | B2, B4   | B5| B1|
 
-The algorithm will initialize the worklist to Blocks('a'), which contains **B3**. The definition in **B3** causes it to insert a phi function at the start of each block in DF(B3) = B4. This insertion in B4 also places B4 in the worklist and B3 will be removed from the worklist. This process will continue for the rest of the blocks in the worklist. This is the basic concept of how the worklist is used to place the phi function. 
+The algorithm will initialize the worklist to Blocks('a'), which contains **B3**. The definition in **B3** causes it to insert a φ-function at the start of each block in DF(B3) = B4. This insertion in B4 also places B4 in the worklist and B3 will be removed from the worklist. This process will continue for the rest of the blocks in the worklist. This is the basic concept of how the worklist is used to place the φ-function. 
 
-In the case where DF(B1) is equal to B1, it will cause an infinite loop of inserting phi function. So the algorithm will be responsible for:
+In the case where DF(B1) is equal to B1, it will cause an infinite loop of inserting φ-function. So the algorithm will be responsible for:
 
-- **Semipruned SSA** - stop the insertion of phi function once the phi function of that variable has already existed inside the block, or 
-- **Pruned SSA** - each block has only 1 attempt of inserting the phi function for a variable, whether the phi function has inserted or not. (The condition in semi-pruned SSA cannot be used in pruned SSA since phi function may not be inserted in pruned SSA, while in semi-pruned SSA, phi function will definitely be inserted to the DF of all the block in the block list.)
+- **Semipruned SSA** - stop the insertion of φ-function once the φ-function of that variable has already existed inside the block, or 
+- **Pruned SSA** - each block has only 1 attempt of inserting the φ-function for a variable, whether the φ-function has inserted or not. (The condition in semi-pruned SSA cannot be used in pruned SSA since φ-function may not be inserted in pruned SSA, while in semi-pruned SSA, φ-function will definitely be inserted to the DF of all the block in the block list.)
 
-The next section will discuss on the placement of phi function based on the flavor of SSA. 
+The next section will discuss on the placement of φ-function based on the flavor of SSA. 
 
 #### The algorithm
-The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. The differences are pruned required an additional check before placing phi function, and the stopping condition may be different which are discussed above.
+The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. The differences are pruned required an additional check before placing φ-function, and the stopping condition may be different which are discussed above.
 
 
-The algorithm for insertion of phi function for semi-pruned SSA. 
+The algorithm for insertion of φ-function for semi-pruned SSA. 
 
 ```
 for each name x ∈ Globals
@@ -470,7 +470,7 @@ for each name x ∈ Globals
 The algorithm for the additional check is:
 
 ```
-Assume block and variable of the phi function to be inserted is represented by blk, var
+Assume block and variable of the φ-function to be inserted is represented by blk, var
 
 need_phi(blk, var):
     total_liveout ← {}
@@ -484,7 +484,7 @@ need_phi(blk, var):
 
 ```
 
-The algorithm for insertion of phi function for pruned SSA. 
+The algorithm for insertion of φ-function for pruned SSA. 
 
 ```
 for each name x ∈ Globals
@@ -497,7 +497,7 @@ for each name x ∈ Globals
                     WorkList ← WorkList ∪ {d}
 ```
 
-Once the phi function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
+Once the φ-function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
 ## Renaming of SSA
 
 ### Terminology
