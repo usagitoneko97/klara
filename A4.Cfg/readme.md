@@ -528,6 +528,7 @@ The second statement is more or less the same as the first one.
 | 1  |  1 |
 
 **Stack**
+
 | 'a'  |  'b' |
 |---|---|
 | 0  |  0 |
@@ -535,11 +536,13 @@ The second statement is more or less the same as the first one.
 At the third statement, it will check the operand 'a' in the stack and retrieve the version of 'a', which is `0` in this case. It will do the same for 'b' and will update the counter of 'z'. 
 
 **counter**
+
 |'a' | 'b'  | 'z' |
 |---|---| ---  |
 | 1  |  1 |  1 |
 
 **Stack**
+
 | 'a'  |  'b' | 'z' |
 |---|---| ---|
 | 0  |  0 | 0 |
