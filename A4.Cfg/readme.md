@@ -495,9 +495,103 @@ for each name x ∈ Globals
                 if need_phi(b, x) then
                     insert a φ-function for x in d
                     WorkList ← WorkList ∪ {d}
+
 ```
+**Note**: the φ-function inserted is just an indication to that block that the φ-function for that variable exist. The actual parameters is waiting to be filled in the next section, renaming of SSA. 
 
 Once the φ-function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
-## Renaming of SSA
 
-### Terminology
+## Renaming of SSA
+In the final SSA form, each global name becomes a base name, and individual definitions of that base name are distinguished by the addition of a numerical subscript. Renaming of SSA in a within a single block is straightforward, but the problems arise when there are multiple basic blocks connected. 
+
+### Role of stack and counter
+**Counter** is used to keep track of the latest version of a particular variable. Normally used when the target of the SSA statement needed to rename, and it will refer to the counter to get the specific version.
+
+**Stack** stores the latest version of a particular variable. It is used when a variable is being referred in an SSA statement, and the version number of that variable can then be found in the stack. 
+
+Take for example a single block with some code below:
+
+```
+a = 3
+b = 4
+z = a + b
+```
+
+At the first statement, the algorithm will rename the operands first. Since 3 is a number, it will then rename the target, 'a'. It will refer to the counter to get the respective version. Because of the counter is empty initially, it will create an entry of 'a', and the target 'a' will hold the version number `0`. The counter for `'a'` will then increment to `1`. The variable `'a_0'` will the push to the stack. 
+
+The second statement is more or less the same as the first one. 
+
+**Counter**
+
+|'a' | 'b'  |
+|---|---|
+| 1  |  1 |
+
+**Stack**
+| 'a'  |  'b' |
+|---|---|
+| 0  |  0 |
+
+At the third statement, it will check the operand 'a' in the stack and retrieve the version of 'a', which is `0` in this case. It will do the same for 'b' and will update the counter of 'z'. 
+
+**counter**
+|'a' | 'b'  | 'z' |
+|---|---| ---  |
+| 1  |  1 |  1 |
+
+**Stack**
+| 'a'  |  'b' | 'z' |
+|---|---| ---|
+| 0  |  0 | 0 |
+
+The resulting ssa:
+```
+a_0 = 3
+b_0 = 4
+z_0 = a_0 + b_0
+```
+
+The use of these 2 data structures may seem not necessary in this case, but it is useful when dealing with multiple basic blocks. The example below will demonstrate that. 
+
+![stack_counter_ex](resources/stack_counter_ex.svg.png)
+
+After converting all the SSA in block **B1**, it will then pass the counter and the stack to the subsequent block, **B2** and **B3**. In block **B2**, the first statement will rename the variable `a` to `a_1` based on the counter, and push `a_1` to the stack. The `a` that get referenced in the second statement will get the latest `a` in the stack. At the end of the operation for block **B2**, the algorithm need to pop all the variable that was created in this block out of the stack, namely `'a_1'` and `'b_0'`. This is to ensure that the `'a'` that get referenced in block **B3** will get the value `'a_0'` and not `'a_1'`. But the counter will not change across multiple blocks. This means that the variable 'a' created in block **B3** will rename to `'a_2'`. 
+
+### The algorithm
+To summarizes the algorithm, assume the method for renaming is called `Rename`, the algorithm will call `Rename` on the root of the dominator tree. `Rename` will rewrite the blocks and recurs on the child of the block in the dominator tree. To finish it, `Rename` pops all the variable that was pushed onto the stacks during processing of this block. 
+
+One detail to complete it is, just before popping out the variable, the `Rewrite` must rewrite φ-function parameters in each of the block's successors in **CFG tree** (Not Dominator tree). 
+
+*Algorithm for renaming*:
+```
+Rename(b)
+    for each φ-function in b, ‘‘x ← φ(· · · )’’
+        rewrite x as NewName(x)
+    for each operation ‘‘x ← y op z’’ in b
+        rewrite y with subscript top(stack[y])
+        rewrite z with subscript top(stack[z])
+        rewrite x as NewName(x)
+    for each successor of b in the cfg
+        fill in φ-function parameters
+    for each successor s of b in the dominator tree
+        Rename(s)
+    for each operation ‘‘x ← y op z’’ in b
+        and each φ-function ‘‘x ← φ(· · · )’’
+        pop(stack[x])
+```
+
+### Why dominator tree?
+
+A question may arise on why do the algorithm recurs on the successors of the **dominator tree** but not **CFG tree**? The example below may clear things up. 
+
+![renaming_why_dom_ex](resources/renaming_why_dom_ex.png)
+
+The algorithm will recur on the child of the dominator tree. This may raise a question like the information in **B2** (stack) will not pass to **B4**, which is the child of **B2**. In other words, the algorithm will pop every variable created in **B2**, which may potentially causing **B4** to not notified all those variables. 
+
+To answer the question above, the algorithm will not pass the stack information from B2 to B4 simply because **B2 doesn't dominate B4**. This means that if B4 referenced a variable that created in B2, **all the variable created in B2 must have a φ-function in B4**, regardless of the form of the SSA (naive, pruned, sempruned). Recall that the algorithm will rewrite the φ-function parameters in each of the block's successors in **CFG tree**, so that process is enough to pass along all the relevant information from **B2** to **B4**.  
+
+## References
+- Torczon, L. and Cooper, M. ed., (2012). Ch9 - Data-Flow Analysis. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.495-519.
+- Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.445-457.
+- Braun, M., Buchwald, S., Hack, S., Leißa, R., Mallon, C., & Zwinkau, A. (2013). Simple and efficient construction of static single assignment form. Lecture Notes in Computer Science (Including Subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics), 7791 LNCS(March), 102–122. https://doi.org/10.1007/978-3-642-37051-9_6
+- Cytron, R., Ferrante, J., Rosen, B. K., Wegman, M. N., & Zadeck, F. K. (1991). Efficiently computing static single assignment form and the control dependence graph. ACM Transactions on Programming Languages and Systems, 13(4), 451–490. https://doi.org/10.1145/115372.115320
