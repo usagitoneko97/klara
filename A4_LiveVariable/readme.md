@@ -337,6 +337,7 @@ a = b + c
 | Uevar   |  varkill   |
 | :---:   |  :---:     |
 |   'c'   |     'b', 'a'|
+
 The Uevar and Varkill of the blocks above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, thus `c` is the **Uevar** of that particular block. But `b` is not even though it is being referenced since the definition of `b` exist in the block. The **Varkill** of that block is `b` and `a`. 
 
 #### 1.6.2.2. LIVEOUT
