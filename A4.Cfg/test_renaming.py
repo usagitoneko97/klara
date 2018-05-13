@@ -69,6 +69,7 @@ class TestRenaming(unittest.TestCase):
                         z = 4       #  |
                     # expected phi func for 'a' here
                     y = a           # 4th
+                    a = 4
                     """)
                             )
         cfg_real = Cfg(as_tree)
@@ -79,4 +80,7 @@ class TestRenaming(unittest.TestCase):
 
         self.assertSsa(cfg_real.block_list[-1].ssa_code.code_list[0],
                        Ssa('a_2', 'a_1', 'Phi', 'a_0'))
+
+    def test_rename_given_custom_4_blocks(self):
+        pass
 

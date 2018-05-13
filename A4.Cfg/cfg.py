@@ -243,7 +243,7 @@ class Cfg:
         block2.prev_block_list.append(block1)
     
     def fill_df(self):
-        self.dominator_tree.build(self.root, self.block_list)
+        self.dominator_tree.build_dominance_frontier(self.root, self.block_list)
 
     def get_var_ast(self, block):
         for i in range(block.start_line, block.end_line + 1):
@@ -357,12 +357,18 @@ class DominatorTree:
         if cfg is not None:
             self.cfg = cfg
 
-    def build(self, root, block_list):
+    def build_dominance_frontier(self, root, block_list):
         self.fill_dominates(root, block_list)
         self.build_tree(root)
         self.fill_df(block_list)
 
     def fill_dominates(self, cfg_root, block_list):
+        """
+        find and fill the dominance relationship of all the blocks
+        :param cfg_root: the root for the block
+        :param block_list: the list of all blocks
+        :return: None
+        """
         for removed_block_num in (range(len(block_list))):
             dom_root = copy.deepcopy(cfg_root)
             dom_block_list = copy.copy(block_list)
