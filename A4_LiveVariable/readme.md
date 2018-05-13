@@ -1,8 +1,40 @@
-# Control Flow Graph
+# 1. Control Flow Graph
+## 1.1. Table of Content
 
-## Basic blocks
+<!-- TOC -->
 
-### Introduction to Control Flow Graph (CFG) and Basic Blocks
+- [1. Control Flow Graph](#1-control-flow-graph)
+    - [1.1. Table of Content](#11-table-of-content)
+    - [1.2. Basic blocks](#12-basic-blocks)
+        - [1.2.1. Introduction to Control Flow Graph (CFG) and Basic Blocks](#121-introduction-to-control-flow-graph-cfg-and-basic-blocks)
+        - [1.2.2. Transforming SSA to CFG](#122-transforming-ssa-to-cfg)
+    - [1.3. Revisiting SSA](#13-revisiting-ssa)
+    - [1.4. Minimal SSA](#14-minimal-ssa)
+        - [1.4.1. Terminology](#141-terminology)
+        - [1.4.2. Dominance](#142-dominance)
+            - [1.4.2.1. Introduction](#1421-introduction)
+            - [1.4.2.2. Algorithm](#1422-algorithm)
+        - [1.4.3. Dominator Tree](#143-dominator-tree)
+            - [1.4.3.1. Introduction](#1431-introduction)
+            - [1.4.3.2. Algorithm](#1432-algorithm)
+        - [1.4.4. Dominance Frontier](#144-dominance-frontier)
+        - [1.4.5. Placing φ-Functions](#145-placing-φ-functions)
+    - [1.5. Creating a test](#15-creating-a-test)
+        - [1.5.1. Generate test inputs](#151-generate-test-inputs)
+        - [1.5.2. Asserting test output](#152-asserting-test-output)
+    - [1.6. Live Variable Analysis](#16-live-variable-analysis)
+        - [1.6.1. Terminology](#161-terminology)
+        - [1.6.2. Basic concept of Live Variable Analysis](#162-basic-concept-of-live-variable-analysis)
+            - [1.6.2.1. UEVAR and VARKILL](#1621-uevar-and-varkill)
+            - [1.6.2.2. LIVEOUT](#1622-liveout)
+        - [1.6.3. The algorithm for computing live variable](#163-the-algorithm-for-computing-live-variable)
+        - [1.6.4. Testing for Live Variable Analysis](#164-testing-for-live-variable-analysis)
+    - [1.7. References](#17-references)
+
+<!-- /TOC -->
+## 1.2. Basic blocks
+
+### 1.2.1. Introduction to Control Flow Graph (CFG) and Basic Blocks
 Basic block simply means a straight-line code sequence with no branches except the entry and the exit. 
 
 E.g., 
@@ -30,7 +62,7 @@ The code above will generate multiple basic blocks since it has a branching stat
 
 ![cfg_ssa_intro](resources/cfg_ssa_intro.svg)
 
-### Transforming SSA to CFG
+### 1.2.2. Transforming SSA to CFG
 
 Transforming SSA to CFG (multiple basic blocks) will required a recursive algorithm, since the program could be nested branch statement. For example, 
 
@@ -45,7 +77,7 @@ else:
 
 The recursive function will require returning the head basic block and the tail basic block to the caller. The caller can then use the head and tail return to connects both of the blocks. I.e., in *If* statement, the caller will pass the body of If to the recursive function, and will connect itself with the head returned, and connects the tail to the next basic block. At the end of the operation, it will return the head and tail for the list of ast statement. 
 
-## Revisiting SSA
+## 1.3. Revisiting SSA
 Static single assignment(SSA) had been discussed previously on [problems when redefining occurs](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs). SSA helped to solve that particular problem. To recall, to solve the problem, the code had transformed to SSA form.
 
 ```python
@@ -112,7 +144,7 @@ b_0 = x_3 + y_0
 
 ![cfg_ssa_intro_after_ssa](resources/cfg_ssa_intro_after_ssa_1.svg)
 
-## Minimal SSA 
+## 1.4. Minimal SSA 
 
 There are many ways to insert Φ-function. The easiest way of inserting Φ-function is to insert it at every block that have joint points (multiple parents). But that could result in an excess amount of unnecessaries φ-function. Consider the CFG below: 
 
@@ -124,7 +156,7 @@ There are many ways to insert Φ-function. The easiest way of inserting Φ-funct
 
 Minimal SSA basically means the SSA form that contains the minimum Φ-function. To complete the job of minimal SSA, they are a few of additional tree structures and algorithm that are required. The section here will explain all the algorithm that is required to compute a minimal SSA. 
 
-### Terminology
+### 1.4.1. Terminology
 
 - **Dominate** - A node `u` is said to *dominate* a node w w.r.t
 source vertex `s` if all the paths from `s` to `w` in the graph must pass through
@@ -141,9 +173,9 @@ dominator of `w` dominates `u`.
 - **dominator tree** - A *dominator tree* is a tree where each node's children are those nodes it immediately dominates. Because the immediate dominator is unique, it is a tree. The start node is the root of the tree.
 
 
-### Dominance
+### 1.4.2. Dominance
 
-#### Introduction
+#### 1.4.2.1. Introduction
 
 As stated in terminology section above, a node `u` is said to *dominate* a node `w` w.r.t the source vertex `s` if all the paths from `s` to `w` in the graph must pass through node `u`. Take for example the graph below, Assume the source is `B1`:
 
@@ -162,20 +194,20 @@ So, the dominator tree becomes:
 
 ![dominanator tree](resources/dominator_tree.svg)
 
-#### Algorithm
+#### 1.4.2.2. Algorithm
 
 They are a few ways to calculate the dominance relationship between nodes. One of the easiest ways is, for each node `w`, remove the node from the graph and perform a [DFS](https://en.wikipedia.org/wiki/Depth-first_search) from source node and all the nodes that are not visited by DFS are the nodes that dominated by `w`. 
 
-### Dominator Tree
+### 1.4.3. Dominator Tree
 
-#### Introduction
+#### 1.4.3.1. Introduction
 Given a node n in a flow graph, the set of nodes that strictly dominate `n` is given by `(Dom(n) − n)`. The node in that set that is closest to n is called n’s **Immediate Dominator(IDOM)**. To simplify the relationship of IDOM and DOM, a dominator tree is built. If `m` is `IDOM(n)`, then the dominator tree has an edge from `m` to `n`. The dominator tree for example in the section above is shown below: 
 
 
 ![dominance tree](resources/dominator_tree.svg)
 
 
-#### Algorithm
+#### 1.4.3.2. Algorithm
 
 The algorithm for constructing the dominance tree is fairly simple. Consider a slightly complex dominance relationship of a tree. Assume that the source is **B0**. 
 
@@ -197,7 +229,7 @@ The dominator tree:
 
 ![dominator_tree_example_result](resources/dominator_tree_example_result.svg)  
 
-### Dominance Frontier
+### 1.4.4. Dominance Frontier
 
 In a simplified manner of explanation, the dominance frontier of a node `n` can be view as, from `n`'s point of view, going through his child, DF node is the first node that `n` doesn't *strictly dominates*. For example, consider following CFG. Assume that the source is **B0**. 
 
@@ -217,13 +249,13 @@ for each node b
                 runner := idom(runner)
 ```
 
-### Placing φ-Functions
+### 1.4.5. Placing φ-Functions
 With dominance frontier, the φ-function can be now place strategically. But in order to further minimize the number of φ-function, liva variable analysis can be use to find out whether the φ-function for that particular variable is needed or not.
 
-## Creating a test
+## 1.5. Creating a test
 Section here will discuss on how to create a test fixture and ways to assert it. 
 
-### Generate test inputs
+### 1.5.1. Generate test inputs
 
 In this moments, there are 2 types of test input. The first type is an AST type. AST is the actual input of the CFG class and can be build like this:
 
@@ -257,7 +289,7 @@ blocks = self.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['
 
 Note that by default, it will create the number of blocks depending on the number of entry of the *block_links* dictionary, and the default name of basic blocks will start from `A` and incremented by 1 ascii character. 
 
-### Asserting test output
+### 1.5.2. Asserting test output
 The test file `test_dominator.py` had included several assert method. 
 
 *To assert the dominance relationship*
@@ -281,9 +313,9 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
                               'E': ['F'], 'F': ['B']})
 ```
 
-## Live Variable Analysis
+## 1.6. Live Variable Analysis
 
-### Terminology
+### 1.6.1. Terminology
 
 - **UEVAR** - those variables that are used in the current block before any redefinition in the current block.
 - **VARKILL** - contains all the variables that are defined in current block
@@ -292,9 +324,9 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 - **Globals** - sets of variable that are live across multiple blocks
 - **Worklist(x)** - worklist of variable `x` contains all the block that defined `x`. 
 
-### Basic concept of Live Variable Analysis
+### 1.6.2. Basic concept of Live Variable Analysis
 
-#### UEVAR and VARKILL
+#### 1.6.2.1. UEVAR and VARKILL
 The concept of Uevar and Varkill is simple. Consider the following code.
 
 ```python
@@ -307,7 +339,7 @@ a = b + c
 |   'c'   |     'b', 'a'|
 The Uevar and Varkill of the blocks above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, thus `c` is the **Uevar** of that particular block. But `b` is not even though it is being referenced since the definition of `b` exist in the block. The **Varkill** of that block is `b` and `a`. 
 
-#### LIVEOUT
+#### 1.6.2.2. LIVEOUT
 **Liveout** set of a particular block will contain variables that will live on exit from that block. The formal definition of Liveout is shown below. 
 
 ![liveoutEQ](resources/liveoutEQ.png)
@@ -341,46 +373,7 @@ The variable `a` from block **B3** will be refer to `a` in block **B2** but not 
 v ∈ LiveOut(m) ∩ ~VarKill(m).
 ```
  
-### Inserting φ-function using Pruned or semi-pruned form of SSA. 
-
-The advantage of semi-pruned compare with pruned SSA is that it avoids the computation of **Liveout** which can result in shorter inserting time for φ-function. But the downside of that is it may generate redundant φ-function. 
-
-#### Semipruned SSA
-To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. φ-function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that φ-function for that variable was not necessary. 
-
-In the process of computing the globals set, it also constructs, for each variable, a list of all blocks that contain a definition of that name, and it's called **Blocks Set**.  
-
-Example: 
-
-![glob_block_ex](resources/globals_and_block_set_ex.svg.png)
-
-Globals
->    ['d', 'e', 'c', 'a', 'f']
-
-Blocks set
-
-|   'c'   | 'a'   |   'b'|  'f'  |  'z'  |   'd'|
-| :---:   |  :---:| :---: |:---: | :---: | :----:|
-| B1, B3  | B1   | B2| B2| B3 | B3
-
-In very brief explanation of inserting φ-function in semi-pruned SSA form, the program will only insert the φ-function for the variable in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the φ-function. I.e., say variable `d` in globals need to insert φ-function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert φ-function in Dominance frontier of B3, DF(B3). 
-
-#### Pruned SSA
-To answer the question on why pruned SSA can further minimize the φ-function required from semi-pruned SSA, consider examples below. 
-
-![pruned_ssa_ex](resources/pruned_ssa_diff_ex.svg.png)
-
-In semi-pruned SSA, because of the `a` is being referenced in B2, so `a` will be a member of globals. The definition of `a` in block **B3** will force a φ-function in block **B4**. But the φ-function in block **B4** may be redundant since `a` does not being referenced in that block, nor does not liveout of the block. So pruned SSA will combine the information of liveout of the blocks to determine the insertion of φ-function, which in this case, the φ-function for `a` will not get inserted. 
-
-The actual algorithm for inserting φ-function in pruned SSA form is more or less the same as semi-pruned. The only additional step is, a verification is required just before the φ-function is inserted. Recall from above, just before the insertion of φ-function in DF(B3), called DF3, a verification is needed to determine whether or not to insert the φ-function, and it is represented below:
-
-Say variable `a` is the φ-function that needed to be inserted in block `B`, then 
-
-`a` must be a member of Uevar(B) ∪ (Liveout(B) ∩ ~Varkill(B)), or
-
-`a` must be a member of Liveout(parent(B))
-
-### The algorithm for computing live variable
+### 1.6.3. The algorithm for computing live variable
 
 The algorithm for computing UEVar and VarKILL is very straight forward. For every statement that can be represented in the form of x = y + z, the algorithm checks if the variable `y` and `z` do not exist in the VarKILL set, then add them in the UEVar set. Variable `x` will be added in VarKILL set. 
 
@@ -424,176 +417,86 @@ Where `recompute LIVEOUT` is simply solving the equation.
 
 ![liveoutEQ](resources/liveoutEQ.png)
 
-### The algorithm for inserting φ-function. 
+### 1.6.4. Testing for Live Variable Analysis
+**Note**: In file `test_live_variable.py`. 
 
-#### Basic concept
-Recall from above, to insert the φ-function, either pruned or semi-pruned SSA form, we need to gather 2 information, which is **Globals** and **BlockSet**. Apart from that, **WorkList** is introduced to represent all the block that defines the variable that is currently working on. To illustrate the importance of worklist, consider following example:
+ The first type is an AST type. AST is the actual input of the CFG class and can be build like this:
 
-![work_list_importance_example](resources/worklist_importance_example.svg.png)
-
-Definition of `a` in block **B3** will force a φ-function for `a` in block **B4**. The φ-function that inserted in block **B4** will in turn force a φ-function in block **B5**. Worklist is used to simplify the process of inserting φ-function. The **blocksets** and **worklist** for example above is shown below. 
-
-Globals
->    ['a']
-
-Blocks set
-
-|   'a'   | 'b'   |   'f'|  'g'  |
-| :---:   |  :---:| :---: |:---: |
-| B3  | B2, B4   | B5| B1|
-
-The algorithm will initialize the worklist to Blocks('a'), which contains **B3**. The definition in **B3** causes it to insert a φ-function at the start of each block in DF(B3) = B4. This insertion in B4 also places B4 in the worklist and B3 will be removed from the worklist. This process will continue for the rest of the blocks in the worklist. This is the basic concept of how the worklist is used to place the φ-function. 
-
-In the case where DF(B1) is equal to B1, it will cause an infinite loop of inserting φ-function. So the algorithm will be responsible for:
-
-- **Semipruned SSA** - stop the insertion of φ-function once the φ-function of that variable has already existed inside the block, or 
-- **Pruned SSA** - each block has only 1 attempt of inserting the φ-function for a variable, whether the φ-function has inserted or not. (The condition in semi-pruned SSA cannot be used in pruned SSA since φ-function may not be inserted in pruned SSA, while in semi-pruned SSA, φ-function will definitely be inserted to the DF of all the block in the block list.)
-
-The next section will discuss on the placement of φ-function based on the flavor of SSA. 
-
-#### The algorithm
-The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. The differences are pruned required an additional check before placing φ-function, and the stopping condition may be different which are discussed above.
-
-
-The algorithm for insertion of φ-function for semi-pruned SSA. 
-
-```
-for each name x ∈ Globals
-    WorkList ← Blocks(x)
-    for each block b ∈ WorkList
-        for each block d in df(b)
-            if d has no φ-function for x then
-                insert a φ-function for x in d
-                WorkList ← WorkList ∪ {d}
+```python
+import ast
+as_tree = ast.parse(ms("""\
+            a = 3           # 1st
+            if a > 3:       #  |
+                a = E       # 2nd
+            else:           # 3rd
+                z = F       #  |
+            y = F           # Eth
+            """)
+                            )
+cfg_real = Cfg(as_tree)
 ```
 
-The algorithm for the additional check is:
+the following method will build a more complex structure of basic blocks with code associate to them. After it has been built, the Cfg object needed to create and assign the parameters returned by `build_blocks_arb` to respective attributes . 
 
-```
-Assume block and variable of the φ-function to be inserted is represented by blk, var
+```python
+"""
+        Note: '|' with no arrows means pointing down
 
-need_phi(blk, var):
-    total_liveout ← {}
-    for parent_blk in blk.parents:
-        total_liveout ← total_liveout ∪ (liveout of parent_blk)
-
-    if var ∈ total_liveout then
-        return True
-    else:
-        return False
-
-```
-
-The algorithm for insertion of φ-function for pruned SSA. 
-
-```
-for each name x ∈ Globals
-    WorkList ← Blocks(x)
-    for each block b ∈ WorkList
-        for each block d in df(b)
-            if d has not been visited by x then
-                if need_phi(b, x) then
-                    insert a φ-function for x in d
-                    WorkList ← WorkList ∪ {d}
-
-```
-**Note**: the φ-function inserted is just an indication to that block that the φ-function for that variable exist. The actual parameters is waiting to be filled in the next section, renaming of SSA. 
-
-Once the φ-function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
-
-## Renaming of SSA
-In the final SSA form, each global name becomes a base name, and individual definitions of that base name are distinguished by the addition of a numerical subscript. Renaming of SSA in a within a single block is straightforward, but the problems arise when there are multiple basic blocks connected. 
-
-### Role of stack and counter
-**Counter** is used to keep track of the latest version of a particular variable. Normally used when the target of the SSA statement needed to rename, and it will refer to the counter to get the specific version.
-
-**Stack** stores the latest version of a particular variable. It is used when a variable is being referred in an SSA statement, and the version number of that variable can then be found in the stack. 
-
-Take for example a single block with some code below:
-
-```
-a = 3
-b = 4
-z = a + b
+          A
+        /   \
+       B     C
+        \   /
+          D
+"""
+blocks, \
+as_tree = th.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []},
+                              code={'A': ms("""\
+                                         temp = a + b
+                                         """),
+                                    'B': ms("""\
+                                         temp_1 = 34
+                                         """),
+                                    'C': ms("""\
+                                         if a < 3:
+                                             pass
+                                         """),
+                                    'D': ms("""\
+                                         temp = a + b
+                                         """)
+                                    })
+as_tree = ast.parse(ast_string)
+cfg_real = Cfg()
+cfg_real.block_list = blocks
+cfg_real.as_tree = as_tree
+cfg_real.root = cfg_real.block_list[0]                                   
 ```
 
-At the first statement, the algorithm will rename the operands first. Since 3 is a number, it will then rename the target, 'a'. It will refer to the counter to get the respective version. Because of the counter is empty initially, it will create an entry of 'a', and the target 'a' will hold the version number `0`. The counter for `'a'` will then increment to `1`. The variable `'a_0'` will the push to the stack. 
-
-The second statement is more or less the same as the first one. 
-
-**Counter**
-
-|'a' | 'b'  |
-|---|---|
-| 1  |  1 |
-
-**Stack**
-
-| 'a'  |  'b' |
-|---|---|
-| 0  |  0 |
-
-At the third statement, it will check the operand 'a' in the stack and retrieve the version of 'a', which is `0` in this case. It will do the same for 'b' and will update the counter of 'z'. 
-
-**counter**
-
-|'a' | 'b'  | 'z' |
-|---|---| ---  |
-| 1  |  1 |  1 |
-
-**Stack**
-
-| 'a'  |  'b' | 'z' |
-|---|---| ---|
-| 0  |  0 | 0 |
-
-The resulting ssa:
-```
-a_0 = 3
-b_0 = 4
-z_0 = a_0 + b_0
+To gather the initial information (UEVAR, VARKILL), use:
+```python
+cfg_real.gather_initial_info()
 ```
 
-The use of these 2 data structures may seem not necessary in this case, but it is useful when dealing with multiple basic blocks. The example below will demonstrate that. 
-
-![stack_counter_ex](resources/stack_counter_ex.svg.png)
-
-After converting all the SSA in block **B1**, it will then pass the counter and the stack to the subsequent block, **B2** and **B3**. In block **B2**, the first statement will rename the variable `a` to `a_1` based on the counter, and push `a_1` to the stack. The `a` that get referenced in the second statement will get the latest `a` in the stack. At the end of the operation for block **B2**, the algorithm need to pop all the variable that was created in this block out of the stack, namely `'a_1'` and `'b_0'`. This is to ensure that the `'a'` that get referenced in block **B3** will get the value `'a_0'` and not `'a_1'`. But the counter will not change across multiple blocks. This means that the variable 'a' created in block **B3** will rename to `'a_2'`. 
-
-### The algorithm
-To summarizes the algorithm, assume the method for renaming is called `Rename`, the algorithm will call `Rename` on the root of the dominator tree. `Rename` will rewrite the blocks and recurs on the child of the block in the dominator tree. To finish it, `Rename` pops all the variable that was pushed onto the stacks during processing of this block. 
-
-One detail to complete it is, just before popping out the variable, the `Rewrite` must rewrite φ-function parameters in each of the block's successors in **CFG tree** (Not Dominator tree). 
-
-*Algorithm for renaming*:
-```
-Rename(b)
-    for each φ-function in b, ‘‘x ← φ(· · · )’’
-        rewrite x as NewName(x)
-    for each operation ‘‘x ← y op z’’ in b
-        rewrite y with subscript top(stack[y])
-        rewrite z with subscript top(stack[z])
-        rewrite x as NewName(x)
-    for each successor of b in the cfg
-        fill in φ-function parameters
-    for each successor s of b in the dominator tree
-        Rename(s)
-    for each operation ‘‘x ← y op z’’ in b
-        and each φ-function ‘‘x ← φ(· · · )’’
-        pop(stack[x])
+And to assert it, the helper function in that test file can be used:
+```python
+expected_ue_var = ({'c'}, {'a', 'b'})
+expected_var_kill = ({'a'}, {'y', 'x'})
+self.assertUeVarKill(cfg_real.block_list, expected_ue_var, expected_var_kill)
 ```
 
-### Why dominator tree?
+To fill the liveout of all the blocks:
+```python
+cfg_real.compute_live_out()
+```
 
-A question may arise on why do the algorithm recurs on the successors of the **dominator tree** but not **CFG tree**? The example below may clear things up. 
+To assert only the liveout, use:
+```python
+expected_live_out = {'A': {'s', 'i'}, 'B': {'s', 'i'}, 'C': {'s', 'i'},
+                     'D': {'s', 'i'}, 'E': set()}
 
-![renaming_why_dom_ex](resources/renaming_why_dom_ex.png)
+self.assertLiveOutEqual(cfg_real.block_list, expected_live_out)
+```
 
-The algorithm will recur on the child of the dominator tree. This may raise a question like the information in **B2** (stack) will not pass to **B4**, which is the child of **B2**. In other words, the algorithm will pop every variable created in **B2**, which may potentially causing **B4** to not notified all those variables. 
-
-To answer the question above, the algorithm will not pass the stack information from B2 to B4 simply because **B2 doesn't dominate B4**. This means that if B4 referenced a variable that created in B2, **all the variable created in B2 must have a φ-function in B4**, regardless of the form of the SSA (naive, pruned, sempruned). Recall that the algorithm will rewrite the φ-function parameters in each of the block's successors in **CFG tree**, so that process is enough to pass along all the relevant information from **B2** to **B4**.  
-
-## References
+## 1.7. References
 - Torczon, L. and Cooper, M. ed., (2012). Ch9 - Data-Flow Analysis. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.495-519.
 - Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.445-457.
 - Braun, M., Buchwald, S., Hack, S., Leißa, R., Mallon, C., & Zwinkau, A. (2013). Simple and efficient construction of static single assignment form. Lecture Notes in Computer Science (Including Subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics), 7791 LNCS(March), 102–122. https://doi.org/10.1007/978-3-642-37051-9_6

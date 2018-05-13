@@ -274,68 +274,6 @@ class Cfg:
                 if blocks.recompute_liveout():
                     changed_flag = True
 
-    def ins_phi_function_semi_pruned(self):
-        for var in self.globals_var:
-            worklist = copy.copy(self.block_set.get(var))
-            if worklist is not None:
-                for block in worklist:
-                    for df_block in block.df:
-                        if not df_block.has_phi(var):
-                            df_block.insert_phi(var)
-                            worklist.append(df_block)
-
-    def ins_phi_function_pruned(self):
-        no_phi_block = NoPhiDict()
-        for var in self.globals_var:
-            worklist = copy.copy(self.block_set.get(var))
-            if worklist is not None:
-                for block in worklist:
-                    for df_block in block.df:
-                        if not df_block.has_phi(var) and not no_phi_block.is_contain_var_no_phi_block(var, df_block):
-                            if self.need_phi(var, df_block):
-                                df_block.insert_phi(var)
-                            else:
-                                no_phi_block.ins_no_phi_block(var, df_block)
-                            worklist.append(df_block)
-
-    @staticmethod
-    def need_phi(var, block):
-        if var not in block.ue_var:
-            if var in block.var_kill:
-                    return False
-            else:
-                if var in block.live_out:
-                    return True
-                else:
-                    return False
-        else:
-            return True
-
-    def rename_to_ssa(self):
-        self._rename_to_ssa(dict(), dict(), self.root)
-
-    def _rename_to_ssa(self, counter_dict, stack_dict, block):
-        block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
-
-        for phi_func in block.ssa_code.get_all_phi_functions():
-            phi_func.target = SsaVariable(phi_func.var, block.ssa_code.update_version(phi_func.var))
-
-        for i in range(block.start_line, block.end_line + 1):
-            ast_node = get_ast_node(self.as_tree, i)
-            block.ssa_code.add_ast_node(ast_node)
-
-        for cfg_succ_block in block.nxt_block_list:
-            cfg_succ_block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
-            cfg_succ_block.fill_phi()
-
-        for dom_succ_block in (CfgCommon.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
-            self._rename_to_ssa(counter_dict, stack_dict, CfgCommon.find_node(self.block_list, dom_succ_block))
-
-        for operation in block.ssa_code.code_list:
-            if operation.target is not None:
-                (stack_dict[operation.target.var]).remove(operation.target.version_num)
-
-
 class NoPhiDict(dict):
     def ins_no_phi_block(self, var, block):
         if self.get(var) is None:
