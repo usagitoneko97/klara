@@ -104,7 +104,6 @@ class TestSsa(unittest.TestCase):
         )
 
         ssa_code = SsaCode(as_tree)
-        print(str(ssa_code))
 
         self.assertEqual(str(ssa_code), ms("""\
         a_0 = b_0 Add c_0
@@ -116,9 +115,6 @@ class TestSsa(unittest.TestCase):
         l_0 = k_0 BitOr m_0
         n_0 = o_0 BitXor 2
         """))
-
-
-
 
     def test_ssa_repeated_expression(self):
         as_tree = ast.parse(ms("""\

@@ -28,6 +28,13 @@ class TestRenaming(unittest.TestCase):
         for ssa_num in range(len(ssa_real_list)):
             self.assertSsa(ssa_real_list[ssa_num], ssa_expected_list[ssa_num])
 
+    def assertBlockSsaList(self, real_block_list, expected_block_dict):
+        self.assertEqual(len(real_block_list), len(expected_block_dict),
+                         "the number of blocks is not the same")
+        for key, ssa_string in expected_block_dict.items():
+            real_block = real_block_list.get_block_by_name(key)
+            self.assertEqual(str(real_block.ssa_code), ssa_string)
+
     def test_add_ast_node_given_if(self):
         as_tree = ast.parse(ms("""\
                            if a < b:
@@ -82,5 +89,73 @@ class TestRenaming(unittest.TestCase):
                        Ssa('a_2', 'a_1', 'Phi', 'a_0'))
 
     def test_rename_given_custom_4_blocks(self):
-        pass
+        """
+               A
+            /    \
+           B      E
+          / \     |
+         C  D     |
+         \ /      |
+          F  <----
+        """
+        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B', 'E'], 'B': ['C', 'D'], 'C': ['F'],
+                                                              'D': ['F'], 'E': ['G'], 'F': ['G'], 'G': []},
+                                                 code={'A': ms("""\
+                                                            temp = 0
+                                                            """),
+                                                       'B': ms("""\
+                                                            a = 1 #a_0
+                                                            """),
+                                                       'C': ms("""\
+                                                            a = 22 #a_1
+                                                            """),
+                                                       'D': ms("""\
+                                                            a = 33 #a_2
+                                                            """),
+                                                       'E': ms("""\
+                                                            a = 44 #a_4
+                                                            """),
+                                                       'F': ms("""\
+                                                            a = 55 #a_3
+                                                            """),
+                                                       'G': ms("""\
+                                                            a = 66 #a_5
+                                                            """)
+                                                       })
+
+        as_tree = ast.parse(ast_string)
+        cfg_real = Cfg()
+        cfg_real.block_list = blocks
+        cfg_real.as_tree = as_tree
+        cfg_real.root = cfg_real.block_list[0]
+        cfg_real.fill_df()
+        cfg_real.gather_initial_info()
+        cfg_real.compute_live_out()
+
+        cfg_real.rename_to_ssa()
+
+        self.assertBlockSsaList(cfg_real.block_list,
+                                {'A': ms("""\
+                                      temp_0 = 0
+                                      """),
+                                 'B': ms("""\
+                                      a_0 = 1
+                                      """),
+                                 'C': ms("""\
+                                      a_1 = 22
+                                      """),
+                                 'D': ms("""\
+                                      a_2 = 33
+                                      """),
+                                 'E': ms("""\
+                                      a_4 = 44
+                                      """),
+                                 'F': ms("""\
+                                      a_3 = 55
+                                      """),
+                                 'G': ms("""\
+                                      a_5 = 66
+                                      """)
+                                 })
+
 
