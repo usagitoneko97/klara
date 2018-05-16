@@ -320,7 +320,7 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 
 To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. But dominance frontier only consider the structure of the control flow graph without taking in account of variables. Consider following diagrams. 
 
-<!-->
+<!---
 ```
 a_0 = b_0 + c_0
 d_0 = 5
@@ -328,7 +328,7 @@ if a_0 < 3:
     d_0 = 4
 // phi function for d here?
 ```
-<-->
+-->
 
 ![](resources/problems_statement_ex.svg.png)
 
