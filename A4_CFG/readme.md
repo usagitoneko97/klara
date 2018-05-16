@@ -1,9 +1,9 @@
-# 1. Control Flow Graph
+# 1. CFG
 ## 1.1. Table of Content
 
 <!-- TOC -->
 
-- [1. Control Flow Graph](#1-control-flow-graph)
+- [1. CFG](#1-cfg)
     - [1.1. Table of Content](#11-table-of-content)
     - [1.2. Basic blocks](#12-basic-blocks)
         - [1.2.1. Introduction to Control Flow Graph (CFG) and Basic Blocks](#121-introduction-to-control-flow-graph-cfg-and-basic-blocks)
@@ -18,17 +18,18 @@
             - [1.4.3.1. Introduction](#1431-introduction)
             - [1.4.3.2. Algorithm](#1432-algorithm)
         - [1.4.4. Dominance Frontier](#144-dominance-frontier)
-        - [1.4.5. Placing φ-Functions](#145-placing-φ-functions)
+        - [1.4.5. Placing φ-Functions](#145-placing--functions)
     - [1.5. Creating a test](#15-creating-a-test)
         - [1.5.1. Generate test inputs](#151-generate-test-inputs)
         - [1.5.2. Asserting test output](#152-asserting-test-output)
     - [1.6. Live Variable Analysis](#16-live-variable-analysis)
-        - [1.6.1. Terminology](#161-terminology)
-        - [1.6.2. Basic concept of Live Variable Analysis](#162-basic-concept-of-live-variable-analysis)
-            - [1.6.2.1. UEVAR and VARKILL](#1621-uevar-and-varkill)
-            - [1.6.2.2. LIVEOUT](#1622-liveout)
-        - [1.6.3. The algorithm for computing live variable](#163-the-algorithm-for-computing-live-variable)
-        - [1.6.4. Testing for Live Variable Analysis](#164-testing-for-live-variable-analysis)
+        - [1.6.1. Problems statements](#161-problems-statements)
+        - [1.6.2. Terminology](#162-terminology)
+        - [1.6.3. Basic concept of Live Variable Analysis](#163-basic-concept-of-live-variable-analysis)
+            - [1.6.3.1. UEVAR and VARKILL](#1631-uevar-and-varkill)
+            - [1.6.3.2. LIVEOUT](#1632-liveout)
+        - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
+        - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
     - [1.7. References](#17-references)
 
 <!-- /TOC -->
@@ -315,7 +316,25 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 
 ## 1.6. Live Variable Analysis
 
-### 1.6.1. Terminology
+### 1.6.1. Problems statements
+
+To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. But dominance frontier only consider the structure of the control flow graph without taking in account of variables. Consider following diagrams. 
+
+<!-->
+```
+a_0 = b_0 + c_0
+d_0 = 5
+if a_0 < 3:
+    d_0 = 4
+// phi function for d here?
+```
+<-->
+
+![](resources/problems_statement_ex.svg.png)
+
+In code shown above, does a phi function needed at the last block? Even though in analysis of dominance frontier had suggested that a definition of variable inside block 2 will result in phi function being placed in the last block, but because of variable `d` had no usage at the last block, the phi function is **not** needed. Live variable analysis will provides the information needed to further narrow the set of φ-functions. 
+
+### 1.6.2. Terminology
 
 - **UEVAR** - those variables that are used in the current block before any redefinition in the current block.
 - **VARKILL** - contains all the variables that are defined in current block
@@ -324,9 +343,9 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 - **Globals** - sets of variable that are live across multiple blocks
 - **Worklist(x)** - worklist of variable `x` contains all the block that defined `x`. 
 
-### 1.6.2. Basic concept of Live Variable Analysis
+### 1.6.3. Basic concept of Live Variable Analysis
 
-#### 1.6.2.1. UEVAR and VARKILL
+#### 1.6.3.1. UEVAR and VARKILL
 The concept of Uevar and Varkill is simple. Consider the following code.
 
 ```python
@@ -340,7 +359,7 @@ a = b + c
 
 The Uevar and Varkill of the blocks above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, thus `c` is the **Uevar** of that particular block. But `b` is not even though it is being referenced since the definition of `b` exist in the block. The **Varkill** of that block is `b` and `a`. 
 
-#### 1.6.2.2. LIVEOUT
+#### 1.6.3.2. LIVEOUT
 **Liveout** set of a particular block will contain variables that will live on exit from that block. The formal definition of Liveout is shown below. 
 
 ![liveoutEQ](resources/liveoutEQ.png)
@@ -374,23 +393,25 @@ The variable `a` from block **B3** will be refer to `a` in block **B2** but not 
 v ∈ LiveOut(m) ∩ ~VarKill(m).
 ```
  
-### 1.6.3. The algorithm for computing live variable
+### 1.6.4. The algorithm for computing live variable
 
 The algorithm for computing UEVar and VarKILL is very straight forward. For every statement that can be represented in the form of x = y + z, the algorithm checks if the variable `y` and `z` do not exist in the VarKILL set, then add them in the UEVar set. Variable `x` will be added in VarKILL set. 
 
 ```
-Globals ← ∅
-Initialize all the Blocks sets to ∅
+// assume block b has k operations
+// of form ‘‘x ← y op z’’
 for each block b
-    VarKill ← ∅
-    for each operation i in b, in order
-        assume that op i is ‘‘x ← y op z’’
-        if y ∉ VarKill then
-            Globals ← Globals ∪ {y}
-        if z ∉ VarKill then
-            Globals ← Globals ∪ {z}
-        VarKill ← VarKill ∪ {x}
-        Blocks(x) ← Blocks(x) ∪ {b}
+    Init(b)
+
+Init(b)
+UEVar(b) ← ∅
+VarKill(b) ← ∅
+for i ← 1 to k   //for every operation in this block
+if y ∉ VarKill(b)
+    then add y to UEVar(b)
+if z ∉ VarKill(b)
+    then add z to UEVar(b)
+add x to VarKill(b)
 ```
 
 For computing Liveout, however, needed an iterative fixed-point method. Using back the example previously, 
@@ -418,7 +439,9 @@ Where `recompute LIVEOUT` is simply solving the equation.
 
 ![liveoutEQ](resources/liveoutEQ.png)
 
-### 1.6.4. Testing for Live Variable Analysis
+Where `succ(n)` means **successors/child** of block `n`. 
+
+### 1.6.5. Testing for Live Variable Analysis
 **Note**: In file `test_live_variable.py`. 
 
  The first type is an AST type. AST is the actual input of the CFG class and can be build like this:
@@ -428,10 +451,10 @@ import ast
 as_tree = ast.parse(ms("""\
             a = 3           # 1st
             if a > 3:       #  |
-                a = E       # 2nd
+                a = 3       # 2nd
             else:           # 3rd
-                z = F       #  |
-            y = F           # Eth
+                z = 4       #  |
+            y = 4           # 4th
             """)
                             )
 cfg_real = Cfg(as_tree)
