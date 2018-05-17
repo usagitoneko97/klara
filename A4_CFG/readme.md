@@ -23,7 +23,10 @@
         - [1.5.1. Generate test inputs](#151-generate-test-inputs)
         - [1.5.2. Asserting test output](#152-asserting-test-output)
     - [1.6. Live Variable Analysis](#16-live-variable-analysis)
-        - [1.6.1. Problems statements](#161-problems-statements)
+        - [1.6.1. Uses for Live Variables](#161-uses-for-live-variables)
+            - [1.6.1.1. Improve SSA construction](#1611-improve-ssa-construction)
+            - [1.6.1.2. Finding uninitialized variables](#1612-finding-uninitialized-variables)
+            - [1.6.1.3. Finding useless store operation](#1613-finding-useless-store-operation)
         - [1.6.2. Terminology](#162-terminology)
         - [1.6.3. Basic concept of Live Variable Analysis](#163-basic-concept-of-live-variable-analysis)
             - [1.6.3.1. UEVAR and VARKILL](#1631-uevar-and-varkill)
@@ -316,8 +319,11 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 
 ## 1.6. Live Variable Analysis
 
-### 1.6.1. Problems statements
+Live variable analysis perform the analysis of lifespan of variables, that is, the variables that may live out of the block, or variables that may be potentially read before their next write, or variable that may get killed in a basic blocks. 
 
+### 1.6.1. Uses for Live Variables
+
+#### 1.6.1.1. Improve SSA construction
 To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. But dominance frontier only consider the structure of the control flow graph without taking in account of variables. Consider following diagrams. 
 
 <!---
@@ -333,6 +339,14 @@ if a_0 < 3:
 ![](resources/problems_statement_ex.svg.png)
 
 In code shown above, does a phi function needed at the last block? Even though in analysis of dominance frontier had suggested that a definition of variable inside block 2 will result in phi function being placed in the last block, but because of variable `d` had no usage at the last block, the phi function is **not** needed. Live variable analysis will provides the information needed to further narrow the set of φ-functions. 
+
+#### 1.6.1.2. Finding uninitialized variables
+
+If a statement uses some variable, *v* before *v* has been assigned a value, the variable *v* can be said is an uninitialized variable. The algorithm can deduce from the set of liveness properties of variable to determine the variable is live out from other blocks to current blocks. 
+
+#### 1.6.1.3. Finding useless store operation
+
+A store operation like `a = b + c` is not needed if `a` is not used anywhere throughout code after the defininition, or `a` **does not live out** of the block. 
 
 ### 1.6.2. Terminology
 
