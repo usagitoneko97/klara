@@ -26,7 +26,7 @@
         - [1.6.1. Uses for Live Variables](#161-uses-for-live-variables)
             - [1.6.1.1. Improve SSA construction](#1611-improve-ssa-construction)
             - [1.6.1.2. Finding uninitialized variables](#1612-finding-uninitialized-variables)
-            - [1.6.1.3. Finding useless store operation](#1613-finding-useless-store-operation)
+            - [1.6.1.3. Dead code elimination](#1613-dead-code-elimination)
         - [1.6.2. Terminology](#162-terminology)
         - [1.6.3. Basic concept of Live Variable Analysis](#163-basic-concept-of-live-variable-analysis)
             - [1.6.3.1. UEVAR and VARKILL](#1631-uevar-and-varkill)
@@ -344,7 +344,7 @@ In code shown above, does a phi function needed at the last block? Even though i
 
 If a statement uses some variable, *v* before *v* has been assigned a value, the variable *v* can be said is an uninitialized variable. The algorithm can deduce from the set of liveness properties of variable to determine the variable is live out from other blocks to current blocks. 
 
-#### 1.6.1.3. Finding useless store operation
+#### 1.6.1.3. Dead code elimination
 
 A store operation like `a = b + c` is not needed if `a` is not used anywhere throughout code after the defininition, or `a` **does not live out** of the block. 
 
