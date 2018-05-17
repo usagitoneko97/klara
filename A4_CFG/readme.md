@@ -28,7 +28,7 @@
             - [1.6.1.2. Finding uninitialized variables](#1612-finding-uninitialized-variables)
             - [1.6.1.3. Dead code elimination](#1613-dead-code-elimination)
         - [1.6.2. Terminology](#162-terminology)
-        - [1.6.3. Basic concept of Live Variable Analysis](#163-basic-concept-of-live-variable-analysis)
+        - [1.6.3. The basic concept of Live Variable Analysis](#163-the-basic-concept-of-live-variable-analysis)
             - [1.6.3.1. UEVAR and VARKILL](#1631-uevar-and-varkill)
             - [1.6.3.2. LIVEOUT](#1632-liveout)
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
@@ -324,7 +324,7 @@ Live variable analysis perform the analysis of lifespan of variables, that is, t
 ### 1.6.1. Uses for Live Variables
 
 #### 1.6.1.1. Improve SSA construction
-To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. But dominance frontier only consider the structure of the control flow graph without taking in account of variables. Consider following diagrams. 
+To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. But dominance frontier only considers the structure of the control flow graph without taking into account of variables. Consider following diagrams. 
 
 <!---
 ```
@@ -338,15 +338,15 @@ if a_0 < 3:
 
 ![](resources/problems_statement_ex.svg.png)
 
-In code shown above, does a phi function needed at the last block? Even though in analysis of dominance frontier had suggested that a definition of variable inside block 2 will result in phi function being placed in the last block, but because of variable `d` had no usage at the last block, the phi function is **not** needed. Live variable analysis will provides the information needed to further narrow the set of φ-functions. 
+In the code shown above, does a phi function needed at the last block? Even though in the analysis of dominance frontier has suggested that a definition of the variable inside block 2 will result in phi function being placed in the last block, but because of variable `d` has no use at the last block, the phi function is **not** needed. Live variable analysis will provide the information needed to further narrow the set of φ-functions. 
 
 #### 1.6.1.2. Finding uninitialized variables
 
-If a statement uses some variable, *v* before *v* has been assigned a value, the variable *v* can be said is an uninitialized variable. The algorithm can deduce from the set of liveness properties of variable to determine the variable is live out from other blocks to current blocks. 
+If a statement uses some variable, *v* before *v* has been assigned a value, the variable *v* can be said is an uninitialized variable. The algorithm can deduce from the set of liveness properties of a variable to determine the variable is live out from other blocks to current blocks. 
 
 #### 1.6.1.3. Dead code elimination
 
-A store operation like `a = b + c` is not needed if `a` is not used anywhere throughout code after the defininition, or `a` **does not live out** of the block. 
+A store operation like `a = b + c` is not needed if `a` is not used anywhere throughout code after the definition, or `a` **does not live out** of the block. 
 
 ### 1.6.2. Terminology
 
@@ -357,7 +357,7 @@ A store operation like `a = b + c` is not needed if `a` is not used anywhere thr
 - **Globals** - sets of variable that are live across multiple blocks
 - **Worklist(x)** - worklist of variable `x` contains all the block that defined `x`. 
 
-### 1.6.3. Basic concept of Live Variable Analysis
+### 1.6.3. The basic concept of Live Variable Analysis
 
 #### 1.6.3.1. UEVAR and VARKILL
 The concept of Uevar and Varkill is simple. Consider the following code.
@@ -390,7 +390,7 @@ To describe and explain the second part of the equation, consider following exam
 
 ![liveoutsimpleex](resources/liveoutcomplexex.svg.png)
 
-The variable `a` in block **B3** is required since `a` is in the set of **UEVAR**. The variable `a` is however, not coming from the block **B2**, but from block **B1**. So the variable `a` has to be pass from block **B1** to **B3**. Hence *Liveout(B1) += Liveout(B2)*, and Liveout(B2) = 'a'. The algorithm for computing are called fixed point iterative method and is discussed in the section below. 
+The variable `a` in block **B3** is required since `a` is in the set of **UEVAR**. The variable `a` is, however, not coming from the block **B2**, but from block **B1**. So the variable `a` has to be pass from block **B1** to **B3**. Hence *Liveout(B1) += Liveout(B2)*, and Liveout(B2) = 'a'. The algorithm for computing is called fixed-point iterative method and is discussed in the section below. 
 
 ![liveoutsimpleex](resources/liveoutcomplexexRes.svg.png)
 
@@ -409,7 +409,7 @@ v ∈ LiveOut(m) ∩ ~VarKill(m).
  
 ### 1.6.4. The algorithm for computing live variable
 
-The algorithm for computing UEVar and VarKILL is very straight forward. For every statement that can be represented in the form of x = y + z, the algorithm checks if the variable `y` and `z` do not exist in the VarKILL set, then add them in the UEVar set. Variable `x` will be added in VarKILL set. 
+The algorithm for computing UEVar and VarKILL is very straightforward. For every statement that can be represented in the form of x = y + z, the algorithm checks if the variable `y` and `z` do not exist in the VarKILL set, then add them in the UEVar set. Variable `x` will be added in VarKILL set. 
 
 ```
 // assume block b has k operations
@@ -432,7 +432,7 @@ For computing Liveout, however, needed an iterative fixed-point method. Using ba
 
 ![liveoutsimpleex](resources/liveoutcomplexex.svg.png)
 
-On the first iteration, all the liveout is initializd to empty. Liveout of block **B1** is empty since **B2** doesn't have any UEVar. It will need the second iteration to update the Liveout of **B2**, only then, the liveout of **B1** will update to include variable `a`. 
+On the first iteration, all the liveout is initialized to empty. Liveout of block **B1** is empty since **B2** doesn't have any UEVar. It will need the second iteration to update the Liveout of **B2**, only then, the liveout of **B1** will update to include variable `a`. 
 
 The algorithm is given below:
 ```
@@ -458,7 +458,7 @@ Where `succ(n)` means **successors/child** of block `n`.
 ### 1.6.5. Testing for Live Variable Analysis
 **Note**: In file `test_live_variable.py`. 
 
- The first type is an AST type. AST is the actual input of the CFG class and can be build like this:
+ The first type is an AST type. AST is the actual input of the CFG class and can be built like this:
 
 ```python
 import ast
@@ -474,7 +474,7 @@ as_tree = ast.parse(ms("""\
 cfg_real = Cfg(as_tree)
 ```
 
-the following method will build a more complex structure of basic blocks with code associate to them. After it has been built, the Cfg object needed to create and assign the parameters returned by `build_blocks_arb` to respective attributes . 
+the following method will build a more complex structure of basic blocks with code associate to them. After it has been built, the Cfg object needed to create and assign the parameters returned by `build_blocks_arb` to respective attributes. 
 
 ```python
 """
