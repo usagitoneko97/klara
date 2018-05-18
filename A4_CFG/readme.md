@@ -319,12 +319,12 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 
 ## 1.6. Live Variable Analysis
 
-Live variable analysis perform the analysis of lifespan of variables, that is, the variables that may live out of the block, or variables that may be potentially read before their next write, or variable that may get killed in a basic blocks. 
+ Live variable analysis will shows the lifespan of each variable across multiple blocks in a network of complex block chain, that is, the variables that may live out of the block, or variables that may be potentially read before their next write, or variable that may get killed in a basic blocks. 
 
 ### 1.6.1. Uses for Live Variables
 
 #### 1.6.1.1. Improve SSA construction
-To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. But dominance frontier only considers the structure of the control flow graph without taking into account of variables. Consider following diagrams. 
+To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. One problem with dominance frontier is that it suggests the nodes to which φ-function(s) should be placed based on structural information (CFG) without considering the data (variables), This leads to possibly inserting redundant φ-function. To stress my point, consider the following diagram: 
 
 <!---
 ```
@@ -338,15 +338,15 @@ if a_0 < 3:
 
 ![](resources/problems_statement_ex.svg.png)
 
-In the code shown above, does a phi function needed at the last block? Even though in the analysis of dominance frontier has suggested that a definition of the variable inside block 2 will result in phi function being placed in the last block, but because of variable `d` has no use at the last block, the phi function is **not** needed. Live variable analysis will provide the information needed to further narrow the set of φ-functions. 
+In the code shown above, does a phi function needed at block **B3**? Even though the dominance frontier suggests that the definition of the variable d inside block 2 will result in φ-function being inserted in the last block, but because of variable d not being used there, the φ-function is not needed. This is where live variable analysis assists the dominance frontier to reduce the set of φ-functions.
 
 #### 1.6.1.2. Finding uninitialized variables
 
-If a statement uses some variable, *v* before *v* has been assigned a value, the variable *v* can be said is an uninitialized variable. The algorithm can deduce from the set of liveness properties of a variable to determine the variable is live out from other blocks to current blocks. 
-
+ If a statement uses some variable v before it has been assigned a value, then clearly it is an error missed by the programmer. If the variable is defined in the same block, then it is a trivial task to determine if the variable has been initialized. However if the variable lives across multiple blocks, then it is no more trivial and we need LVA to make that deduction. 
+ 
 #### 1.6.1.3. Dead code elimination
 
-A store operation like `a = b + c` is not needed if `a` is not used anywhere throughout code after the definition, or `a` **does not live out** of the block. 
+A store operation like `a = b + c` is not needed if a is not used anywhere throughout the code after the definition, or a **does not live out** of the block. 
 
 ### 1.6.2. Terminology
 
