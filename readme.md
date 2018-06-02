@@ -17,8 +17,10 @@ print(astor.to_source(ast_tree))
 ```
 
 # 2. Topics 
-1. [Printing of Function Name in Ast](https://github.com/usagitoneko97/python-ast/tree/master/A1.FunctionDef)
+1. [Printing of Function Name in Ast](A1.FunctionDef)
 
-2. [Ast to Python code](https://github.com/usagitoneko97/python-ast/tree/master/A2.Ast2Py)
+2. [Ast to Python code](A2.Ast2Py)
 
-3. [Local Value Numbering](https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN)
+3. [Local Value Numbering](A3_LVN)
+
+4. [Control Flow Graph](A4_CFG)
