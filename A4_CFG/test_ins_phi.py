@@ -151,6 +151,8 @@ class TestInsPhi(unittest.TestCase):
         """
                 Note: '|' with no arrows means pointing down
 
+        GIVEN: block B has 2 DF nodes, C and D. Definition in B will force phi function in C and D
+
                 A ---
                / \  |
               B  |  |
@@ -165,6 +167,53 @@ class TestInsPhi(unittest.TestCase):
                                                               'D': []},
                                                  code={'A': ms("""\
                                                                     temp = 1
+                                                                    phi_var = 1
+                                                                    """),
+                                                       'B': ms("""\
+                                                                    phi_var= 2
+                                                                    """),
+                                                       'C': ms("""\
+                                                                    x = phi_var
+                                                                    """),
+                                                       'D': ms("""\
+                                                                    y = phi_var
+                                                                    """)}
+                                                       )
+
+        as_tree = ast.parse(ast_string)
+        cfg_real = Cfg()
+        cfg_real.block_list = blocks
+        cfg_real.as_tree = as_tree
+        cfg_real.root = cfg_real.block_list[0]
+        cfg_real.fill_df()
+        cfg_real.gather_initial_info()
+        cfg_real.compute_live_out()
+        cfg_real.ins_phi_function_pruned()
+
+        expected_phi_list = {'A': set(),
+                             'B': set(),
+                             'C': {'phi_var'},
+                             'D': {'phi_var'}}
+
+        self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
+
+    def test_insert_phi_function_pruned_given_2_df_connected(self):
+        """
+                Note: '|' with no arrows means pointing down
+
+                A ---
+               / \  |
+              B  |  |
+             / \ |  |
+            |  C    |
+            \  |    |
+              D  ---
+        """
+        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B', 'C', 'D'],
+                                                              'B': ['C', 'D'],
+                                                              'C': ['D'],
+                                                              'D': []},
+                                                 code={'A': ms("""\
                                                                     phi_var = 1
                                                                     """),
                                                        'B': ms("""\

@@ -34,12 +34,12 @@
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
         - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
     - [1.7. Inserting φ-function](#17-inserting--function)
-        - [Minimal SSA](#minimal-ssa)
-        - [1.7.1. Semipruned SSA](#171-semipruned-ssa)
-        - [1.7.2. Pruned SSA](#172-pruned-ssa)
-        - [1.7.3. Worklist algorithm for inserting φ-function.](#173-worklist-algorithm-for-inserting--function)
-            - [1.7.3.1. Basic concept](#1731-basic-concept)
-            - [1.7.3.2. The algorithm](#1732-the-algorithm)
+        - [1.7.1. Minimal SSA](#171-minimal-ssa)
+        - [1.7.2. Semipruned SSA](#172-semipruned-ssa)
+        - [1.7.3. Pruned SSA](#173-pruned-ssa)
+        - [1.7.4. Worklist algorithm for inserting φ-function.](#174-worklist-algorithm-for-inserting--function)
+            - [1.7.4.1. Basic concept](#1741-basic-concept)
+            - [1.7.4.2. The algorithm](#1742-the-algorithm)
     - [1.8. References](#18-references)
 
 <!-- /TOC -->
@@ -374,9 +374,9 @@ b = 3
 a = b + c
 ```
 
-| Uevar   |  varkill   |
-| :---:   |  :---:     |
-|   'c'   |     'b', 'a'|
+| Uevar | varkill  |
+| :---: | :------: |
+| 'c'   | 'b', 'a' |
 
 The Uevar and Varkill of the blocks above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, thus `c` is the **Uevar** of that particular block. But `b` is not even though it is being referenced since the definition of `b` exist in the block. The **Varkill** of that block is `b` and `a`. 
 
@@ -543,55 +543,57 @@ self.assertLiveOutEqual(cfg_real.block_list, expected_live_out)
 
 ## 1.7. Inserting φ-function
 
-Insertion of φ-function is a very important phase during the transformation to SSA form. **Minimal SSA** will inserts φ-function at any joint points where two definitions of variables meet, but some of these φ-function may be dead, or in other words, not being used in subsequents blocks. By using the information of variables(live variable analysis), dead φ-function could be avoided. 
+Insertion of φ-function is a very important phase during the transformation to SSA form. **Minimal SSA** will inserts φ-function at any joint points where two definitions of variables meet, but some of these φ-function may be dead, or in other words, not being used in subsequents blocks. 
 
-There are 2 flavors of SSA that consider the liveness of variables, namely **pruned SSA** and **semipruned SSA**.  
+To further minimize dead φ-function, information of variables(live variable analysis) may be used. There are 2 flavors of SSA that consider the liveness of variables, namely **pruned SSA** and **semipruned SSA**.  
 
 Construction of **pruned ssa** will add a liveness test to the CFG to avoid adding dead φ-function. To perform liveness test, the algorithm must compute **LIVEOUT** sets,  which will result in the cost of building pruned SSA to be higher than **Minimal SSA**. 
 
 **Semipruned SSA** is a compromise between **minimal SSA** and **pruned SSA**. By only considering *UEVAR* and *VARKILL*, this will eliminates some dead φ-function in minimal SSA, but could potentially generate dead φ-function as well. By avoiding the computation of **LIVEOUT**, the execution time will be faster compared to pruned SSA. 
 
-### Minimal SSA
+### 1.7.1. Minimal SSA
+To recall, Minimal SSA that had been discussed in [section 1.4](). Minimal SSA would not requires live variable analysis. By using only the fact of dominance frontiers, the algorithm can eliminate some useless φ-function based on only the structures of CFG. 
 
-### 1.7.1. Semipruned SSA
-
+### 1.7.2. Semipruned SSA
 The semipruned SSA will eliminates any names that are not live across a block boundary. To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. φ-function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that φ-function for that variable was not necessary. 
 
 In the process of computing the globals set, it also constructs, for each variable, a list of all blocks that contain a definition of that name, and it's called **Blocks Set**.  
 
 Example: 
 
-![glob_block_ex](resources/globals_and_block_set_ex.svg.png)
+![glob_block_ex](resources/semipruned_ex.svg)
 
 Globals
 >    ['d', 'e', 'c', 'a', 'f']
 
 Blocks set
 
-|   'c'   | 'a'   |   'b'|  'f'  |  'z'  |   'd'|
-| :---:   |  :---:| :---: |:---: | :---: | :----:|
-| B1, B3  | B1   | B2| B2| B3 | B3
+| 'c'    | 'a'   | 'b'   | 'f'   | 'z'   | 'd'   |
+| :----: | :---: | :---: | :---: | :---: | :---: |
+| B1, B3 | B1    | B2    | B2    | B3    | B3    |
 
-In very brief explanation of inserting φ-function in semi-pruned SSA form, the program will only insert the φ-function for the variable in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the φ-function. I.e., say variable `d` in globals need to insert φ-function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert φ-function in Dominance frontier of B3, DF(B3). 
+In very brief explanation of inserting φ-function in semi-pruned SSA form, the program will only insert the φ-function for the variables in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the φ-function. I.e., say variable `d` in globals needed a φ-function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert φ-function in Dominance frontier of B3, DF(B3). 
 
-### 1.7.2. Pruned SSA
+### 1.7.3. Pruned SSA
 To answer the question on why pruned SSA can further minimize the φ-function required from semi-pruned SSA, consider examples below. 
 
-![pruned_ssa_ex](resources/pruned_ssa_diff_ex.svg.png)
+![pruned_ssa_ex](resources/pruned_ssa_diff_ex.svg)
 
 In semi-pruned SSA, because of the `a` is being referenced in B2, so `a` will be a member of globals. The definition of `a` in block **B3** will force a φ-function in block **B4**. But the φ-function in block **B4** may be redundant since `a` does not being referenced in that block, nor does not liveout of the block. So pruned SSA will combine the information of liveout of the blocks to determine the insertion of φ-function, which in this case, the φ-function for `a` will not get inserted. 
 
-The actual algorithm for inserting φ-function in pruned SSA form is more or less the same as semi-pruned. The only additional step is, a verification is required just before the φ-function is inserted. Recall from above, just before the insertion of φ-function in DF(B3), called DF3, a verification is needed to determine whether or not to insert the φ-function, and it is represented below:
+The actual algorithm for inserting φ-function in pruned SSA form is more or less the same as semi-pruned. The only additional step is, a verification is required just before the φ-function is inserted. Recall from above, just before the insertion of φ-function in dominance frontier of B3, a verification is needed to determine whether or not to insert the φ-function, and it is represented below:
 
 Say variable `a` is the φ-function that needed to be inserted in block `B`, then 
 
 `a` must be a member of Uevar(B) ∪ (Liveout(B) ∩ ~Varkill(B)), or
 
-`a` must be a member of Liveout(parent(B))
+`a` must be a member of Liveout(any parent(B))
 
-### 1.7.3. Worklist algorithm for inserting φ-function. 
+Which in other words, if `a` does not liveout from any of the parent blocks, `a` variable can be said useless in this current block. Thus, φ-function is not needed. 
 
-#### 1.7.3.1. Basic concept
+### 1.7.4. Worklist algorithm for inserting φ-function. 
+
+#### 1.7.4.1. Basic concept
 Recall from above, to insert the φ-function, either pruned or semi-pruned SSA form, we need to gather 2 information, which is **Globals** and **BlockSet**. Apart from that, **WorkList** is introduced to represent all the block that defines the variable that is currently working on. To illustrate the importance of worklist, consider following example:
 
 ![work_list_importance_example](resources/worklist_importance_example.svg.png)
@@ -603,20 +605,20 @@ Globals
 
 Blocks set
 
-|   'a'   | 'b'   |   'f'|  'g'  |
-| :---:   |  :---:| :---: |:---: |
-| B3  | B2, B4   | B5| B1|
+| 'a'   | 'b'    | 'f'   | 'g'   |
+| :---: | :----: | :---: | :---: |
+| B3    | B2, B4 | B5    | B1    |
 
-The algorithm will initialize the worklist to Blocks('a'), which contains **B3**. The definition in **B3** causes it to insert a φ-function at the start of each block in DF(B3) = B4. This insertion in B4 also places B4 in the worklist and B3 will be removed from the worklist. This process will continue for the rest of the blocks in the worklist. This is the basic concept of how the worklist is used to place the φ-function. 
+The algorithm will initialize the worklist to blocks in blockset('a'), which contains **B3**. The definition in **B3** causes it to insert a φ-function at the start of each block in DF(B3) = B4. This insertion in B4 also places B4 in the worklist and B3 will be removed from the worklist. This process will continue for the rest of the blocks in the worklist. This is the basic concept of how the worklist is used to place the φ-function. 
 
 In the case where DF(B1) is equal to B1, it will cause an infinite loop of inserting φ-function. So the algorithm will be responsible for:
 
 - **Semipruned SSA** - stop the insertion of φ-function once the φ-function of that variable has already existed inside the block, or 
 - **Pruned SSA** - each block has only 1 attempt of inserting the φ-function for a variable, whether the φ-function has inserted or not. (The condition in semi-pruned SSA cannot be used in pruned SSA since φ-function may not be inserted in pruned SSA, while in semi-pruned SSA, φ-function will definitely be inserted to the DF of all the block in the block list.)
 
-The next section will discuss on the placement of φ-function based on the flavor of SSA. 
+The next section will provide the pseudocode for placement of φ-function based on the flavor of SSA. 
 
-#### 1.7.3.2. The algorithm
+#### 1.7.4.2. The algorithm
 The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. The differences are pruned required an additional check before placing φ-function, and the stopping condition may be different which are discussed above.
 
 
