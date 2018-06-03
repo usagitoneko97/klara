@@ -1,7 +1,7 @@
 import unittest
 import ast
 from ssa import Ssa, SsaVariable, SsaCode
-from cfg_common import *
+from Common.cfg_common import *
 
 
 class TestSsa(unittest.TestCase):

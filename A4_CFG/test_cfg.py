@@ -2,8 +2,8 @@ import unittest
 from cfg import Cfg, RawBasicBlock, build_blocks
 import ast
 import textwrap
-import cfg_common
-from cfg_common import get_ast_node
+import Common.cfg_common as cfg_common
+from Common.cfg_common import get_ast_node
 
 ms = textwrap.dedent
 

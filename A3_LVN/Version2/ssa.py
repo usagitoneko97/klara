@@ -1,5 +1,4 @@
-import ast
-from common import *
+from Common.common import *
 from var_ast import VarAst
 
 

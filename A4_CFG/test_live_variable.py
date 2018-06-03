@@ -1,6 +1,6 @@
 import unittest
 import ast
-from cfg_common import ms
+from Common.cfg_common import ms
 from cfg import Cfg
 import test_helper as th
 

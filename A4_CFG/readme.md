@@ -33,7 +33,8 @@
             - [1.6.3.2. LIVEOUT](#1632-liveout)
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
         - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
-    - [1.7. Inserting φ-function using Pruned or semipruned form of SSA.](#17-inserting--function-using-pruned-or-semipruned-form-of-ssa)
+    - [1.7. Inserting φ-function](#17-inserting--function)
+        - [Minimal SSA](#minimal-ssa)
         - [1.7.1. Semipruned SSA](#171-semipruned-ssa)
         - [1.7.2. Pruned SSA](#172-pruned-ssa)
         - [1.7.3. Worklist algorithm for inserting φ-function.](#173-worklist-algorithm-for-inserting--function)
@@ -540,15 +541,17 @@ expected_live_out = {'A': {'s', 'i'}, 'B': {'s', 'i'}, 'C': {'s', 'i'},
 self.assertLiveOutEqual(cfg_real.block_list, expected_live_out)
 ```
 
-## 1.7. Inserting φ-function using Pruned or semipruned form of SSA. 
+## 1.7. Inserting φ-function
 
 Insertion of φ-function is a very important phase during the transformation to SSA form. **Minimal SSA** will inserts φ-function at any joint points where two definitions of variables meet, but some of these φ-function may be dead, or in other words, not being used in subsequents blocks. By using the information of variables(live variable analysis), dead φ-function could be avoided. 
 
-There are 2 flavours of SSA that consider the liveness of variables, namely **pruned SSA** and **semipruned SSA**.  
+There are 2 flavors of SSA that consider the liveness of variables, namely **pruned SSA** and **semipruned SSA**.  
 
 Construction of **pruned ssa** will add a liveness test to the CFG to avoid adding dead φ-function. To perform liveness test, the algorithm must compute **LIVEOUT** sets,  which will result in the cost of building pruned SSA to be higher than **Minimal SSA**. 
 
 **Semipruned SSA** is a compromise between **minimal SSA** and **pruned SSA**. By only considering *UEVAR* and *VARKILL*, this will eliminates some dead φ-function in minimal SSA, but could potentially generate dead φ-function as well. By avoiding the computation of **LIVEOUT**, the execution time will be faster compared to pruned SSA. 
+
+### Minimal SSA
 
 ### 1.7.1. Semipruned SSA
 

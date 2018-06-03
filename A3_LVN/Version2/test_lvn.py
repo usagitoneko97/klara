@@ -1,7 +1,6 @@
 import unittest
-import ast
-from cfg_common import *
-from common import *
+from Common.cfg_common import *
+from Common.common import *
 
 from ssa import SsaCode, SsaVariable
 from lvn_dict import LvnDict, LvnStatement

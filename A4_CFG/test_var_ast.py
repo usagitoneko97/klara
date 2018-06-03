@@ -1,9 +1,10 @@
-from cfg_common import ms
+from Common.cfg_common import ms
 
 from cfg import RawBasicBlock, Cfg
 import unittest
 import ast
 from var_ast import VarAst
+
 
 class TestVarAst(unittest.TestCase):
     def test_VarAst_given_simple_assign(self):
