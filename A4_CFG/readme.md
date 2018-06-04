@@ -625,16 +625,30 @@ The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. 
 The algorithm for insertion of φ-function for semi-pruned SSA. 
 
 ```
-for each name x ∈ Globals
+for each name x in Globals
     WorkList ← Blocks(x)
-    for each block b ∈ WorkList
+    for each block b in WorkList
         for each block d in df(b)
             if d has no φ-function for x then
                 insert a φ-function for x in d
-                WorkList ← WorkList ∪ {d}
+                WorkList ← WorkList + {d}
 ```
 
-The algorithm for the additional check is:
+The algorithm for insertion of φ-function for pruned SSA. 
+
+```
+for each name x in Globals
+    WorkList ← Blocks(x) 
+    for each block b in WorkList
+        for each block d in df(b)
+            if d has not been visited by x then
+                if need_phi(b, x) then
+                    insert a φ-function for x in d
+                    WorkList ← WorkList + {d}
+
+```
+
+Where the algorithm for the additional check(need_phi) is:
 
 ```
 Assume block and variable of the φ-function to be inserted is represented by blk, var
@@ -642,28 +656,15 @@ Assume block and variable of the φ-function to be inserted is represented by bl
 need_phi(blk, var):
     total_liveout ← {}
     for parent_blk in blk.parents:
-        total_liveout ← total_liveout ∪ (liveout of parent_blk)
+        total_liveout ← total_liveout + (liveout of parent_blk)
 
-    if var ∈ total_liveout then
+    if var is in total_liveout then
         return True
     else:
         return False
 
 ```
 
-The algorithm for insertion of φ-function for pruned SSA. 
-
-```
-for each name x ∈ Globals
-    WorkList ← Blocks(x)
-    for each block b ∈ WorkList
-        for each block d in df(b)
-            if d has not been visited by x then
-                if need_phi(b, x) then
-                    insert a φ-function for x in d
-                    WorkList ← WorkList ∪ {d}
-
-```
 **Note**: the φ-function inserted is just an indication to that block that the φ-function for that variable exist. The actual parameters is waiting to be filled in the next section, renaming of SSA. 
 
 Once the φ-function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
