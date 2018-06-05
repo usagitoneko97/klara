@@ -34,6 +34,7 @@
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
         - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
     - [1.7. Inserting φ-function](#17-inserting--function)
+        - [Trivial SSA](#trivial-ssa)
         - [1.7.1. Minimal SSA](#171-minimal-ssa)
         - [1.7.2. Semipruned SSA](#172-semipruned-ssa)
         - [1.7.3. Pruned SSA](#173-pruned-ssa)
@@ -551,8 +552,24 @@ Construction of **pruned ssa** will add a liveness test to the CFG to avoid addi
 
 **Semipruned SSA** is a compromise between **minimal SSA** and **pruned SSA**. By only considering *UEVAR* and *VARKILL*, this will eliminates some dead φ-function in minimal SSA, but could potentially generate dead φ-function as well. By avoiding the computation of **LIVEOUT**, the execution time will be faster compared to pruned SSA. 
 
+Below shows all the different ways to insert φ-function.
+
+### Trivial SSA
+Trivial SSA is the naive and primitive way to insert a φ-function. Trivial SSA will insert φ-function for all variables at every joint points. To demonstrate why it could generate excess φ-function, consider CFG below:
+
+![trivial_ex](resources/trivial_ex.svg)
+
+Trivial SSA will insert φ-function for all variables that declared in all joint points. In the example shown above, the φ-function for `b` is necessary since `b` is declared in B2 and B3. The φ-function for `a` however is compeletely useless since `a` had only been declared in B1. Doesn't matter which path the program takes, B2 path or B3 path, the variable `a` in B4 will still be the variable that declared in B1. Declaration of variable in B1 will not force φ-functions in B4 since B1 dominates B4. Dominance frontier is used to eliminates these redundant φ-function. SSA form that relies on Dominance frontier only for inserting φ-function is called **Minimal SSA**. 
+
 ### 1.7.1. Minimal SSA
-To recall, Minimal SSA that had been discussed in [section 1.4](). Minimal SSA would not requires live variable analysis. By using only the fact of dominance frontiers, the algorithm can eliminate some useless φ-function based on only the structures of CFG. 
+
+To recall, Minimal SSA had been discussed in [section 1.4](). Minimal SSA would not requires live variable analysis. By using only the fact of dominance frontiers, the algorithm can eliminate some useless φ-function based on only the structures of CFG. Recall the diagrams in section above. 
+
+![trivial_ex](resources/minimal_ex.svg)
+
+Because of the Dominance frontier(DF) of block B1 is empty, the declaration of `a` would not requires a φ-function anywhere, or specifically in B4. **Minimal SSA** will produced CFG shown diagram above. 
+
+Now, taking a closer look at the `b` φ-function declared in B4, is `b` φ-function is really required? So far the algorithm only considered the structure of CFG, but not the liveness of variables. `b` declared by φ-function in B4 does not liveout of the block, or `b` had not been used in the subsequent blocks, hence the φ-function for `b` will not be required. SSA form that takes liveness of variables into accounts generally has 2 form,  **Pruned SSA** and **Semipruned SSA** that will be discussing below. 
 
 ### 1.7.2. Semipruned SSA
 The semipruned SSA will eliminates any names that are not live across a block boundary. To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. φ-function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that φ-function for that variable was not necessary. 
