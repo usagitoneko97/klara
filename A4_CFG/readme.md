@@ -34,13 +34,13 @@
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
         - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
     - [1.7. Inserting φ-function](#17-inserting--function)
-        - [Trivial SSA](#trivial-ssa)
-        - [1.7.1. Minimal SSA](#171-minimal-ssa)
-        - [1.7.2. Semipruned SSA](#172-semipruned-ssa)
-        - [1.7.3. Pruned SSA](#173-pruned-ssa)
-        - [1.7.4. Worklist algorithm for inserting φ-function.](#174-worklist-algorithm-for-inserting--function)
-            - [1.7.4.1. Basic concept](#1741-basic-concept)
-            - [1.7.4.2. The algorithm](#1742-the-algorithm)
+        - [1.7.1. Trivial SSA](#171-trivial-ssa)
+        - [1.7.2. Minimal SSA](#172-minimal-ssa)
+        - [1.7.3. Semipruned SSA](#173-semipruned-ssa)
+        - [1.7.4. Pruned SSA](#174-pruned-ssa)
+        - [1.7.5. Worklist algorithm for inserting φ-function.](#175-worklist-algorithm-for-inserting--function)
+            - [1.7.5.1. Basic concept](#1751-basic-concept)
+            - [1.7.5.2. The algorithm](#1752-the-algorithm)
     - [1.8. References](#18-references)
 
 <!-- /TOC -->
@@ -554,14 +554,14 @@ Construction of **pruned ssa** will add a liveness test to the CFG to avoid addi
 
 Below shows all the different ways to insert φ-function.
 
-### Trivial SSA
+### 1.7.1. Trivial SSA
 Trivial SSA is the naive and primitive way to insert a φ-function. Trivial SSA will insert φ-function for all variables at every joint points. To demonstrate why it could generate excess φ-function, consider CFG below:
 
 ![trivial_ex](resources/trivial_ex.svg)
 
 Trivial SSA will insert φ-function for all variables that declared in all joint points. In the example shown above, the φ-function for `b` is necessary since `b` is declared in B2 and B3. The φ-function for `a` however is compeletely useless since `a` had only been declared in B1. Doesn't matter which path the program takes, B2 path or B3 path, the variable `a` in B4 will still be the variable that declared in B1. Declaration of variable in B1 will not force φ-functions in B4 since B1 dominates B4. Dominance frontier is used to eliminates these redundant φ-function. SSA form that relies on Dominance frontier only for inserting φ-function is called **Minimal SSA**. 
 
-### 1.7.1. Minimal SSA
+### 1.7.2. Minimal SSA
 
 To recall, Minimal SSA had been discussed in [section 1.4](). Minimal SSA would not requires live variable analysis. By using only the fact of dominance frontiers, the algorithm can eliminate some useless φ-function based on only the structures of CFG. Recall the diagrams in section above. 
 
@@ -571,7 +571,7 @@ Because of the Dominance frontier(DF) of block B1 is empty, the declaration of `
 
 Now, taking a closer look at the `b` φ-function declared in B4, is `b` φ-function is really required? So far the algorithm only considered the structure of CFG, but not the liveness of variables. `b` declared by φ-function in B4 does not liveout of the block, or `b` had not been used in the subsequent blocks, hence the φ-function for `b` will not be required. SSA form that takes liveness of variables into accounts generally has 2 form,  **Pruned SSA** and **Semipruned SSA** that will be discussing below. 
 
-### 1.7.2. Semipruned SSA
+### 1.7.3. Semipruned SSA
 The semipruned SSA will eliminates any names that are not live across a block boundary. To compute the semi-pruned SSA, the program can compute the **globals set** of variables, which in other words taking the union of all UEVAR of all blocks. φ-function will only need to be inserted for these global variables since if a variable was not included in Uevar of any blocks, that variable can be said that it was only declared but not used anywhere else. This means that φ-function for that variable was not necessary. 
 
 In the process of computing the globals set, it also constructs, for each variable, a list of all blocks that contain a definition of that name, and it's called **Blocks Set**.  
@@ -591,7 +591,7 @@ Blocks set
 
 In very brief explanation of inserting φ-function in semi-pruned SSA form, the program will only insert the φ-function for the variables in the globals set. For each variable in globals set, it will then use the information in Blocks set to identify the location for inserting the φ-function. I.e., say variable `d` in globals needed a φ-function, it will then look at the blocks set, and identify that block **B3** has a definition of `d`, it will then insert φ-function in Dominance frontier of B3, DF(B3). 
 
-### 1.7.3. Pruned SSA
+### 1.7.4. Pruned SSA
 To answer the question on why pruned SSA can further minimize the φ-function required from semi-pruned SSA, consider examples below. 
 
 ![pruned_ssa_ex](resources/pruned_ssa_diff_ex.svg)
@@ -608,9 +608,9 @@ Say variable `a` is the φ-function that needed to be inserted in block `B`, the
 
 Which in other words, if `a` does not liveout from any of the parent blocks, `a` variable can be said useless in this current block. Thus, φ-function is not needed. 
 
-### 1.7.4. Worklist algorithm for inserting φ-function. 
+### 1.7.5. Worklist algorithm for inserting φ-function. 
 
-#### 1.7.4.1. Basic concept
+#### 1.7.5.1. Basic concept
 Recall from above, to insert the φ-function, either pruned or semi-pruned SSA form, we need to gather 2 information, which is **Globals** and **BlockSet**. Apart from that, **WorkList** is introduced to represent all the block that defines the variable that is currently working on. To illustrate the importance of worklist, consider following example:
 
 ![work_list_importance_example](resources/worklist_importance_example.svg.png)
@@ -635,7 +635,7 @@ In the case where DF(B1) is equal to B1, it will cause an infinite loop of inser
 
 The next section will provide the pseudocode for placement of φ-function based on the flavor of SSA. 
 
-#### 1.7.4.2. The algorithm
+#### 1.7.5.2. The algorithm
 The algorithm behaves quite similar between *pruned SSA* and *semi pruned SSA*. The differences are pruned required an additional check before placing φ-function, and the stopping condition may be different which are discussed above.
 
 
