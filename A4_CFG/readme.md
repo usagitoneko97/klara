@@ -359,9 +359,9 @@ A store operation like `a = b + c` is not needed if a is not used anywhere throu
 
 ### 1.6.2. Terminology
 
-- **UEVAR** - those variables that are used in the current block before any redefinition in the current block.
-- **VARKILL** - contains all the variables that are defined in current block
-- **LIVEOUT** - contains all the variables that are live on exit from the block
+- **UEVAR** - (Upward Exposure Variable) those variables that are used in the current block before any redefinition in the current block.
+- **VARKILL** - (Variable Kill) contains all the variables that are defined in current block
+- **LIVEOUT** - contains all the variables that lives on exiting the block
 - **BlockSets** - contains the information on where the variable is being defined. 
 - **Globals** - sets of variable that are live across multiple blocks
 - **Worklist(x)** - worklist of variable `x` contains all the block that defined `x`. 
@@ -391,7 +391,7 @@ Basically, the equation can be broken down to 2 parts, **Uevar(m)**, and **(Live
 
 ![liveoutsimpleex](resources/liveoutsimpleex.svg.png)
 
-It is obvious that the variable `a` in **B2** is required from the parents of that block, specifically **B1** in this case, hence the `a` is included in  **Uevar**. Therefore **Liveout** of **B1** has to include `a` since it is live outside of the block. To simplify,  *Liveout of the current block has to include the union of all Uevar of the successor/child blocks.*, as described in the first part of the equation. 
+It is obvious that the variable `a` used in **B2** is required from the parent, **B1**.  hence `a` is included in  **Uevar(B2)**. Therefore **Liveout** of **B1** includes `a` since it lives beyond block **B1**. In general,  *Liveout of the current block includes the union of all Uevar of the successor/child blocks*, as described in the first part of the equation. 
 
 ![liveoutsimpleex](resources/liveoutsimpleexWlo.svg.png)
 
@@ -399,7 +399,7 @@ To describe and explain the second part of the equation, consider following exam
 
 ![liveoutsimpleex](resources/liveoutcomplexex.svg.png)
 
-The variable `a` in block **B3** is required since `a` is in the set of **UEVAR**. The variable `a` is, however, not coming from the block **B2**, but from block **B1**. So the variable `a` has to be pass from block **B1** to **B3**. Hence *Liveout(B1) += Liveout(B2)*, and Liveout(B2) = 'a'. The algorithm for computing is called fixed-point iterative method and is discussed in the section below. 
+The variable `a` in block **B3** is required since `a` is in the set of **UEVAR**. The variable `a` is, however, not coming directly from the immediate parent block **B2**, but from block **B1**. So the variable `a` has to be pass from block **B1** to **B3**. Hence *Liveout(B1) += Liveout(B2)*, and Liveout(B2) = 'a'. The algorithm for computing is called fixed-point iterative method and is discussed in the section below. 
 
 ![liveoutsimpleex](resources/liveoutcomplexexRes.svg.png)
 
