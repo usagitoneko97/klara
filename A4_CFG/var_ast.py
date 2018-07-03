@@ -24,6 +24,9 @@ class VarAst:
             targets, values, body_op = self.get_var_ast_assign(ast_stmt)
         elif isinstance(ast_stmt, ast.If) or isinstance(ast_stmt, ast.While):
             targets, values, body_op = self.get_var_ast_if_while(ast_stmt)
+        elif isinstance(ast_stmt, ast.Return):
+            targets, values, body_op = self.get_var_ast_return(ast_stmt)
+
         return targets, values, target_op, body_op
 
     def get_var_ast_bin_op(self, ast_bin_op):
@@ -108,5 +111,22 @@ class VarAst:
             self.right_operand = ast_unary.operand.n
 
         return values, ast_unary.op.__class__.__name__
+
+    def get_var_ast_return(self, ast_return):
+        values = []
+        body_op = None
+        if isinstance(ast_return.value, ast.Name):
+            self.left_operand = ast_return.value.id
+            values.append(ast_return.value.id)
+        elif isinstance(ast_return.value, ast.Num):
+            self.left_operand = ast_return.value.n
+            values.append(ast_return.value.n)
+        elif isinstance(ast_return.value, ast.BinOp):
+            values, body_op = self.get_var_ast_bin_op(ast_return.value)
+
+        return [], values, body_op
+
+
+
 
 

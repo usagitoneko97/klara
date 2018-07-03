@@ -1,6 +1,5 @@
 import unittest
-import ast
-from ssa import Ssa, SsaVariable, SsaCode
+from .ssa import SsaVariable, SsaCode
 from Common.cfg_common import *
 
 
@@ -38,7 +37,7 @@ class TestSsa(unittest.TestCase):
 
         ssa_code = SsaCode(as_tree)
         expected_ssa_dict = {'z': [0], 'a': [0], 'y': [0]}
-        self.assertEqual(str(ssa_code), "z_0 = a_0 Add y_0\n")
+        self.assertEqual(str(ssa_code), "z_0 = a_0 + y_0\n")
         self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_generation_number(self):
@@ -58,8 +57,8 @@ class TestSsa(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         expected_ssa_dict = {'z': [0], 'a': [0], 'y': [0], 'x': [0], 'b': [0], 'c': [0]}
         self.assertEqual(str(ssa_code), ms("""\
-        z_0 = a_0 Add y_0
-        x_0 = b_0 Add c_0
+        z_0 = a_0 + y_0
+        x_0 = b_0 + c_0
         """))
         self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
@@ -70,7 +69,7 @@ class TestSsa(unittest.TestCase):
 
         ssa_code = SsaCode(as_tree)
         expected_ssa_dict = {'z': [0, 1], 'a': [0], 'y': [0]}
-        self.assertEqual(str(ssa_code), "z_0 = a_0 Add y_0\nz_1 = a_0\n")
+        self.assertEqual(str(ssa_code), "z_0 = a_0 + y_0\nz_1 = a_0\n")
         self.assertVariableVersionStack(ssa_code.var_version_list, expected_ssa_dict)
 
     def test_ssa_generation_2_stmt_expect_update_target_multiple_time(self):
@@ -83,8 +82,8 @@ class TestSsa(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
         expected_ssa_dict = {'z': [0, 1, 2], 'a': [0, 1], 'y': [0]}
         self.assertEqual(str(ssa_code), ms("""\
-        z_0 = a_0 Add y_0
-        z_1 = a_0 Add y_0
+        z_0 = a_0 + y_0
+        z_1 = a_0 + y_0
         z_2 = a_0
         a_1 = y_0
         """))
@@ -106,14 +105,14 @@ class TestSsa(unittest.TestCase):
         ssa_code = SsaCode(as_tree)
 
         self.assertEqual(str(ssa_code), ms("""\
-        a_0 = b_0 Add c_0
-        d_0 = 2 Mult e_0
-        f_0 = g_0 Div 3
-        h_0 = USub 4
-        i_0 = UAdd j_0
-        k_0 = 1 Lt 3
-        l_0 = k_0 BitOr m_0
-        n_0 = o_0 BitXor 2
+        a_0 = b_0 + c_0
+        d_0 = 2 * e_0
+        f_0 = g_0 / 3
+        h_0 = - 4
+        i_0 = + j_0
+        k_0 = 1 < 3
+        l_0 = k_0 | m_0
+        n_0 = o_0 ^ 2
         """))
 
     def test_ssa_repeated_expression(self):
@@ -128,10 +127,10 @@ class TestSsa(unittest.TestCase):
 
         ssa_code = SsaCode(as_tree)
         self.assertEqual(str(ssa_code), ms("""\
-            c_0 = d_0 Add e_0
+            c_0 = d_0 + e_0
             e_1 = 5
-            d_1 = d_0 Add e_1
-            d_2 = d_1 Add e_1
-            c_1 = d_2 Add e_1
-            c_2 = d_2 Add e_1
+            d_1 = d_0 + e_1
+            d_2 = d_1 + e_1
+            c_1 = d_2 + e_1
+            c_2 = d_2 + e_1
         """))

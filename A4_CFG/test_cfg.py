@@ -1,73 +1,13 @@
 import unittest
-from cfg import Cfg, RawBasicBlock, build_blocks
+from .cfg import Cfg, RawBasicBlock, build_blocks, GetBlocks
 import ast
 import textwrap
-import Common.cfg_common as cfg_common
-from Common.cfg_common import get_ast_node
-
+from Common import cfg_common
+from Common.test_helper.cfg_th import CfgTestCase
 ms = textwrap.dedent
 
 
-class TestCfg(unittest.TestCase):
-    def assertCfgEqual(self, cfg_real, cfg_expected):
-        self.assertEqual(len(cfg_real.block_list), len(cfg_expected.block_list),
-                         "Number of real basic block {} is not the same as expected {}".format(len(cfg_real.block_list),
-                                                                                 len(cfg_expected.block_list))
-                         )
-        for block_list_num in range(len(cfg_real.block_list)):
-            self.assertBasicBlockEqual(cfg_real.block_list[block_list_num],
-                                       cfg_expected.block_list[block_list_num],
-                                       block_index=block_list_num)
-
-    def assertBasicBlockEqual(self, basic_block_real, basic_block_expected, block_index=0):
-
-        self.assertEqual(basic_block_real.block_end_type, basic_block_expected.block_end_type)
-
-        self.assertStartEnd([basic_block_real.start_line, basic_block_real.end_line],
-                            [basic_block_expected.start_line, basic_block_expected.end_line],
-                            block_index)
-
-        for nxt_block_num in range(len(basic_block_real.nxt_block_list)):
-            self.assertStartEnd([basic_block_real.nxt_block_list[nxt_block_num].start_line,
-                                 basic_block_real.nxt_block_list[nxt_block_num].start_line],
-                                [basic_block_expected.nxt_block_list[nxt_block_num].end_line,
-                                 basic_block_expected.nxt_block_list[nxt_block_num].end_line],
-                                block_index,
-                                nxt_or_prev='next')
-
-    def assertBasicBlockListEqual(self, block_real, block_expected):
-        self.assertEqual(len(block_real), len(block_expected), 'the len of basic block is not the same')
-        for block_num in range(len(block_real)):
-            self.assertBasicBlockEqual(block_real[block_num], block_expected[block_num],
-                                       block_index=block_num)
-
-    def assertStartEnd(self, real_block, expected_block, block_index, nxt_or_prev=''):
-        self.assertEqual(real_block[0], expected_block[0],
-                         'On block {}, the start line is not the same at {}'.format(block_index, nxt_or_prev))
-
-        self.assertEqual(real_block[1], expected_block[1],
-                         'On block {}, the end line is not the same at {}'.format(block_index, nxt_or_prev))
-
-    def assertCfgWithAst(self, cfg_real, *args):
-        cfg_expected = Cfg()
-
-        # a = 3
-        # a = 4
-        for ast_list in args:
-            basic_block = RawBasicBlock()
-            basic_block.ast_list.extend(ast_list)
-            cfg_expected.block_list.append(basic_block)
-
-        self.assertCfgEqual(cfg_real, cfg_expected)
-
-    def assertCfgWithBasicBlocks(self, cfg_real, *args, block_links):
-        cfg_expected = Cfg()
-
-        block_list = build_blocks(*args, block_links=block_links)
-        cfg_expected.block_list.extend(block_list)
-
-        self.assertCfgEqual(cfg_real, cfg_expected)
-
+class TestCfg(CfgTestCase):
     @staticmethod
     def fill_nxt_block(cfg_expected, block_links):
         for i in range(len(block_links)):
@@ -83,9 +23,9 @@ class TestCfg(unittest.TestCase):
             a = 4
             """)
         )
-        cfg_holder = Cfg()
+        get_blocks_handler = GetBlocks(as_tree, as_tree.body)
         simple_block_list = []
-        for simple_block in cfg_holder.get_basic_block(as_tree.body):
+        for simple_block in get_blocks_handler.get_basic_block():
             simple_block_list.append(simple_block)
 
         expected_block = RawBasicBlock(start_line=1, end_line=2)
@@ -100,9 +40,9 @@ class TestCfg(unittest.TestCase):
             c = 5
             """)
         )
-        cfg_holder = Cfg()
+        get_blocks_handler = GetBlocks(as_tree, as_tree.body)
         simple_block_list = []
-        for basic_block in cfg_holder.get_basic_block(as_tree.body):
+        for basic_block in get_blocks_handler.get_basic_block():
             simple_block_list.append(basic_block)
 
         expected_block_0 = RawBasicBlock(start_line=1, end_line=2, block_end_type='If')
@@ -119,9 +59,9 @@ class TestCfg(unittest.TestCase):
             c = 5
             """)
         )
-        cfg_holder = Cfg()
+        get_blocks_handler = GetBlocks(as_tree, as_tree.body)
         simple_block_list = []
-        for basic_block in cfg_holder.get_basic_block(as_tree.body):
+        for basic_block in get_blocks_handler.get_basic_block():
             simple_block_list.append(basic_block)
 
         expected_block_0 = RawBasicBlock(start_line=1, end_line=2, block_end_type='While')
@@ -129,83 +69,6 @@ class TestCfg(unittest.TestCase):
 
         self.assertBasicBlockEqual(simple_block_list[0], expected_block_0)
         self.assertBasicBlockEqual(simple_block_list[1], expected_block_1)
-
-    # ----------------- get ast node test---------------
-    def test_get_ast_node_given_2_assign(self):
-        as_tree = ast.parse(ms("""\
-                    a = 3
-                    a = 4
-                    """)
-                            )
-
-        cfg_real = Cfg()
-        node = get_ast_node(as_tree, 2)
-
-        self.assertEqual(node, as_tree.body[1])
-
-    def test_get_ast_node_given_if(self):
-        as_tree = ast.parse(ms("""\
-                    a = 3
-                    if a < 3:
-                        z = 2
-                    a = 4
-                    """)
-                            )
-
-        cfg_real = Cfg()
-        node = get_ast_node(as_tree, 3)
-
-        self.assertEqual(node, as_tree.body[1].body[0])
-
-    def test_get_ast_node_given_if_else(self):
-        as_tree = ast.parse(ms("""\
-                    a = 3
-                    if a < 3:
-                        z = 2
-                    else:
-                        y = 2
-                    a = 4
-                    """)
-                            )
-
-        cfg_real = Cfg()
-        node = get_ast_node(as_tree, 5)
-
-        self.assertEqual(node, as_tree.body[1].orelse[0])
-
-    def test_get_ast_node_given_if_elif_else(self):
-        as_tree = ast.parse(ms("""\
-                    a = 3
-                    if a < 3:
-                        z = 2
-                    elif z < 2:
-                        x = 2
-                    else:
-                        y = 2
-                    a = 4
-                    """)
-                            )
-
-        cfg_real = Cfg()
-        node = get_ast_node(as_tree, 5)
-
-        self.assertEqual(node, as_tree.body[1].orelse[0].body[0])
-
-    def test_get_ast_node_given_nested_if(self):
-        as_tree = ast.parse(ms("""\
-                    a = 3
-                    if a < 3:
-                        z = 2
-                        if y < 2:
-                            d = 2
-                    a = 4
-                    """)
-                            )
-
-        cfg_real = Cfg()
-        node = get_ast_node(as_tree, 5)
-
-        self.assertEqual(node, as_tree.body[1].body[1].body[0])
 
     # ----------------- cfg test------------------
 
@@ -358,7 +221,6 @@ class TestCfg(unittest.TestCase):
         blocks_list = []
         for blocks in cfg_common.walk_block(cfg_real.block_list[0]):
             blocks_list.append(blocks)
-        pass
 
     def test_delete_node(self):
         as_tree = ast.parse(ms("""\
@@ -372,4 +234,3 @@ class TestCfg(unittest.TestCase):
 
         cfg_real = Cfg(as_tree)
         cfg_real.root = cfg_common.delete_node(cfg_real.root, RawBasicBlock(1, 1))
-        pass

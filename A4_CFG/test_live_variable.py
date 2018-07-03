@@ -1,8 +1,8 @@
 import unittest
 import ast
 from Common.cfg_common import ms
-from cfg import Cfg
-import test_helper as th
+from .cfg import Cfg
+from .test_helper import build_arbitrary_blocks
 
 
 class TestLiveVariable(unittest.TestCase):
@@ -72,7 +72,7 @@ class TestLiveVariable(unittest.TestCase):
     def test_recompute_liveout(self):
         # Given: UEVAR(B) = 'c'
         # Expect: LIVEOUT(A) = 'c'
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[1].ue_var.add('c')
         self.assertTrue(blocks[0].recompute_liveout())
 
@@ -83,7 +83,7 @@ class TestLiveVariable(unittest.TestCase):
         #        VARKILL(B) = None
         # Expect: LIVEOUT(A) = 'c, 'd'
 
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[1].ue_var.add('c')
         blocks[1].live_out.add('d')
         self.assertTrue(blocks[0].recompute_liveout())
@@ -95,7 +95,7 @@ class TestLiveVariable(unittest.TestCase):
         #        VARKILL(B) = 'd'
         # Expect: LIVEOUT(A) = 'c'
 
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[1].ue_var.add('c')
         blocks[1].live_out.add('d')
         blocks[1].var_kill.add('d')
@@ -109,7 +109,7 @@ class TestLiveVariable(unittest.TestCase):
         #        VARKILL(B) = 'd'
         # Expect: LIVEOUT(A) = 'c' (no changed)
 
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[0].live_out.add('c')
         blocks[1].ue_var.add('c')
         blocks[1].live_out.add('d')
@@ -121,7 +121,7 @@ class TestLiveVariable(unittest.TestCase):
     # -------------------- test compute liveout------------------------------
     def test_compute_liveout_given_5_blocks(self):
 
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D'], 'C': ['D'],
+        blocks, ast_string = build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'D'], 'C': ['D'],
                                                               'D': ['E', 'B'], 'E': []},
                                                  code={'A': ms("""\
                                                                     i = 1

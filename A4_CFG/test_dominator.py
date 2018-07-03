@@ -1,8 +1,8 @@
 import unittest
-from cfg import Cfg, build_blocks, DominatorTree
+from .cfg import Cfg, build_blocks, DominatorTree
 import ast
 import textwrap
-import test_helper as th
+import A4_CFG.test_helper as th
 ms = textwrap.dedent
 
 
@@ -91,7 +91,7 @@ class TestDominator(unittest.TestCase):
             self.fail('Two basic blocks are not equal at num {}'.format(block_num))
 
     def test_build_blocks_arb(self):
-        blocks = th.build_blocks_arb({'A': ['B', 'C'], 'B': [], 'C': []})
+        blocks = th.build_arbitrary_blocks({'A': ['B', 'C'], 'B': [], 'C': []})
         print(blocks)
 
 # ----------------------- fill dominate test----------------
@@ -105,7 +105,7 @@ class TestDominator(unittest.TestCase):
                \   /                   C: []
                  D                     D: []
         """
-        blocks = th.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []})
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []})
         cfg_real = Cfg()
         cfg_real.block_list = blocks
         cfg_real.root = blocks[0]
@@ -135,7 +135,7 @@ class TestDominator(unittest.TestCase):
             \    /         |
               F   ----------
         """
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
                                                   'D': ['E'], 'E': ['F'], 'F': ['B']})
         cfg_real = Cfg()
         cfg_real.block_list = blocks
@@ -172,7 +172,7 @@ class TestDominator(unittest.TestCase):
                 |
                 E
         """
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
                                                   'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
                                                   'G': ['H'], 'H': ['D'], 'I': ['H']})
 
@@ -183,7 +183,7 @@ class TestDominator(unittest.TestCase):
         dom_tree.fill_dominates(cfg_real.root, cfg_real.block_list)
         dom_tree.build_tree(cfg_real.root)
 
-        expected_blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D', 'F'], 'C': [], 'D': ['E'],
+        expected_blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'D', 'F'], 'C': [], 'D': ['E'],
                                                              'E': [], 'F': ['G', 'H', 'I'], 'G': [], 'H': [], 'I': []})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)
@@ -208,7 +208,7 @@ class TestDominator(unittest.TestCase):
                 |                       |   |
                 +---------------------- K --+
         """
-        blocks = th.build_blocks_arb(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B', 'C', 'H'], 'B': ['D'], 'C': ['B', 'D', 'F'], 'D': ['E'],
                                                   'E': ['G'], 'F': ['G'], 'G': ['F', 'M'], 'H': ['I', 'J'],
                                                   'I': ['L'], 'J': ['K', 'L'], 'K': ['L'], 'L': ['M'],
                                                   'M': ['A', 'L']})
@@ -220,7 +220,7 @@ class TestDominator(unittest.TestCase):
         dom_tree.fill_dominates(cfg_real.root, cfg_real.block_list)
         dom_tree.build_tree(cfg_real.root)
 
-        expected_blocks = th.build_blocks_arb(block_links={'A': ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M'],
+        expected_blocks = th.build_arbitrary_blocks(block_links={'A': ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M'],
                                                            'B': [], 'C': [], 'D': ['E'], 'E': [],
                                                            'F': [], 'G': [], 'H': ['I', 'J'], 'I': [],
                                                            'J': ['K'], 'K': [], 'L': [], 'M': []})
@@ -244,7 +244,7 @@ class TestDominator(unittest.TestCase):
             \    /         |
              F(B) ----------
         """
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D', 'E'],
                                                     'D': ['E'], 'E': ['F'], 'F': ['B']})
 
         cfg_real = Cfg()
@@ -273,7 +273,7 @@ class TestDominator(unittest.TestCase):
             \  |              DF(H) = None
               G
         """
-        blocks = th.build_blocks_arb(block_links={'H': ['A'], 'A': ['B', 'E'], 'B': ['C', 'D'], 'C': ['F'], 'D': ['F'],
+        blocks = th.build_arbitrary_blocks(block_links={'H': ['A'], 'A': ['B', 'E'], 'B': ['C', 'D'], 'C': ['F'], 'D': ['F'],
                                                     'E': ['G', 'A'], 'F': ['G'], 'G': []})
 
         cfg_real = Cfg()
@@ -284,7 +284,7 @@ class TestDominator(unittest.TestCase):
         dom_tree.build_tree(cfg_real.root)
         dom_tree.fill_df(cfg_real.block_list)
 
-        expected_blocks = th.build_blocks_arb(block_links={'A': ['B', 'E', 'G'], 'B': ['C', 'D', 'F'],
+        expected_blocks = th.build_arbitrary_blocks(block_links={'A': ['B', 'E', 'G'], 'B': ['C', 'D', 'F'],
                                                              'C': [], 'D': [], 'E': [], 'F': [], 'G': [], 'H': ['A']})
 
         self.assertBasicBlockListEqual(dom_tree.dominator_nodes, expected_blocks)

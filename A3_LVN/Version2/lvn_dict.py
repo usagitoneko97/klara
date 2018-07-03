@@ -1,6 +1,3 @@
-from Common.cfg_common import *
-
-
 class VariableDict(dict):
     def __init__(self, ssa_code=None):
         self.current_value = 0
@@ -25,7 +22,8 @@ class VariableDict(dict):
         if ssa.right_oprd is not None:
             self._add_to_variable_dict(ssa.right_oprd)
 
-        self._add_to_variable_dict(ssa.target)
+        if ssa.target is not None:
+            self._add_to_variable_dict(ssa.target)
 
     def get_value_number(self, var):
         """
@@ -53,7 +51,7 @@ class VariableDict(dict):
 class LvnCodeTupleList(list):
     def append_lvn_stmt(self, lvn_stmt):
         self.append((lvn_stmt.target, lvn_stmt.left, lvn_stmt.operator,
-                     lvn_stmt.right))
+                     lvn_stmt.right, lvn_stmt.target_operator))
 
 
 class SimpleAssignDict(dict):
@@ -113,7 +111,7 @@ class LvnDict(dict):
         if ssa.right_oprd is not None:
             right_oprd = self.variable_dict.get(str(ssa.right_oprd))
 
-        lvn_stmt = LvnStatement(target, left_oprd, ssa.operator, right_oprd)
+        lvn_stmt = LvnStatement(target, left_oprd, ssa.operator, right_oprd, ssa.target_operator)
         return lvn_stmt
 
     def add_expr(self, expr, target):
@@ -132,11 +130,12 @@ class LvnDict(dict):
 
 class LvnStatement:
 
-    def __init__(self, target, left, operator, right):
+    def __init__(self, target, left, operator, right, target_operator="Assign"):
         self.left = left
         self.right = right
         self.operator = operator
         self.target = target
+        self.target_operator = target_operator
 
     def get_expr(self):
         if self.operator is None:

@@ -100,7 +100,7 @@ class SsaCode:
         params = VarAst(ast_node)
 
         left_var = params.left_operand if params.left_operand is not None else None
-
+        
         right_var = params.right_operand if params.right_operand is not None else None
 
         if len(params.targets_var) != 0:
@@ -141,6 +141,7 @@ class SsaCode:
             target_var = None
         ssa_stmt = Ssa(target_var, left_var, params.body_op, right_var, target_operator=params.target_op)
         self.code_list.append(ssa_stmt)
+
 
     @staticmethod
     def _get_assign_class(as_tree):
@@ -215,7 +216,7 @@ class Ssa:
 
             else:
                 return f"{self.target_operator} {self.left_oprd}"
-
+            
         else:
             return ""
 

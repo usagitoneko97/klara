@@ -1,6 +1,6 @@
 import unittest
-from algebraic_identities import AlgIdent
-from ssa import SsaVariable
+from .algebraic_identities import AlgIdent
+from .ssa import SsaVariable
 
 
 class TestAlgIdent(unittest.TestCase):

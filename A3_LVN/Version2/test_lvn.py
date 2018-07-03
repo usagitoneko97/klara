@@ -2,9 +2,9 @@ import unittest
 from Common.cfg_common import *
 from Common.common import *
 
-from ssa import SsaCode, SsaVariable
-from lvn_dict import LvnDict, LvnStatement
-from lvn import Lvn
+from .ssa import SsaCode, SsaVariable
+from .lvn_dict import LvnDict, LvnStatement
+from .lvn import Lvn
 
 
 class TestLvnDict(unittest.TestCase):
@@ -272,7 +272,7 @@ class TestLvnDict(unittest.TestCase):
         lvn_handler = Lvn()
         lvn_stmt = LvnStatement(3, 0, 'Add', 1)
         lvn_handler.lvn_dict.lvn_code_tuples_list.append_lvn_stmt(lvn_stmt)
-        expected_lvn_code_tup_list = [(3, 0, 'Add', 1)]
+        expected_lvn_code_tup_list = [(3, 0, 'Add', 1, 'Assign')]
 
         self.assertTupleEqual(lvn_handler.lvn_dict.lvn_code_tuples_list[0],
                               expected_lvn_code_tup_list[0])
@@ -285,8 +285,8 @@ class TestLvnDict(unittest.TestCase):
         """
         lvn = Lvn()
 
-        lvn.lvn_dict.lvn_code_tuples_list = [(2, 0, "Add", 1),
-                                             (4, 3, None, None)]
+        lvn.lvn_dict.lvn_code_tuples_list = [(2, 0, "Add", 1, 'Assign'),
+                                             (4, 3, None, None, 'Assign')]
 
         lvn.lvn_dict.variable_dict.val_num_var_list = ['x', 'y', 'a', '2', 'b']
 

@@ -1,8 +1,8 @@
 import unittest
 import ast
 from Common.cfg_common import ms
-from cfg import Cfg
-import test_helper as th
+from .cfg import Cfg
+import A4_CFG.test_helper as th
 
 
 class TestInsPhi(unittest.TestCase):
@@ -87,10 +87,10 @@ class TestInsPhi(unittest.TestCase):
                         |
                         E
                 """
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
+        blocks, ast_string = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
                                                               'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
                                                               'G': ['H'], 'H': ['D'], 'I': ['H']},
-                                                 code={'A': ms("""\
+                                                       code={'A': ms("""\
                                                             i = 1
                                                             """),
                                                        'B': ms("""\
@@ -147,103 +147,6 @@ class TestInsPhi(unittest.TestCase):
 
         self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
 
-    def test_insert_phi_function_pruned_given_2_df(self):
-        """
-                Note: '|' with no arrows means pointing down
-
-        GIVEN: block B has 2 DF nodes, C and D. Definition in B will force phi function in C and D
-
-                A ---
-               / \  |
-              B  |  |
-             / \ |  |
-            |  C    |
-            \       |
-              D  ---
-        """
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B', 'C', 'D'],
-                                                              'B': ['C', 'D'],
-                                                              'C': [],
-                                                              'D': []},
-                                                 code={'A': ms("""\
-                                                                    temp = 1
-                                                                    phi_var = 1
-                                                                    """),
-                                                       'B': ms("""\
-                                                                    phi_var= 2
-                                                                    """),
-                                                       'C': ms("""\
-                                                                    x = phi_var
-                                                                    """),
-                                                       'D': ms("""\
-                                                                    y = phi_var
-                                                                    """)}
-                                                       )
-
-        as_tree = ast.parse(ast_string)
-        cfg_real = Cfg()
-        cfg_real.block_list = blocks
-        cfg_real.as_tree = as_tree
-        cfg_real.root = cfg_real.block_list[0]
-        cfg_real.fill_df()
-        cfg_real.gather_initial_info()
-        cfg_real.compute_live_out()
-        cfg_real.ins_phi_function_pruned()
-
-        expected_phi_list = {'A': set(),
-                             'B': set(),
-                             'C': {'phi_var'},
-                             'D': {'phi_var'}}
-
-        self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
-
-    def test_insert_phi_function_pruned_given_2_df_connected(self):
-        """
-                Note: '|' with no arrows means pointing down
-
-                A ---
-               / \  |
-              B  |  |
-             / \ |  |
-            |  C    |
-            \  |    |
-              D  ---
-        """
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B', 'C', 'D'],
-                                                              'B': ['C', 'D'],
-                                                              'C': ['D'],
-                                                              'D': []},
-                                                 code={'A': ms("""\
-                                                                    phi_var = 1
-                                                                    """),
-                                                       'B': ms("""\
-                                                                    phi_var= 2
-                                                                    """),
-                                                       'C': ms("""\
-                                                                    x = phi_var
-                                                                    """),
-                                                       'D': ms("""\
-                                                                    y = phi_var
-                                                                    """)}
-                                                       )
-
-        as_tree = ast.parse(ast_string)
-        cfg_real = Cfg()
-        cfg_real.block_list = blocks
-        cfg_real.as_tree = as_tree
-        cfg_real.root = cfg_real.block_list[0]
-        cfg_real.fill_df()
-        cfg_real.gather_initial_info()
-        cfg_real.compute_live_out()
-        cfg_real.ins_phi_function_pruned()
-
-        expected_phi_list = {'A': set(),
-                             'B': set(),
-                             'C': {'phi_var'},
-                             'D': {'phi_var'}}
-
-        self.assertPhiListEqual(cfg_real.block_list, expected_phi_list)
-
     def test_insert_phi_function_pruned(self):
         """
                         Note: '|' with no arrows means pointing down
@@ -262,10 +165,10 @@ class TestInsPhi(unittest.TestCase):
                         |
                         E
                 """
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
+        blocks, ast_string = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'F'], 'C': ['D'],
                                                               'D': ['E', 'B'], 'E': [], 'F': ['G', 'I'],
                                                               'G': ['H'], 'H': ['D'], 'I': ['H']},
-                                                 code={'A': ms("""\
+                                                       code={'A': ms("""\
                                                             i = 1
                                                             """),
                                                        'B': ms("""\
@@ -327,8 +230,8 @@ class TestInsPhi(unittest.TestCase):
 
     def test_insert_phi_function_pruned_4_blocks(self):
 
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []},
-                                                 code={'A': ms("""\
+        blocks, ast_string = th.build_arbitrary_blocks(block_links={'A': ['B', 'C'], 'B': ['D'], 'C': ['D'], 'D': []},
+                                                       code={'A': ms("""\
                                                             pass
                                                             """),
                                                        'B': ms("""\
@@ -363,7 +266,7 @@ class TestInsPhi(unittest.TestCase):
     def test_recompute_liveout(self):
         # Given: UEVAR(B) = 'c'
         # Expect: LIVEOUT(A) = 'c'
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[1].ue_var.add('c')
         self.assertTrue(blocks[0].recompute_liveout())
 
@@ -374,7 +277,7 @@ class TestInsPhi(unittest.TestCase):
         #        VARKILL(B) = None
         # Expect: LIVEOUT(A) = 'c, 'd'
 
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[1].ue_var.add('c')
         blocks[1].live_out.add('d')
         self.assertTrue(blocks[0].recompute_liveout())
@@ -386,7 +289,7 @@ class TestInsPhi(unittest.TestCase):
         #        VARKILL(B) = 'd'
         # Expect: LIVEOUT(A) = 'c'
 
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[1].ue_var.add('c')
         blocks[1].live_out.add('d')
         blocks[1].var_kill.add('d')
@@ -400,7 +303,7 @@ class TestInsPhi(unittest.TestCase):
         #        VARKILL(B) = 'd'
         # Expect: LIVEOUT(A) = 'c' (no changed)
 
-        blocks = th.build_blocks_arb(block_links={'A': ['B'], 'B': []})
+        blocks = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': []})
         blocks[0].live_out.add('c')
         blocks[1].ue_var.add('c')
         blocks[1].live_out.add('d')
@@ -412,9 +315,9 @@ class TestInsPhi(unittest.TestCase):
     # -------------------- test compute liveout------------------------------
     def test_compute_liveout_given_5_blocks(self):
 
-        blocks, ast_string = th.build_blocks_arb(block_links={'A': ['B'], 'B': ['C', 'D'], 'C': ['D'],
+        blocks, ast_string = th.build_arbitrary_blocks(block_links={'A': ['B'], 'B': ['C', 'D'], 'C': ['D'],
                                                               'D': ['E', 'B'], 'E': []},
-                                                 code={'A': ms("""\
+                                                       code={'A': ms("""\
                                                                     i = 1
                                                                     """),
                                                        'B': ms("""\
@@ -468,3 +371,6 @@ class TestInsPhi(unittest.TestCase):
 
         expected_phi_list_for_block_3 = {'a'}
         self.assertSetEqual(cfg_real.block_list[-1].phi, expected_phi_list_for_block_3)
+
+        cfg_real.rename_to_ssa()
+        pass
