@@ -1,5 +1,6 @@
+from Common.cfg_common import get_ast_node
 from Common.common import *
-from var_ast import VarAst
+from A4_CFG.var_ast import VarAst
 
 
 class SsaCode:
@@ -12,19 +13,8 @@ class SsaCode:
 
     def __repr__(self):
         s = ""
-        for assign_ssa in self.code_list:
-            if assign_ssa.operator is None:
-                s = s + str(assign_ssa.target) + ' = ' \
-                    + str(assign_ssa.left_oprd) + '\n'
-            else:
-                if assign_ssa.left_oprd is not None:
-                    s = s + str(assign_ssa.target) + ' = ' \
-                        + str(assign_ssa.left_oprd) + ' ' + str(assign_ssa.operator) \
-                        + ' ' + str(assign_ssa.right_oprd) + '\n'
-                else:
-                    s = s + str(assign_ssa.target ) + ' = ' \
-                        + str(assign_ssa.operator) \
-                        + ' ' + str(assign_ssa.right_oprd) + '\n'
+        for ssa in self.code_list:
+            s = s + str(ssa) + '\n'
 
         return s
 
@@ -99,9 +89,40 @@ class SsaCode:
 
     def add_ast(self, as_tree):
         for assign_node in as_tree.body:
-            self.add_ast_node(assign_node)
+            self.add_ast_node_ssa(assign_node)
 
     def add_ast_node(self, ast_node):
+        """
+        break ast stmt down and assign it to Ssa Class
+        :param ast_node:
+        :return:
+        """
+        params = VarAst(ast_node)
+
+        left_var = params.left_operand if params.left_operand is not None else None
+
+        right_var = params.right_operand if params.right_operand is not None else None
+
+        if len(params.targets_var) != 0:
+            target_var = params.get_target()
+        else:
+            target_var = None
+        ssa_stmt = Ssa(target_var, left_var, params.body_op, right_var, target_operator=params.target_op)
+        if ssa_stmt.is_not_none():
+            self.code_list.append(ssa_stmt)
+
+    def add_ast_node_by_line_number(self, as_tree, start_line, end_line):
+        for i in range(start_line, end_line + 1):
+            node = get_ast_node(as_tree, i)
+            self.add_ast_node(node)
+
+    def add_ast_node_ssa(self, ast_node):
+        """
+        break ast stmt down, transform to ssa and assign it to Ssa Class
+        :param ast_node:
+        :return:
+        """
+
         params = VarAst(ast_node)
 
         if params.left_operand is not None:
@@ -145,6 +166,7 @@ class SsaCode:
         self.var_version_list = stack
         self.counter = counter
 
+
 class Ssa:
     def __init__(self, target, left, op, right, lvn_tuple=None, target_operator="Assign"):
         self.target = target
@@ -169,6 +191,38 @@ class Ssa:
 
     def replace_rhs_expr(self, left_oprd, operator="", right_oprd=""):
         pass
+
+    def __repr__(self):
+        if self.target_operator == "Assign":
+            s = ''
+            if self.operator is None:
+                s = s + str(self.target) + ' = ' \
+                    + str(self.left_oprd)
+            else:
+                if self.left_oprd is not None:
+                    s = s + str(self.target) + ' = ' \
+                        + str(self.left_oprd) + ' ' + operator_dict[self.operator] \
+                        + ' ' + str(self.right_oprd)
+                else:
+                    s = s + str(self.target) + ' = ' \
+                        + operator_dict[self.operator] \
+                        + ' ' + str(self.right_oprd)
+            return s
+
+        elif self.target_operator == "While" or self.target_operator == 'If':
+            if self.operator is not None:
+                return f"{self.target_operator} {self.left_oprd} {operator_dict[self.operator]} {self.right_oprd}"
+
+            else:
+                return f"{self.target_operator} {self.left_oprd}"
+
+        else:
+            return ""
+
+    def is_not_none(self):
+        if self.target is not None or self.left_oprd is not None or self.right_oprd is not None:
+            return True
+        return False
 
 
 class SsaVariable:

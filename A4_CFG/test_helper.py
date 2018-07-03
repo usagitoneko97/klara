@@ -1,7 +1,7 @@
-from cfg import BlockList, RawBasicBlock, Cfg
+from .cfg import BlockList, RawBasicBlock, Cfg
 
 
-def build_blocks_arb(block_links, code=None):
+def build_arbitrary_blocks(block_links, code=None):
     block_list = BlockList()
     as_tree_string = ""
     current_line_number = 1

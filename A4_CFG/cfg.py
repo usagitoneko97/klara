@@ -1,4 +1,4 @@
-from var_ast import VarAst
+from .var_ast import VarAst
 from Common.cfg_common import remove_block_from_list, get_ast_node
 from A3_LVN.Version2.ssa import SsaCode, SsaVariable, PhiFunction
 
@@ -297,6 +297,32 @@ class Cfg:
                             else:
                                 no_phi_block.ins_no_phi_block(var, df_block)
                             worklist.append(df_block)
+
+    def rename_to_ssa(self):
+        for block in self.block_list:
+            block.ssa_code.code_list = []
+        self._rename_to_ssa(dict(), dict(), self.root)
+
+    def _rename_to_ssa(self, counter_dict, stack_dict, block):
+        block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
+
+        for phi_func in block.ssa_code.get_all_phi_functions():
+            phi_func.target = SsaVariable(phi_func.var, block.ssa_code.update_version(phi_func.var))
+
+        for i in range(block.start_line, block.end_line + 1):
+            ast_node = get_ast_node(self.as_tree, i)
+            block.ssa_code.add_ast_node_ssa(ast_node)
+
+        for cfg_succ_block in block.nxt_block_list:
+            cfg_succ_block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
+            cfg_succ_block.fill_phi()
+
+        for dom_succ_block in (CfgCommon.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
+            self._rename_to_ssa(counter_dict, stack_dict, CfgCommon.find_node(self.block_list, dom_succ_block))
+
+        for operation in block.ssa_code.code_list:
+            if operation.target is not None:
+                (stack_dict[operation.target.var]).remove(operation.target.version_num)
 
 
 class BlockList(list):
@@ -599,6 +625,32 @@ class Cfg:
                     return False
         else:
             return True
+
+    def rename_to_ssa(self):
+        for block in self.block_list:
+            block.ssa_code.code_list = []
+        self._rename_to_ssa(dict(), dict(), self.root)
+
+    def _rename_to_ssa(self, counter_dict, stack_dict, block):
+        block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
+
+        for phi_func in block.ssa_code.get_all_phi_functions():
+            phi_func.target = SsaVariable(phi_func.var, block.ssa_code.update_version(phi_func.var))
+
+        for i in range(block.start_line, block.end_line + 1):
+            ast_node = get_ast_node(self.as_tree, i)
+            block.ssa_code.add_ast_node_ssa(ast_node)
+
+        for cfg_succ_block in block.nxt_block_list:
+            cfg_succ_block.ssa_code.reload_stack_and_counter(stack_dict, counter_dict)
+            cfg_succ_block.fill_phi()
+
+        for dom_succ_block in (CfgCommon.find_node(self.dominator_tree.dominator_nodes, block)).nxt_block_list:
+            self._rename_to_ssa(counter_dict, stack_dict, CfgCommon.find_node(self.block_list, dom_succ_block))
+
+        for operation in block.ssa_code.code_list:
+            if operation.target is not None:
+                (stack_dict[operation.target.var]).remove(operation.target.version_num)
 
 
 class NoPhiDict(dict):

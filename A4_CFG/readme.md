@@ -18,7 +18,7 @@
             - [1.4.3.1. Introduction](#1431-introduction)
             - [1.4.3.2. Algorithm](#1432-algorithm)
         - [1.4.4. Dominance Frontier](#144-dominance-frontier)
-        - [1.4.5. Placing φ-Functions](#145-placing--functions)
+        - [1.4.5. Placing φ-Functions](#145-placing-%CF%86-functions)
     - [1.5. Creating a test](#15-creating-a-test)
         - [1.5.1. Generate test inputs](#151-generate-test-inputs)
         - [1.5.2. Asserting test output](#152-asserting-test-output)
@@ -33,15 +33,19 @@
             - [1.6.3.2. LIVEOUT](#1632-liveout)
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
         - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
-    - [1.7. Inserting φ-function](#17-inserting--function)
+    - [1.7. Inserting φ-function](#17-inserting-%CF%86-function)
         - [1.7.1. Trivial SSA](#171-trivial-ssa)
         - [1.7.2. Minimal SSA](#172-minimal-ssa)
         - [1.7.3. Pruning SSA](#173-pruning-ssa)
             - [1.7.3.1. Semipruned SSA](#1731-semipruned-ssa)
             - [1.7.3.2. Pruned SSA](#1732-pruned-ssa)
-        - [1.7.4. Worklist algorithm for inserting φ-function.](#174-worklist-algorithm-for-inserting--function)
+        - [1.7.4. Worklist algorithm for inserting φ-function.](#174-worklist-algorithm-for-inserting-%CF%86-function)
             - [1.7.4.1. Basic concept](#1741-basic-concept)
             - [1.7.4.2. The algorithm](#1742-the-algorithm)
+    - [Renaming of SSA](#renaming-of-ssa)
+        - [Role of stack and counter](#role-of-stack-and-counter)
+        - [The algorithm](#the-algorithm)
+        - [Why dominator tree?](#why-dominator-tree)
     - [1.8. References](#18-references)
 
 <!-- /TOC -->
@@ -696,6 +700,82 @@ need_phi(blk, var):
 **Note**: the φ-function inserted is just an indication to that block that the φ-function for that variable exist. The actual parameters is waiting to be filled in the next section, renaming of SSA. 
 
 Once the φ-function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
+
+
+## Renaming of SSA
+
+In the final SSA form, each global name becomes a base name, and individual definitions of that base name are distinguished by the addition of a numerical subscript. 
+
+![intro_renaming](resources/renaming/intro_to_renaming.svg)
+
+While renaming of SSA in a within a single block is straightforward, but the complexity arise when there are multiple basic blocks connected not forgetting that φ-function will contributes some of the problem too. The remaining of the sections below will focusing on ways to rename SSA across multiple blocks.
+
+On side notes, renaming is actually the last step of transforming a code into SSA form, which means that it comes after inserting φ-function. φ-function inserted from section above is merely just an indication for φ-function of some variable, which can be a list that holds variable that **need** φ-function. 
+
+![show_indication](resources/renaming/show_indication.svg)
+
+
+### Role of stack and counter
+**Counter** is used to keep track of the latest version of a particular variable. Normally used when the target of the SSA statement needed to rename, and it will refer to the counter to get the specific version.
+
+**Stack** stores the latest version of a particular variable. It is used when a variable is being referred in an SSA statement, and the version number of that variable can then be found in the stack. 
+
+Take for example a single block with some code below:
+
+![](resources/renaming/stack_and_counter.png)
+
+
+At first statement, the algorithm will rename the operands first. Since 3 is a number, it will then rename the target, 'a'. It will refer to the counter to get the respective version. Because of the counter is empty initially, it will create an entry of 'a', and the target 'a' will hold the version number `0`. The counter for `'a'` will then increment to `1`. The variable `'a_0'` will the push to the stack. 
+
+The second statement is more or less the same as the first one. 
+
+At the third statement, it will check the operand 'a' in the stack and retrieve the version of 'a', which is `0` in this case. It will do the same for 'b' and will update the counter of 'z'. 
+
+The resulting ssa:
+```
+a_0 = 3
+b_0 = 4
+z_0 = a_0 + b_0
+```
+
+The use of these 2 data structures may seem not necessary in this case, but it is useful when dealing with multiple basic blocks. The example below will demonstrate that. 
+
+![stack_counter_ex](resources/renaming/stack_counter_multi_block.png)
+
+After converting all the SSA in block **B1**, it will then pass the counter and the stack to the subsequent block, **B2** and **B3**. In block **B2**, the first statement will rename the variable `a` to `a_1` based on the counter, and push `a_1` to the stack. The `a` that get referenced in the second statement will get the latest `a` in the stack. At the end of the operation for block **B2**, the algorithm need to pop all the variable that was created in this block out of the stack, namely `'a_1'` and `'b_0'`. This is to ensure that the `'a'` that get referenced in block **B3** will get the value `'a_0'` and not `'a_1'`. But the counter will not change across multiple blocks. This means that the variable 'a' created in block **B3** will rename to `'a_2'`. 
+
+### The algorithm
+To summarizes the algorithm, assume the method for renaming is called `Rename`, the algorithm will call `Rename` on the root of the dominator tree. `Rename` will rewrite the blocks and recurs on the child of the block in the dominator tree. To finish it, `Rename` pops all the variable that was pushed onto the stacks during processing of this block. 
+
+One detail to complete it is, just before popping out the variable, the `Rewrite` must rewrite φ-function parameters in each of the block's successors in **CFG tree** (Not Dominator tree). 
+
+*Algorithm for renaming*:
+```
+Rename(b)
+    for each φ-function in b, ‘‘x ← φ(· · · )’’
+        rewrite x as NewName(x)
+    for each operation ‘‘x ← y op z’’ in b
+        rewrite y with subscript top(stack[y])
+        rewrite z with subscript top(stack[z])
+        rewrite x as NewName(x)
+    for each successor of b in the cfg
+        fill in φ-function parameters
+    for each successor s of b in the dominator tree
+        Rename(s)
+    for each operation ‘‘x ← y op z’’ in b
+        and each φ-function ‘‘x ← φ(· · · )’’
+        pop(stack[x])
+```
+
+### Why dominator tree?
+
+A question may arise on why do the algorithm recurs on the successors of the **dominator tree** but not **CFG tree**? The example below may clear things up. 
+
+![renaming_why_dom_ex](resources/renaming_why_dom_ex.png)
+
+The algorithm will recur on the child of the dominator tree. This may raise a question like the information in **B2** (stack) will not pass to **B4**, which is the child of **B2**. In other words, the algorithm will pop every variable created in **B2**, which may potentially causing **B4** to not notified all those variables. 
+
+To answer the question above, the algorithm will not pass the stack information from B2 to B4 simply because **B2 doesn't dominate B4**. This means that if B4 is referencing a variable that created in B2, **all the variable created in B2 must have a φ-function in B4**, regardless of the form of the SSA (naive, pruned, sempruned). Recall that the algorithm will rewrite the φ-function parameters in each of the block's successors in **CFG tree**, so that process is enough to pass along all the relevant information from **B2** to **B4**.  
 
 
 ## 1.8. References

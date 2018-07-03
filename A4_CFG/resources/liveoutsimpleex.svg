@@ -14,7 +14,7 @@
    viewBox="0 0 142.74811 104.51721"
    id="svg2"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="liveoutsimpleex.svg"
    inkscape:export-filename="/home/usagitoneko/PycharmProjects/astAssignment/A4.Cfg/resources/liveoutsimpleex.svg.png"
    inkscape:export-xdpi="90"
@@ -32,7 +32,7 @@
       <path
          id="path4201"
          d="M 0,0 5,-5 -12.5,0 5,5 0,0 Z"
-         style="fill:#00ffff;fill-opacity:1;fill-rule:evenodd;stroke:#00f7ff;stroke-width:1pt;stroke-opacity:1"
+         style="fill:#00f7f0;fill-opacity:1;fill-rule:evenodd;stroke:#00f7ff;stroke-width:1pt;stroke-opacity:1"
          transform="matrix(-0.4,0,0,-0.4,-4,0)"
          inkscape:connector-curvature="0" />
     </marker>
@@ -60,15 +60,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
-     inkscape:cx="-22.891366"
-     inkscape:cy="47.344721"
+     inkscape:cx="109.76017"
+     inkscape:cy="66.955048"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1022"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-height="1027"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -82,7 +82,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -102,13 +102,12 @@
          id="rect4136"
          style="opacity:1;fill:none;fill-opacity:0.97647059;stroke:#00d2ff;stroke-width:0.99622279;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:3.80125952;stroke-opacity:1" />
       <text
-         sodipodi:linespacing="125%"
          id="text4153"
          y="151.30614"
          x="199.50513"
-         style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
-           style="font-size:16.25px"
+           style="font-size:16.25px;line-height:1.25"
            y="151.30614"
            x="199.50513"
            id="tspan4155"
@@ -125,78 +124,75 @@
          id="rect4136-6"
          style="opacity:1;fill:none;fill-opacity:0.97647059;stroke:#00d2ff;stroke-width:0.99622279;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:3.80125952;stroke-opacity:1" />
       <text
-         sodipodi:linespacing="125%"
          id="text4177"
          y="212.42036"
          x="202.0305"
-         style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
-           style="font-size:16.25px"
+           style="font-size:16.25px;line-height:1.25"
            y="212.42036"
            x="202.0305"
            id="tspan4179"
            sodipodi:role="line">b = a</tspan></text>
     </g>
     <path
-       style="fill:#00ffff;fill-rule:evenodd;stroke:#00f7ff;stroke-width:0.89999998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:3.79999995;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend)"
+       style="fill:#00f7f0;fill-rule:evenodd;stroke:#00f7ff;stroke-width:0.89999998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:3.79999995;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend);fill-opacity:1"
        d="m 222.79991,173.1776 0.0631,13.63706"
        id="path4186"
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="260.11426"
        y="206.612"
-       id="text4494"
-       sodipodi:linespacing="125%"><tspan
+       id="text4494"><tspan
          sodipodi:role="line"
          id="tspan4496"
          x="260.11426"
          y="206.612"
-         style="font-size:10px">UEVAR   = {a}</tspan><tspan
+         style="font-size:10px;line-height:1.25">UEVAR   = {a}</tspan><tspan
          sodipodi:role="line"
          x="260.11426"
          y="219.112"
          id="tspan4498"
-         style="font-size:10px">VARKILL = {b}</tspan></text>
+         style="font-size:10px;line-height:1.25">VARKILL = {b}</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="259.3689"
        y="147.02646"
-       id="text4494-7"
-       sodipodi:linespacing="125%"><tspan
+       id="text4494-7"><tspan
          sodipodi:role="line"
          id="tspan4496-5"
          x="259.3689"
          y="147.02646"
-         style="font-size:10px">UEVAR   = {}</tspan><tspan
+         style="font-size:10px;line-height:1.25">UEVAR   = {}</tspan><tspan
          sodipodi:role="line"
          x="259.3689"
          y="159.52646"
          id="tspan4498-3"
-         style="font-size:10px">VARKILL = {a}</tspan></text>
+         style="font-size:10px;line-height:1.25">VARKILL = {a}</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="191.82707"
        y="130.33994"
-       id="text4669"
-       sodipodi:linespacing="125%"><tspan
+       id="text4669"><tspan
          sodipodi:role="line"
          id="tspan4671"
          x="191.82707"
-         y="130.33994">B1</tspan></text>
+         y="130.33994"
+         style="font-size:10px;line-height:1.25">B1</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:10px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="191.7549"
        y="189.54333"
-       id="text4669-5"
-       sodipodi:linespacing="125%"><tspan
+       id="text4669-5"><tspan
          sodipodi:role="line"
          id="tspan4671-6"
          x="191.7549"
-         y="189.54333">B2</tspan></text>
+         y="189.54333"
+         style="font-size:10px;line-height:1.25">B2</tspan></text>
   </g>
 </svg>

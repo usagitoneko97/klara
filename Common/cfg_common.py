@@ -3,6 +3,9 @@ import ast
 import textwrap
 ms = textwrap.dedent
 
+def is_function_def(ast_node):
+    return isinstance(ast_node, ast.FunctionDef)
+
 def is_call_func(ast_node):
     if isinstance(ast_node, ast.Expr):
         if isinstance(ast_node.value, ast.Call):
@@ -92,13 +95,29 @@ def get_ast_node(ast_tree, lineno):
     """
     for node in ast.iter_child_nodes(ast_tree):
 
-        if node.lineno == lineno:
-            return node
+        if hasattr(node, 'lineno'):
+            if node.lineno == lineno:
+                return node
 
-        if isinstance(node, ast.If) or isinstance(node, ast.While):
+        if isinstance(node, ast.If) or isinstance(node, ast.While) \
+                or isinstance(node, ast.FunctionDef):
             node_return = get_ast_node(node, lineno)
             if node_return is not None:
                 return node_return
             continue
 
     return None
+
+
+def get_all_phi_functions(code_list):
+    for code in code_list:
+        from A4_CFG.cfg import PhiFunction
+        if type(code) is PhiFunction:
+            yield code
+
+
+def get_all_stmt_without_phi_function(code_list):
+    for code in code_list:
+        from A4_CFG.cfg import PhiFunction
+        if type(code) is not PhiFunction:
+            yield code
