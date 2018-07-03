@@ -157,3 +157,16 @@ class TestLiveVariable(unittest.TestCase):
 
         self.assertLiveOutEqual(cfg_real.block_list, expected_live_out)
 
+    def test_print_liveout_varkill_uevar(self):
+            as_tree = ast.parse(ms("""\
+                a = 3    
+                if c < 3:       
+                    y = a + b
+                    x, y = a, b         
+                """)
+                                )
+
+            cfg_real = Cfg(as_tree)
+            cfg_real.gather_initial_info()
+            cfg_real.compute_live_out()
+            cfg_real.print_live_variable()

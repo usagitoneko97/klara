@@ -319,6 +319,10 @@ class Cfg:
                 if blocks.recompute_liveout():
                     changed_flag = True
 
+    def print_live_variable(self):
+        for block in self.block_list:
+            print(f"block {block.name}: UEVAR: {block.ue_var}, VARKILL : {block.var_kill}, LIVEOUT : {block.live_out}")
+
     def ins_phi_function_semi_pruned(self):
         for var in self.globals_var:
             worklist = copy.copy(self.block_set.get(var))
