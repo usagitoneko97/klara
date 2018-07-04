@@ -33,7 +33,7 @@
             - [1.6.3.2. LIVEOUT](#1632-liveout)
         - [1.6.4. The algorithm for computing live variable](#164-the-algorithm-for-computing-live-variable)
         - [1.6.5. Testing for Live Variable Analysis](#165-testing-for-live-variable-analysis)
-    - [1.7. Inserting φ-function](#17-inserting-%CF%86-function)
+    - [1.7. Insertion of φ-function](#17-insertion-of-%CF%86-function)
         - [1.7.1. Trivial SSA](#171-trivial-ssa)
         - [1.7.2. Minimal SSA](#172-minimal-ssa)
         - [1.7.3. Pruning SSA](#173-pruning-ssa)
@@ -42,11 +42,11 @@
         - [1.7.4. Worklist algorithm for inserting φ-function.](#174-worklist-algorithm-for-inserting-%CF%86-function)
             - [1.7.4.1. Basic concept](#1741-basic-concept)
             - [1.7.4.2. The algorithm](#1742-the-algorithm)
-    - [Renaming of SSA](#renaming-of-ssa)
-        - [Role of stack and counter](#role-of-stack-and-counter)
-        - [The algorithm](#the-algorithm)
-        - [Why dominator tree?](#why-dominator-tree)
-    - [1.8. References](#18-references)
+    - [1.8. Renaming of SSA](#18-renaming-of-ssa)
+        - [1.8.1. Role of stack and counter](#181-role-of-stack-and-counter)
+        - [1.8.2. The algorithm](#182-the-algorithm)
+        - [1.8.3. Why dominator tree?](#183-why-dominator-tree)
+    - [1.9. References](#19-references)
 
 <!-- /TOC -->
 ## 1.2. Basic blocks
@@ -337,7 +337,7 @@ self.assertDfEqual(cfg_real, {'A': [], 'B': ['B'], 'C': ['F'], 'D': ['E'],
 ### 1.6.1. Uses for Live Variables
 
 #### 1.6.1.1. Improve SSA construction
-To build minimal SSA, dominance frontier is used to find the strategic place to place phi functions. One problem with dominance frontier is that it suggests the nodes to which φ-function(s) should be placed based on structural information (CFG) without considering the data (variables), This leads to possibly inserting redundant φ-function. To stress my point, consider the following diagram: 
+To build minimal SSA, dominance frontier is used to find the strategic place to place φ-functions. One problem with dominance frontier is that it suggests the nodes to which φ-function(s) should be placed based on structural information (CFG) without considering the data (variables), This leads to possibly inserting redundant φ-function. Consider the following diagram: 
 
 <!---
 ```
@@ -351,68 +351,77 @@ if a_0 < 3:
 
 ![](resources/problems_statement_ex.svg.png)
 
-In the code shown above, does a phi function needed at block **B3**? Even though the dominance frontier suggests that the definition of the variable d inside block 2 will result in φ-function being inserted in the last block, but because of variable d not being used there, the φ-function is not needed. This is where live variable analysis assists the dominance frontier to reduce the set of φ-functions.
+In the code shown above, does a φ-function needed at block **B3**? Even though the dominance frontier suggests that the definition of the variable `d` inside block 2 will result in φ-function being inserted in the last block, but because of variable `d` not being used there, the φ-function is not needed. This is where live variable analysis assists the dominance frontier to reduce the set of φ-functions.
 
 #### 1.6.1.2. Finding uninitialized variables
 
- If a statement uses some variable v before it has been assigned a value, then clearly it is an error missed by the programmer. If the variable is defined in the same block, then it is a trivial task to determine if the variable has been initialized. However if the variable lives across multiple blocks, then it is no more trivial and we need LVA to make that deduction. 
+ If a statement uses some variable `v` before it has been assigned a value, then clearly it is an error missed by the programmer. If the variable is defined in the same block, then it is a trivial task to determine if the variable has been initialized. However if the variable lives across multiple blocks, then it is no more trivial and we need LVA to make that deduction. LVA is discussed in section [1.6.3]. 
  
 #### 1.6.1.3. Dead code elimination
 
-A store operation like `a = b + c` is not needed if a is not used anywhere throughout the code after the definition, or a **does not live out** of the block. 
+A store operation like `a = b + c` is not needed if `a` is not used beyond the code after the definition. This has some relation with LIVEOUT computation that discussed below. 
 
 ### 1.6.2. Terminology
 
-- **UEVAR** - those variables that are used in the current block before any redefinition in the current block.
-- **VARKILL** - contains all the variables that are defined in current block
-- **LIVEOUT** - contains all the variables that are live on exit from the block
-- **BlockSets** - contains the information on where the variable is being defined. 
+- **UEVAR(n)** - (Upward Exposure Variable) Refers to variables that are used in the block `n` before any redefinition in the current block.
+- **VARKILL(n)** - (Variable Kill) contains all the variables that are defined in block `n`
+- **LIVEOUT(n)** - contains all the variables that lives on exiting block `n`
+- **BlockSets(v)** - contains the information of the blocks within which the variable `v` is defined. 
 - **Globals** - sets of variable that are live across multiple blocks
-- **Worklist(x)** - worklist of variable `x` contains all the block that defined `x`. 
+- **Worklist(v)** - is dynamic information of BlockSets of variable `v` that used in renaming the SSA. 
+Some other terminologies related to relationship of blocks. 
+
+![terminology_block](resources/terminology_block.svg)
+
+- B1 is the **parent/precedence** block of B2 and B3. 
+- B2 and B3 is the **children/successors** of B1. 
 
 ### 1.6.3. The basic concept of Live Variable Analysis
 
 #### 1.6.3.1. UEVAR and VARKILL
-The concept of Uevar and Varkill is simple. Consider the following code.
+The concept of Uevar and Varkill is simple. Consider the following block codes.
 
-```python
-b = 3
-a = b + c
-```
+![uevar_varkill_ex](resources/uevar_varkill_ex.png)
 
-| Uevar | varkill  |
-| :---: | :------: |
-| 'c'   | 'b', 'a' |
+| Uevar(B1)    | Varkill(B1)       |
+| :------: | :-----------: |
+| 'c', 'd' | 'b', 'a', 'd' |
 
-The Uevar and Varkill of the blocks above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, thus `c` is the **Uevar** of that particular block. But `b` is not even though it is being referenced since the definition of `b` exist in the block. The **Varkill** of that block is `b` and `a`. 
+The Uevar(B1) and Varkill(B1) above are very straightforward. The variable `c` is being referenced but there is no definition of that variable in the block, which `c` must be coming from definition in previous blocks. This will result in `c` contained in Uevar(B1). But `b` is not, even though it is being referenced since `b` is been redefined in the block before it's being referenced. 
+
+In the last statement of the block, variable `d` that been referenced is coming from the definition on previous block , thus `d` is added into Uevar(B1) sets. But because of `d` is being redefined as well, `d` will also added in Varkill(B1) sets.
+
+The Varkill(B1) is `b`, `a` and `d`. 
 
 #### 1.6.3.2. LIVEOUT
-**Liveout** set of a particular block will contain variables that will live on exit from that block. The formal definition of Liveout is shown below. 
+**Liveout(n)** set of variables of block `n` that live on exit of that block. The formal definition of Liveout is shown below. 
 
 ![liveoutEQ](resources/liveoutEQ.png)
 
-Basically, the equation can be broken down to 2 parts, **Uevar(m)**, and **(Liveout(m) ∩ ~Varkill(m))**. To simplify the explanation, consider the following example. 
+Basically, the equation can be broken down to 2 parts, **Uevar(m)**, and **(Liveout(m) ∩ ~Varkill(m))**. Consider the following example. 
 
-![liveoutsimpleex](resources/liveoutsimpleex.svg.png)
+![liveoutsimpleex](resources/liveoutsimpleex.png)
 
-It is obvious that the variable `a` in **B2** is required from the parents of that block, specifically **B1** in this case, hence the `a` is included in  **Uevar**. Therefore **Liveout** of **B1** has to include `a` since it is live outside of the block. To simplify,  *Liveout of the current block has to include the union of all Uevar of the successor/child blocks.*, as described in the first part of the equation. 
+It is obvious that the variable `a` used in **B2** is required from the parent, **B1**.  hence `a` is included in  **Uevar(B2)**. Therefore **Liveout** of **B1** includes `a` since it lives beyond block **B1**. In this example, only 1 child is demonstrated. However, in general,  *Liveout of the current block includes the union of all Uevar of the successor/child blocks*, as described in the first part of the equation. 
 
-![liveoutsimpleex](resources/liveoutsimpleexWlo.svg.png)
+<!--[liveoutsimpleex](resources/liveoutsimpleexWlo.svg.png)-->
 
-To describe and explain the second part of the equation, consider following example. 
+To explain the second part of the equation, consider the following slightly modifed code of the previous example. 
 
-![liveoutsimpleex](resources/liveoutcomplexex.svg.png)
+![liveoutsimpleex](resources/liveoutcomplexex.png)
 
-The variable `a` in block **B3** is required since `a` is in the set of **UEVAR**. The variable `a` is, however, not coming from the block **B2**, but from block **B1**. So the variable `a` has to be pass from block **B1** to **B3**. Hence *Liveout(B1) += Liveout(B2)*, and Liveout(B2) = 'a'. The algorithm for computing is called fixed-point iterative method and is discussed in the section below. 
+The variable `c` is required in block **B3** because it is used in the statement `y = c`, and therefore `c` is included in Uevar(B3) set. But `c` is defined in **B1**, which is not a direct parent of **B3**. So the variable `c` has to be pass from block **B1** to **B3**. Hence **Liveout(B1) = Uevar(B2) ∪ Liveout(B2) = {a, c}**, where Uevar(B2) = 'a', Liveout(B2) = 'c'. 
 
-![liveoutsimpleex](resources/liveoutcomplexexRes.svg.png)
+<!--[liveoutsimpleex](resources/liveoutcomplexexRes.svg.png)-->
 
 
-But it's not always the liveout of the child block is the liveout of the current block. From the example below: 
+But it's not always the liveout of the child block is the liveout of the current block. This has something to do with **~Varkill** which will be explained now. The following diagram on the left side is the modified example with an extra statement `c = 10 + b` added into block **B2**, and the diagram at the right is the original for comparison.
 
-![liveoutsimpleex](resources/liveoutcomplexvarkillex.svg.png)
+![liveoutsimpleex](resources/liveoutcomplexvarkillex.png)
 
-The variable `a` from block **B3** will be refer to `a` in block **B2** but not **B1** since `a` is being redefined in block **B2**. With that being said, the final form of the equation for the second part will be:
+In the left diagram, the variable `c` referenced in block **B3** comes from block **B2** instead of **B1** because it has been redefined. In **B2**, unlike the variable `a`, the variable `c` is never **used**, but being killed in the statement `c = 10 + b`, therefore `Liveout(B1) = {a}` and `c` is excluded. This explained the Varkill part, `Liveout(B1) = Uevar(B2) ∪ (Liveout(B2) ∩ ~Varkill(B2)) = {a}`, where Uevar(B2) = {a} and Liveout(B2) ∩ ~Varkill(B2) = {}.
+
+That makes the final form of equation for second part to be:
 
 *Liveout of the current block has to include the union of all Liveout of the successor/child blocks and not killed by the successor/child blocks.*
 
@@ -476,12 +485,10 @@ Where `succ(n)` means **successors/child** of block `n`.
 ```python
 import ast
 as_tree = ast.parse(ms("""\
-            a = 3           # 1st
-            if a > 3:       #  |
-                a = 3       # 2nd
-            else:           # 3rd
-                z = 4       #  |
-            y = 4           # 4th
+            a = 3    
+            if c < 3:       
+                y = a + b
+                x, y = a, b         
             """)
                             )
 cfg_real = Cfg(as_tree)
@@ -527,27 +534,24 @@ To gather the initial information (UEVAR, VARKILL), use:
 cfg_real.gather_initial_info()
 ```
 
-And to assert it, the helper function in that test file can be used:
-```python
-expected_ue_var = ({'c'}, {'a', 'b'})
-expected_var_kill = ({'a'}, {'y', 'x'})
-self.assertUeVarKill(cfg_real.block_list, expected_ue_var, expected_var_kill)
-```
-
 To fill the liveout of all the blocks:
 ```python
 cfg_real.compute_live_out()
 ```
 
-To assert only the liveout, use:
+To print the information of live variable, 
 ```python
-expected_live_out = {'A': {'s', 'i'}, 'B': {'s', 'i'}, 'C': {'s', 'i'},
-                     'D': {'s', 'i'}, 'E': set()}
-
-self.assertLiveOutEqual(cfg_real.block_list, expected_live_out)
+cfg_real.print_live_variable()
 ```
 
-## 1.7. Inserting φ-function
+Console should display relevant informations. 
+```python
+>>> block L1: UEVAR: {'c'}, VARKILL : {'a'}, LIVEOUT : {'a', 'b'}
+>>> block L3: UEVAR: {'a', 'b'}, VARKILL : {'y', 'x'}, LIVEOUT : set()
+```
+
+
+## 1.7. Insertion of φ-function
 
 Insertion of φ-function is a very important phase during the transformation to SSA form. **Minimal SSA** will inserts φ-function at any joint points where two definitions of variables meet, but some of these φ-function may be dead, or in other words, not being used in subsequents blocks. 
 
@@ -702,7 +706,8 @@ need_phi(blk, var):
 Once the φ-function is in place, it is time to renaming all the SSA to complete the formation of SSA. 
 
 
-## Renaming of SSA
+
+## 1.8. Renaming of SSA
 
 In the final SSA form, each global name becomes a base name, and individual definitions of that base name are distinguished by the addition of a numerical subscript. 
 
@@ -715,7 +720,7 @@ On side notes, renaming is actually the last step of transforming a code into SS
 ![show_indication](resources/renaming/show_indication.svg)
 
 
-### Role of stack and counter
+### 1.8.1. Role of stack and counter
 **Counter** is used to keep track of the latest version of a particular variable. Normally used when the target of the SSA statement needed to rename, and it will refer to the counter to get the specific version.
 
 **Stack** stores the latest version of a particular variable. It is used when a variable is being referred in an SSA statement, and the version number of that variable can then be found in the stack. 
@@ -744,7 +749,7 @@ The use of these 2 data structures may seem not necessary in this case, but it i
 
 After converting all the SSA in block **B1**, it will then pass the counter and the stack to the subsequent block, **B2** and **B3**. In block **B2**, the first statement will rename the variable `a` to `a_1` based on the counter, and push `a_1` to the stack. The `a` that get referenced in the second statement will get the latest `a` in the stack. At the end of the operation for block **B2**, the algorithm need to pop all the variable that was created in this block out of the stack, namely `'a_1'` and `'b_0'`. This is to ensure that the `'a'` that get referenced in block **B3** will get the value `'a_0'` and not `'a_1'`. But the counter will not change across multiple blocks. This means that the variable 'a' created in block **B3** will rename to `'a_2'`. 
 
-### The algorithm
+### 1.8.2. The algorithm
 To summarizes the algorithm, assume the method for renaming is called `Rename`, the algorithm will call `Rename` on the root of the dominator tree. `Rename` will rewrite the blocks and recurs on the child of the block in the dominator tree. To finish it, `Rename` pops all the variable that was pushed onto the stacks during processing of this block. 
 
 One detail to complete it is, just before popping out the variable, the `Rewrite` must rewrite φ-function parameters in each of the block's successors in **CFG tree** (Not Dominator tree). 
@@ -767,18 +772,18 @@ Rename(b)
         pop(stack[x])
 ```
 
-### Why dominator tree?
+### 1.8.3. Why dominator tree?
 
 A question may arise on why do the algorithm recurs on the successors of the **dominator tree** but not **CFG tree**? The example below may clear things up. 
 
-![renaming_why_dom_ex](resources/renaming_why_dom_ex.png)
+![renaming_why_dom_ex](resources/renaming/renaming_why_dom_ex.png)
 
 The algorithm will recur on the child of the dominator tree. This may raise a question like the information in **B2** (stack) will not pass to **B4**, which is the child of **B2**. In other words, the algorithm will pop every variable created in **B2**, which may potentially causing **B4** to not notified all those variables. 
 
 To answer the question above, the algorithm will not pass the stack information from B2 to B4 simply because **B2 doesn't dominate B4**. This means that if B4 is referencing a variable that created in B2, **all the variable created in B2 must have a φ-function in B4**, regardless of the form of the SSA (naive, pruned, sempruned). Recall that the algorithm will rewrite the φ-function parameters in each of the block's successors in **CFG tree**, so that process is enough to pass along all the relevant information from **B2** to **B4**.  
 
 
-## 1.8. References
+## 1.9. References
 - Torczon, L. and Cooper, M. ed., (2012). Ch9 - Data-Flow Analysis. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.495-519.
 - Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.445-457.
 - Braun, M., Buchwald, S., Hack, S., Leißa, R., Mallon, C., & Zwinkau, A. (2013). Simple and efficient construction of static single assignment form. Lecture Notes in Computer Science (Including Subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics), 7791 LNCS(March), 102–122. https://doi.org/10.1007/978-3-642-37051-9_6
