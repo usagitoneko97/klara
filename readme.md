@@ -1,26 +1,19 @@
-# 1. Software and libraries requirements
-Python3.5.2 is used and below is the libraries and GUI that may be used in topics in section [2](https://github.com/usagitoneko97/python-ast#2-topics)
-## 1.2 Ast viewer
+## Interesting python ast data flow analysis topics and implementation.
+This repository explore how one can extract information out of the python's ast. 
+To statically analyze the python data flow information, there are several intermediate representation(IR) that provide facilities that are easier to work with during an analysis, without re-inventing the wheel of having to construct custom data flow analysis algorithm on the ast itself.
 
-To simplify the process of exploring the whole ast, [astviewer](https://github.com/titusjan/astviewer) is a simple gui perform the job. Detail instruction on installing astviewer can be found [here](https://github.com/titusjan/astviewer). 
+The IR cover in this repo including *Control flow graph(CFG)* and *Static single assignment(SSA)*. There are details explanation on each topics with implementation provided as a reference.
 
-![astViewer](https://github.com/titusjan/astviewer/raw/master/screen_shot.png)
+After all IR has been built, any analysis can then be carried out on the IR. Examples of analysis that can be carried out in CFG+SSA is dead code analysis, use-def/def-use chain and value inference.
 
-## 1.3 Transform ast to python source code
+`cfg_and_ssa` folder will explain in details about the mentioned IRs, and `lvn_optimization` will further explore interesting way to optimize a python expression.
 
-[Astor](http://astor.readthedocs.io/en/latest/) can convert ast to readable python source code. 
+## References
+Below is a list of references that are used in the writing.
 
-Example usage:
-```python
-ast_tree = ast.parse("b = 2\nc = 3\na = b + c\nd=b+c")
-print(astor.to_source(ast_tree))
-```
+- Torczon, L. and Cooper, M. ed., (2012). Ch9 - Data-Flow Analysis. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.495-519.
+- Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.445-457.
+- Braun, M., Buchwald, S., Hack, S., Leißa, R., Mallon, C., & Zwinkau, A. (2013). Simple and efficient construction of static single assignment form. Lecture Notes in Computer Science (Including Subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics), 7791 LNCS(March), 102–122. https://doi.org/10.1007/978-3-642-37051-9_6
+- Cytron, R., Ferrante, J., Rosen, B. K., Wegman, M. N., & Zadeck, F. K. (1991). Efficiently computing static single assignment form and the control dependence graph. ACM Transactions on Programming Languages and Systems, 13(4), 451–490. https://doi.org/10.1145/115372.115320
 
-# 2. Topics 
-1. [Printing of Function Name in Ast](A1.FunctionDef)
 
-2. [Ast to Python code](A2.Ast2Py)
-
-3. [Local Value Numbering](A3_LVN)
-
-4. [Control Flow Graph](A4_CFG)
