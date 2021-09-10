@@ -8,12 +8,12 @@ following function in file `test.py`
 
 ``` python
 def triangle(x: int, y: int, z: int) -> str:
-if x == y == z:
-return "Equilateral triangle"
-elif x == y or y == z or x == z:
-return "Isosceles triangle"
-else:
-return "Scalene triangle"
+    if x == y == z:
+        return "Equilateral triangle"
+    elif x == y or y == z or x == z:
+        return "Isosceles triangle"
+    else:
+        return "Scalene triangle"
 ```
 
 will generate
@@ -161,33 +161,33 @@ customize how do Klara cover the function.
 For example, say we are composing a complex system
 
 ``` python
-def main(number: int, cm: int, dc: int, wn: int):
-mc = 0
-if wn > 2:
-if number > 2 and number > 2 or number > 2:
-if number > 0:
-if wn > 2 or wn > 2:
-mc = 2
-else:
-mc = 5
-else:
-mc = 100
-else:
-mc = 1
-nnn = number * cm
-if cm <= 4:
-num_incr = 4
-else:
-num_incr = cm
-n_num_incr = nnn / num_incr
-nnn_left = dc * num_incr * (n_num_incr / 2 + n_num_incr % 2)
-nnn_right = nnn - nnn_left
-is_flag = nnn_right
-if is_flag:
-cell = Component(nnn_right, options=[mc])
-else:
-cell = Component(nnn_right)
-return cell
+    def main(number: int, cm: int, dc: int, wn: int):
+        mc = 0
+        if wn > 2:
+            if number > 2 and number > 2 or number > 2:
+                if number > 0:
+                    if wn > 2 or wn > 2:
+                        mc = 2
+                    else:
+                        mc = 5
+                else:
+                    mc = 100
+        else:
+            mc = 1
+        nnn = number * cm
+        if cm <= 4:
+            num_incr = 4
+        else:
+            num_incr = cm
+        n_num_incr = nnn / num_incr
+        nnn_left = dc * num_incr * (n_num_incr / 2 + n_num_incr % 2)
+        nnn_right = nnn - nnn_left
+        is_flag = nnn_right
+        if is_flag:
+            cell = Component(nnn_right, options=[mc])
+        else:
+            cell = Component(nnn_right)
+        return cell
 ```
 
 It isn\'t immediately clear to us how many possible return values there
