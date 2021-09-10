@@ -27,6 +27,8 @@ will generate::
         assert test.triangle(0, 0, 1) == 'Isosceles triangle'
         assert test.triangle(2, 0, 1) == 'Scalene triangle'
 
+See the Klara's documentation at https://klara-py.readthedocs.io
+
 Installing
 ----------
 Klara can be installed via ``pip`` tool by using::
