@@ -3,8 +3,9 @@ Klara
 
 Klara is a static analysis tools to automatic generate test case, based on SMT (z3) solver, with a powerful ast
 level inference system. Klara will take python file as input and generate corresponding test file in pytest format, that attempt to cover all
-return values. For example, following function in file ``test.py``::
+return values. For example, following function in file ``test.py``
 
+.. code-block:: python
     def triangle(x: int, y: int, z: int) -> str:
         if x == y == z:
             return "Equilateral triangle"
@@ -13,8 +14,9 @@ return values. For example, following function in file ``test.py``::
         else:
             return "Scalene triangle"
 
-will generate::
+will generate
 
+.. code-block:: python
     import test
 
 
@@ -76,8 +78,9 @@ To specify the source code is in python 2, pass in ``-py 2`` argument. It's pyth
 
 Klara can also be used as a static analysis tool, allow user to define custom rule to identify programming bugs, error
 or enforcing coding standard. With SMT solver support, analysis will be more accurate and greatly reduce false-positive
-case. For example::
+case. For example
 
+.. code-block:: python
     from klara import parse
 
     tree = parse("""
@@ -103,8 +106,9 @@ a static inference library used by `Pylint <https://github.com/PyCQA/pylint>`_.
 Klara utilize the inference system to generate test case, in other words, it **generate test case for all possible return values of the function**,
 instead of generate test case for all control path of the function.
 
-To illustrate the point, consider the function below, with `divide by zero` vulnerabilities at line 3::
+To illustrate the point, consider the function below, with `divide by zero` vulnerabilities at line 3
 
+.. code-block:: python
     def foo(v1: int, v2: float):
         if v1 > 10000:
             s = v1 / 0  # unused statement
@@ -114,8 +118,9 @@ To illustrate the point, consider the function below, with `divide by zero` vuln
             s = v2
         return s
 
-Klara will generate test inputs below::
+Klara will generate test inputs below
 
+.. code-block:: python
     import contract_test
 
 
@@ -134,8 +139,9 @@ This is an important distinction with other automatic test case generation avail
 generate test case for return values, we can generate a minimal test case, and it's easier to customize how do Klara
 cover the function.
 
-For example, say we are composing a complex system::
+For example, say we are composing a complex system
 
+.. code-block:: python
     def main(number: int, cm: int, dc: int, wn: int):
         mc = 0
         if wn > 2:
@@ -166,8 +172,9 @@ For example, say we are composing a complex system::
 
 
 It isn't immediately clear to us how many possible return values there are. But we can
-utilize Klara to generate inputs instantly, below is the generated test::
+utilize Klara to generate inputs instantly, below is the generated test
 
+.. code-block:: python
     import contract_test
 
 
@@ -189,8 +196,9 @@ Suppose that 10 tests input is too much, and we have determine that the `options
 redundant to test, we can use Klara's custom plugin to selectively determine which part to ignore in test
 generation. Go to `customize coverage strategy <customize_coverage_strategy.html>`_ for more information.
 
-After we have setup the plugin, Klara will generate following test::
+After we have setup the plugin, Klara will generate following test
 
+.. code-block:: python
     import contract_test
 
 
