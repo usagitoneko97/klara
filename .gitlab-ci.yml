@@ -1,0 +1,13 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+before_script:
+  - apt-get -qq update
+  - apt-get -qq install -y python python-virtualenv python-pip python3 bc
+  - python3 -m pip install tox
+
+python36:
+  image: python:3.6
+  stage: test
+  script: tox
+

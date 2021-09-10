@@ -1,0 +1,1383 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API" href="api.html" /><link rel="prev" title="How Does It Work?" href="how_does_it_works.html" />
+
+    <meta name="generator" content="sphinx-4.1.2, furo 2021.09.08"/>
+        <title>Python ast transformation - klara 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=c7c65a82b42f6b978e58466c1e9ef2509836d916" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=16fb25fabf47304eee183a5e9af80b1ba98259b1" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  body[data-theme="dark"] {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+</style></head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" />
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">klara 0.1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">klara 0.1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending Klara</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending_user_type.html">Extending Inference with User defined type</a></li>
+<li class="toctree-l1"><a class="reference internal" href="customize_coverage_strategy.html">Customize Coverage Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="limitation.html">Limitation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="how_does_it_works.html">How Does It Work?</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Python ast transformation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="section" id="python-ast-transformation">
+<h1>Python ast transformation<a class="headerlink" href="#python-ast-transformation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>1.1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>There are 2 important additional representation apart from python ast that provide us capabilities to perform inference,
+it’s Control Flow Graphs (CFG) and Static Single Assignment (SSA).</p>
+<p>Converting python ast to CFG allows more reasoning to the ast. It provide us a base to perform analysis,
+and eventually able to convert to Static Single Assignment (SSA) form that is important to our inference
+systems.</p>
+</div>
+<div class="section" id="basic-blocks">
+<h2>1.2. Basic blocks<a class="headerlink" href="#basic-blocks" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="introduction-to-control-flow-graph-cfg-and-basic-blocks">
+<h3>1.2.1. Introduction to Control Flow Graph (CFG) and Basic Blocks<a class="headerlink" href="#introduction-to-control-flow-graph-cfg-and-basic-blocks" title="Permalink to this headline">¶</a></h3>
+<p>Basic block simply means a straight-line code sequence with no branches
+except the entry and the exit.</p>
+<p>E.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mi">17</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p>The code above can be group into a block, namely <code class="docutils literal notranslate"><span class="pre">Basic</span> <span class="pre">Block</span></code>.</p>
+<p>Now take a look at the code below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="k">if</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p>The code above will generate multiple basic blocks since it has a
+branching statement. The basic blocks will then linked between
+themselves, and form a network of basic blocks, name <strong>Control Flow
+Graph (CFG)</strong>.</p>
+<p><img alt="cfgssaintro" src="_images/cfg_ssa_intro.svg"/></p>
+</div>
+<div class="section" id="transforming-ssa-to-cfg">
+<h3>1.2.2. Transforming SSA to CFG<a class="headerlink" href="#transforming-ssa-to-cfg" title="Permalink to this headline">¶</a></h3>
+<p>Transforming SSA to CFG (multiple basic blocks) will required a
+recursive algorithm, since the program could be nested branch statement.
+For example,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>The recursive function will require returning the head basic block and
+the tail basic block to the caller. The caller can then use the head and
+tail return to connects both of the blocks. I.e., in <em>If</em> statement, the
+caller will pass the body of If to the recursive function, and will
+connect itself with the head returned, and connects the tail to the next
+basic block. At the end of the operation, it will return the head and
+tail for the list of ast statement.</p>
+</div>
+</div>
+<div class="section" id="revisiting-ssa">
+<h2>1.3. Revisiting SSA<a class="headerlink" href="#revisiting-ssa" title="Permalink to this headline">¶</a></h2>
+<p>Static single assignment(SSA) had been discussed previously on <a class="reference external" href="https://github.com/usagitoneko97/python-ast/tree/master/A3.LVN#114-details-and-solution-for-problems-when-redefining-occurs">problems
+when redefining
+occurs</a>.
+SSA helped to solve that particular problem. To recall, to solve the
+problem, the code had transformed to SSA form.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mi">17</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p>will transform to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a_0</span> <span class="o">=</span> <span class="n">x_0</span> <span class="o">+</span> <span class="n">y_0</span>
+<span class="n">b_0</span> <span class="o">=</span> <span class="n">x_0</span> <span class="o">+</span> <span class="n">y_0</span>
+<span class="n">a_1</span> <span class="o">=</span> <span class="mi">17</span>
+<span class="n">c_0</span> <span class="o">=</span> <span class="n">x_0</span> <span class="o">+</span> <span class="n">y_0</span>
+</pre></div>
+</div>
+<p>And will obtain:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a_0</span> <span class="o">=</span> <span class="n">x_0</span> <span class="o">+</span> <span class="n">y_0</span>
+<span class="n">b_0</span> <span class="o">=</span> <span class="n">a_0</span>
+<span class="n">a_1</span> <span class="o">=</span> <span class="mi">17</span>
+<span class="n">c_0</span> <span class="o">=</span> <span class="n">a_0</span>
+</pre></div>
+</div>
+<p>Transforming the code above to SSA is primarily a simple matter of
+replacing the target of each assignment with a new variable and with a
+new version.</p>
+<p>Now consider the code below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="k">if</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p><img alt="cfgssaintro" src="_images/cfg_ssa_intro.svg"/></p>
+<p>To transform a CFG, especially a branching of basic blocks, to SSA form
+is not as straightforward as above. The code below will demonstrate the
+problem.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>a_0 = x_0 + y_0
+if b_0 &lt; 3:
+    x_1 = 0
+else:
+    x_2 = 1
+b_0 = x_? + y_0
+</pre></div>
+</div>
+<p>At the last statement of the code, the use of <code class="docutils literal notranslate"><span class="pre">x</span></code> could be referring
+to either <code class="docutils literal notranslate"><span class="pre">x_1</span></code> or <code class="docutils literal notranslate"><span class="pre">x_2</span></code> depending on the execution to fall into one
+of the 2 blocks. To resolve this, a special statement is inserted before
+the last statement, called a <strong>Φ (Phi) function</strong>. This statement will
+generate a new definition of <code class="docutils literal notranslate"><span class="pre">x</span></code> called <code class="docutils literal notranslate"><span class="pre">x_3</span></code> by “choosing” either
+<code class="docutils literal notranslate"><span class="pre">x_1</span></code> or <code class="docutils literal notranslate"><span class="pre">x_2</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a_0</span> <span class="o">=</span> <span class="n">x_0</span> <span class="o">+</span> <span class="n">y_0</span>
+<span class="k">if</span> <span class="n">b_0</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">x_1</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">x_2</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">x_3</span> <span class="o">=</span> <span class="n">Φ</span><span class="p">(</span><span class="n">x_1</span><span class="p">,</span> <span class="n">x_2</span><span class="p">)</span>
+<span class="n">b_0</span> <span class="o">=</span> <span class="n">x_3</span> <span class="o">+</span> <span class="n">y_0</span>
+</pre></div>
+</div>
+<p><img alt="cfgssaintroafterssa" src="_images/cfg_ssa_intro_after_ssa_1.svg"/></p>
+</div>
+<div class="section" id="minimal-ssa">
+<h2>1.4. Minimal SSA<a class="headerlink" href="#minimal-ssa" title="Permalink to this headline">¶</a></h2>
+<p>There are many ways to insert Φ-function. The easiest way of inserting
+Φ-function is to insert it at every block that have joint points
+(multiple parents). But that could result in an excess amount of
+unnecessaries φ-function. Consider the CFG below:</p>
+<p><img alt="cfgssaintro" src="_images/cfg_ssa_intro.svg"/></p>
+<p>Φ-function of <code class="docutils literal notranslate"><span class="pre">x</span></code> had to be inserted just before <code class="docutils literal notranslate"><span class="pre">B4</span></code> since it has
+been declared in both of the blocks <code class="docutils literal notranslate"><span class="pre">B2</span></code> and <code class="docutils literal notranslate"><span class="pre">B3</span></code>. But φ-function
+for variable <code class="docutils literal notranslate"><span class="pre">y</span></code> should not be inserted at <code class="docutils literal notranslate"><span class="pre">B4</span></code> since <code class="docutils literal notranslate"><span class="pre">B2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">B3</span></code> had not declared variable <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<p><img alt="cfgssaintroafterssa" src="_images/cfg_ssa_intro_after_ssa_1.svg"/></p>
+<p>Minimal SSA basically means the SSA form that contains the minimum
+Φ-function. To complete the job of minimal SSA, they are a few of
+additional tree structures and algorithm that are required. The section
+here will explain all the algorithm that is required to compute a
+minimal SSA.</p>
+<div class="section" id="terminology">
+<h3>1.4.1. Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Dominate</strong> - A node <code class="docutils literal notranslate"><span class="pre">u</span></code> is said to <em>dominate</em> a node w w.r.t source vertex <code class="docutils literal notranslate"><span class="pre">s</span></code> if all the paths from <code class="docutils literal notranslate"><span class="pre">s</span></code> to <code class="docutils literal notranslate"><span class="pre">w</span></code> in the
+graph must pass through node u.</p></li>
+<li><p><strong>Immediate Dominator</strong> - A node <code class="docutils literal notranslate"><span class="pre">u</span></code> is said to be an <em>immediate dominator</em> of a node <code class="docutils literal notranslate"><span class="pre">w</span></code> (denoted as <code class="docutils literal notranslate"><span class="pre">idom(w)</span></code>) if <code class="docutils literal notranslate"><span class="pre">u</span></code> dominates <code class="docutils literal notranslate"><span class="pre">w</span></code> and every other dominator of <code class="docutils literal notranslate"><span class="pre">w</span></code> dominates <code class="docutils literal notranslate"><span class="pre">u</span></code>.</p></li>
+<li><p><strong>Strictly Dominates</strong> - A node <code class="docutils literal notranslate"><span class="pre">d</span></code> is said to <em>strictly dominates</em> node <code class="docutils literal notranslate"><span class="pre">n</span></code> if <code class="docutils literal notranslate"><span class="pre">d</span></code> dominates <code class="docutils literal notranslate"><span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">d</span></code> does not equal <code class="docutils literal notranslate"><span class="pre">n</span></code></p></li>
+<li><p><strong>dominance frontier</strong> - The <em>dominance frontier</em> of a node <code class="docutils literal notranslate"><span class="pre">d</span></code> is the set of all nodes <code class="docutils literal notranslate"><span class="pre">n</span></code> such that d dominates an immediate predecessor of <code class="docutils literal notranslate"><span class="pre">n</span></code>, but <code class="docutils literal notranslate"><span class="pre">d</span></code> does not strictly dominate <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p></li>
+<li><p><strong>dominator tree</strong> - A <em>dominator tree</em> is a tree where each node’s children are those nodes it immediately dominates. Because the immediate dominator is unique, it is a tree. The start node is the root of the tree.</p></li>
+</ul>
+</div>
+<div class="section" id="dominance">
+<h3>1.4.2. Dominance<a class="headerlink" href="#dominance" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h4>1.4.2.1. Introduction<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>As stated in terminology section above, a node <code class="docutils literal notranslate"><span class="pre">u</span></code> is said to
+<em>dominate</em> a node <code class="docutils literal notranslate"><span class="pre">w</span></code> w.r.t the source vertex <code class="docutils literal notranslate"><span class="pre">s</span></code> if all the paths
+from <code class="docutils literal notranslate"><span class="pre">s</span></code> to <code class="docutils literal notranslate"><span class="pre">w</span></code> in the graph must pass through node <code class="docutils literal notranslate"><span class="pre">u</span></code>. Take for
+example the graph below, Assume the source is <code class="docutils literal notranslate"><span class="pre">B1</span></code>:</p>
+<p><img alt="cfg" src="_images/cfg.svg"/></p>
+<p>To find the dominated nodes of <code class="docutils literal notranslate"><span class="pre">B1</span></code>, each node reachable from <code class="docutils literal notranslate"><span class="pre">B1</span></code>
+is visited. Let’s start with <code class="docutils literal notranslate"><span class="pre">B2</span></code>. It is clear that there is only 1
+path to reach <code class="docutils literal notranslate"><span class="pre">B2</span></code> and the path must pass through <code class="docutils literal notranslate"><span class="pre">B1</span></code>. So <code class="docutils literal notranslate"><span class="pre">B2</span></code> is
+one of the dominated nodes of <code class="docutils literal notranslate"><span class="pre">B1</span></code>. The same applies to <code class="docutils literal notranslate"><span class="pre">B3</span></code>. For
+<code class="docutils literal notranslate"><span class="pre">B4</span></code>, there are 2 paths and both have to pass through <code class="docutils literal notranslate"><span class="pre">B1</span></code> as well.
+So <code class="docutils literal notranslate"><span class="pre">B4</span></code> is also the dominated node of <code class="docutils literal notranslate"><span class="pre">B1</span></code>.</p>
+<p>To find the dominated nodes of <code class="docutils literal notranslate"><span class="pre">B2</span></code>, the same process is applied. Note
+however, <code class="docutils literal notranslate"><span class="pre">B1</span></code> is not reachable from <code class="docutils literal notranslate"><span class="pre">B2</span></code>, so it cannot be dominated
+by the latter. For <code class="docutils literal notranslate"><span class="pre">B4</span></code>, there are 2 paths, namely, <code class="docutils literal notranslate"><span class="pre">B1-&gt;B2-&gt;B4</span></code> and
+<code class="docutils literal notranslate"><span class="pre">B1-&gt;B3-&gt;B4</span></code>. The second path does not pass through <code class="docutils literal notranslate"><span class="pre">B2</span></code> and
+therefore <code class="docutils literal notranslate"><span class="pre">B2</span></code> does not <strong>dominate</strong> <code class="docutils literal notranslate"><span class="pre">B4</span></code>. As the result <code class="docutils literal notranslate"><span class="pre">B2</span></code> does
+not dominate any node.</p>
+<p><code class="docutils literal notranslate"><span class="pre">B3</span></code> is similar to <code class="docutils literal notranslate"><span class="pre">B2</span></code>. It does not dominate any node too.</p>
+<p><code class="docutils literal notranslate"><span class="pre">B4</span></code> does not have any outgoing link, so there is no node reachable
+from it, hence it does not dominate any node.</p>
+<p>So, the dominator tree becomes:</p>
+<p><img alt="dominanator tree" src="_images/dominator_tree.svg"/></p>
+</div>
+<div class="section" id="algorithm">
+<h4>1.4.2.2. Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h4>
+<p>They are a few ways to calculate the dominance relationship between
+nodes. One of the easiest ways is, for each node <code class="docutils literal notranslate"><span class="pre">w</span></code>, remove the node
+from the graph and perform a
+<a class="reference external" href="https://en.wikipedia.org/wiki/Depth-first_search">DFS</a> from source
+node and all the nodes that are not visited by DFS are the nodes that
+dominated by <code class="docutils literal notranslate"><span class="pre">w</span></code>.</p>
+</div>
+</div>
+<div class="section" id="dominator-tree">
+<h3>1.4.3. Dominator Tree<a class="headerlink" href="#dominator-tree" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h4>1.4.3.1. Introduction<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p>Given a node n in a flow graph, the set of nodes that strictly dominate
+<code class="docutils literal notranslate"><span class="pre">n</span></code> is given by <code class="docutils literal notranslate"><span class="pre">(Dom(n)</span> <span class="pre">−</span> <span class="pre">n)</span></code>. The node in that set that is closest
+to n is called n’s <strong>Immediate Dominator(IDOM)</strong>. To simplify the
+relationship of IDOM and DOM, a dominator tree is built. If <code class="docutils literal notranslate"><span class="pre">m</span></code> is
+<code class="docutils literal notranslate"><span class="pre">IDOM(n)</span></code>, then the dominator tree has an edge from <code class="docutils literal notranslate"><span class="pre">m</span></code> to <code class="docutils literal notranslate"><span class="pre">n</span></code>.
+The dominator tree for example in the section above is shown below:</p>
+<p><img alt="dominance tree" src="_images/dominator_tree.svg"/></p>
+</div>
+<div class="section" id="id3">
+<h4>1.4.3.2. Algorithm<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p>The algorithm for constructing the dominance tree is fairly simple.
+Consider a slightly complex dominance relationship of a tree. Assume
+that the source is <strong>B0</strong>.</p>
+<p><img alt="dominatortreeexample" src="_images/dominator_tree_example.svg"/></p>
+<p>And the dominance relationship between nodes is shown below:</p>
+<p><strong>B0</strong> : [<strong>B1</strong>, <strong>B2</strong>, <strong>B3</strong>]</p>
+<p><strong>B1</strong> : [<strong>B2</strong>, <strong>B3</strong>]</p>
+<p><strong>B2</strong> : []</p>
+<p><strong>B3</strong> : []</p>
+<p>To build the tree, first go down to the bottom of the tree and start to
+build the dominator tree from bottom to the top. For every node <code class="docutils literal notranslate"><span class="pre">u</span></code>
+starting from the bottom, <code class="docutils literal notranslate"><span class="pre">u</span></code> will be added to the dominator tree, and
+will attach node that <code class="docutils literal notranslate"><span class="pre">u</span></code> dominates and doesn’t have a parent. This
+will result in <strong>B0</strong> does not have <strong>B2</strong> and <strong>B3</strong> as it’s child.</p>
+<p>The dominator tree:</p>
+<p><img alt="dominatortreeexampleresult" src="_images/dominator_tree_example_result.svg"/></p>
+</div>
+</div>
+<div class="section" id="dominance-frontier">
+<h3>1.4.4. Dominance Frontier<a class="headerlink" href="#dominance-frontier" title="Permalink to this headline">¶</a></h3>
+<p>In a simplified manner of explanation, the dominance frontier of a node
+<code class="docutils literal notranslate"><span class="pre">n</span></code> can be view as, from <code class="docutils literal notranslate"><span class="pre">n</span></code>’s point of view, going through his
+child, DF node is the first node that <code class="docutils literal notranslate"><span class="pre">n</span></code> doesn’t <em>strictly
+dominates</em>. For example, consider following CFG. Assume that the source
+is <strong>B0</strong>.</p>
+<p><img alt="DFexample" src="_images/DF_example.svg"/></p>
+<p>Assume that DF of <code class="docutils literal notranslate"><span class="pre">B5</span></code> needs to be found, it will iterate through both
+of the child, <code class="docutils literal notranslate"><span class="pre">B6</span></code> and <code class="docutils literal notranslate"><span class="pre">B8</span></code>. Since <code class="docutils literal notranslate"><span class="pre">B5</span></code> dominates both of them,
+they are not dominance frontier of <code class="docutils literal notranslate"><span class="pre">B5</span></code>. Then it will move on to
+<code class="docutils literal notranslate"><span class="pre">B7</span></code>, and <code class="docutils literal notranslate"><span class="pre">B5</span></code> still dominates <code class="docutils literal notranslate"><span class="pre">B7</span></code>. On block <code class="docutils literal notranslate"><span class="pre">B3</span></code> however,
+<code class="docutils literal notranslate"><span class="pre">B5</span></code> does not strictly dominates <code class="docutils literal notranslate"><span class="pre">B3</span></code> hence <code class="docutils literal notranslate"><span class="pre">B3</span></code> is the dominance
+frontier of <code class="docutils literal notranslate"><span class="pre">B5</span></code>.</p>
+<p>Pseudocode for calculating DF is provided below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>for each node b
+    if the number of immediate predecessors of b ≥ 2
+        for each p in immediate predecessors of b
+            runner := p.
+            while runner ≠ idom(b)
+                add b to runner’s dominance frontier set
+                runner := idom(runner)
+</pre></div>
+</div>
+</div>
+<div class="section" id="placing-functions">
+<h3>1.4.5. Placing φ-Functions<a class="headerlink" href="#placing-functions" title="Permalink to this headline">¶</a></h3>
+<p>With dominance frontier, the φ-function can be now place strategically.
+But in order to further minimize the number of φ-function, liva variable
+analysis can be use to find out whether the φ-function for that
+particular variable is needed or not.</p>
+</div>
+</div>
+<div class="section" id="creating-a-test">
+<h2>1.5. Creating a test<a class="headerlink" href="#creating-a-test" title="Permalink to this headline">¶</a></h2>
+<p>Section here will discuss on how to create a test fixture and ways to
+assert it.</p>
+<div class="section" id="generate-test-inputs">
+<h3>1.5.1. Generate test inputs<a class="headerlink" href="#generate-test-inputs" title="Permalink to this headline">¶</a></h3>
+<p>In this moments, there are 2 types of test input. The first type is an
+AST type. AST is the actual input of the CFG class and can be build like
+this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ast</span>
+<span class="n">as_tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">            a = 3           # 1st</span>
+<span class="s2">            if a &gt; 3:       #  |</span>
+<span class="s2">                a = E       # 2nd</span>
+<span class="s2">            else:           # 3rd</span>
+<span class="s2">                z = F       #  |</span>
+<span class="s2">            y = F           # Eth</span>
+<span class="s2">            """</span><span class="p">)</span>
+                            <span class="p">)</span>
+<span class="n">cfg_real</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">as_tree</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>AST can be used in testing the building of basic block, but when comes
+down to testing the dominator tree or the DF, it’s very hard to
+construct a complex linkage of basic block. Therefore the test file
+provide also the method for building a complex basic block.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""</span>
+<span class="sd">                Note: '|' with no arrows means pointing down</span>
+
+<span class="sd">                 A</span>
+<span class="sd">               /   \</span>
+<span class="sd">              B     C</span>
+<span class="sd">               \   /</span>
+<span class="sd">                 D</span>
+<span class="sd">"""</span>
+<span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_blocks_arb</span><span class="p">(</span><span class="n">block_links</span><span class="o">=</span><span class="p">{</span><span class="s1">'A'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'B'</span><span class="p">,</span> <span class="s1">'C'</span><span class="p">],</span> <span class="s1">'B'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'D'</span><span class="p">],</span> <span class="s1">'C'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'D'</span><span class="p">],</span> <span class="s1">'D'</span><span class="p">:</span> <span class="p">[]})</span>
+</pre></div>
+</div>
+<p>Note that by default, it will create the number of blocks depending on
+the number of entry of the <em>block_links</em> dictionary, and the default
+name of basic blocks will start from <code class="docutils literal notranslate"><span class="pre">A</span></code> and incremented by 1 ascii
+character.</p>
+</div>
+<div class="section" id="asserting-test-output">
+<h3>1.5.2. Asserting test output<a class="headerlink" href="#asserting-test-output" title="Permalink to this headline">¶</a></h3>
+<p>The test file <code class="docutils literal notranslate"><span class="pre">test_dominator.py</span></code> had included several assert method.</p>
+<p><em>To assert the dominance relationship</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">assertDominatorEqual</span><span class="p">(</span><span class="n">cfg_real</span><span class="p">,</span> <span class="p">{</span><span class="s1">'A'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'B'</span><span class="p">,</span> <span class="s1">'C'</span><span class="p">,</span> <span class="s1">'D'</span><span class="p">],</span>
+                                     <span class="s1">'B'</span><span class="p">:</span> <span class="p">[],</span>
+                                     <span class="s1">'C'</span><span class="p">:</span> <span class="p">[],</span>
+                                     <span class="s1">'D'</span><span class="p">:</span> <span class="p">[]})</span>
+</pre></div>
+</div>
+<p><em>To assert 2 lists of basic blocks</em> :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">expected_blocks_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_blocks_arb</span><span class="p">(</span><span class="n">block_links</span><span class="o">=</span><span class="p">{</span><span class="s1">'A'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'B'</span><span class="p">],</span> <span class="s1">'B'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'A'</span><span class="p">]})</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">assertBasicBlockListEqual</span><span class="p">(</span><span class="n">real_blocks_list</span><span class="p">,</span> <span class="n">expected_blocks</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><em>To assert the DF of the blocks</em> :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">assertDfEqual</span><span class="p">(</span><span class="n">cfg_real</span><span class="p">,</span> <span class="p">{</span><span class="s1">'A'</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">'B'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'B'</span><span class="p">],</span> <span class="s1">'C'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'F'</span><span class="p">],</span> <span class="s1">'D'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'E'</span><span class="p">],</span>
+                              <span class="s1">'E'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'F'</span><span class="p">],</span> <span class="s1">'F'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'B'</span><span class="p">]})</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="live-variable-analysis">
+<h2>1.6. Live Variable Analysis<a class="headerlink" href="#live-variable-analysis" title="Permalink to this headline">¶</a></h2>
+<p>Live variable analysis will shows the lifespan of each variable across
+multiple blocks in a network of complex block chain, that is, the
+variables that may live out of the block, or variables that may be
+potentially read before their next write, or variable that may get
+killed in a basic blocks.</p>
+<div class="section" id="uses-for-live-variables">
+<h3>1.6.1. Uses for Live Variables<a class="headerlink" href="#uses-for-live-variables" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="improve-ssa-construction">
+<h4>1.6.1.1. Improve SSA construction<a class="headerlink" href="#improve-ssa-construction" title="Permalink to this headline">¶</a></h4>
+<p>To build minimal SSA, dominance frontier is used to find the strategic
+place to place φ-functions. One problem with dominance frontier is that
+it suggests the nodes to which φ-function(s) should be placed based on
+structural information (CFG) without considering the data (variables),
+This leads to possibly inserting redundant φ-function. Consider the
+following diagram:</p>
+<!---
+```
+a_0 = b_0 + c_0
+d_0 = 5
+if a_0 < 3:
+    d_0 = 4
+// phi function for d here?
+```
+--><p><img alt="image8" src="_images/problems_statement_ex.svg.png"/></p>
+<p>In the code shown above, does a φ-function needed at block <strong>B3</strong>? Even
+though the dominance frontier suggests that the definition of the
+variable <code class="docutils literal notranslate"><span class="pre">d</span></code> inside block 2 will result in φ-function being inserted
+in the last block, but because of variable <code class="docutils literal notranslate"><span class="pre">d</span></code> not being used there,
+the φ-function is not needed. This is where live variable analysis
+assists the dominance frontier to reduce the set of φ-functions.</p>
+</div>
+<div class="section" id="finding-uninitialized-variables">
+<h4>1.6.1.2. Finding uninitialized variables<a class="headerlink" href="#finding-uninitialized-variables" title="Permalink to this headline">¶</a></h4>
+<p>If a statement uses some variable <code class="docutils literal notranslate"><span class="pre">v</span></code> before it has been assigned a
+value, then clearly it is an error missed by the programmer. If the
+variable is defined in the same block, then it is a trivial task to
+determine if the variable has been initialized. However if the variable
+lives across multiple blocks, then it is no more trivial and we need LVA
+to make that deduction. LVA is discussed in section [1.6.3].</p>
+</div>
+<div class="section" id="dead-code-elimination">
+<h4>1.6.1.3. Dead code elimination<a class="headerlink" href="#dead-code-elimination" title="Permalink to this headline">¶</a></h4>
+<p>A store operation like <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span> <span class="pre">+</span> <span class="pre">c</span></code> is not needed if <code class="docutils literal notranslate"><span class="pre">a</span></code> is not used
+beyond the code after the definition. This has some relation with
+LIVEOUT computation that discussed below.</p>
+</div>
+</div>
+<div class="section" id="id4">
+<h3>1.6.2. Terminology<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>UEVAR(n)</strong> - (Upward Exposure Variable) Refers to variables that
+are used in the block <code class="docutils literal notranslate"><span class="pre">n</span></code> before any redefinition in the current
+block.</p></li>
+<li><p><strong>VARKILL(n)</strong> - (Variable Kill) contains all the variables that are
+defined in block <code class="docutils literal notranslate"><span class="pre">n</span></code></p></li>
+<li><p><strong>LIVEOUT(n)</strong> - contains all the variables that lives on exiting
+block <code class="docutils literal notranslate"><span class="pre">n</span></code></p></li>
+<li><p><strong>BlockSets(v)</strong> - contains the information of the blocks within
+which the variable <code class="docutils literal notranslate"><span class="pre">v</span></code> is defined.</p></li>
+<li><p><strong>Globals</strong> - sets of variable that are live across multiple blocks</p></li>
+<li><p><strong>Worklist(v)</strong> - is dynamic information of BlockSets of variable
+<code class="docutils literal notranslate"><span class="pre">v</span></code> that used in renaming the SSA.
+Some other terminologies related to relationship of blocks.</p></li>
+</ul>
+<p><img alt="terminologyblock" src="_images/terminology_block.svg"/></p>
+<ul class="simple">
+<li><p>B1 is the <strong>parent/precedence</strong> block of B2 and B3.</p></li>
+<li><p>B2 and B3 is the <strong>children/successors</strong> of B1.</p></li>
+</ul>
+</div>
+<div class="section" id="the-basic-concept-of-live-variable-analysis">
+<h3>1.6.3. The basic concept of Live Variable Analysis<a class="headerlink" href="#the-basic-concept-of-live-variable-analysis" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="uevar-and-varkill">
+<h4>1.6.3.1. UEVAR and VARKILL<a class="headerlink" href="#uevar-and-varkill" title="Permalink to this headline">¶</a></h4>
+<p>The concept of Uevar and Varkill is simple. Consider the following block
+codes.</p>
+<p><img alt="uevarvarkillex" src="_images/uevar_varkill_ex.png"/></p>
+<div class="table-wrapper"><table class="docutils align-default">
+<colgroup>
+<col style="width: 43%"/>
+<col style="width: 57%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Uevar(B1)</p></th>
+<th class="head"><p>Varkill(B1)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘c’, ‘d’</p></td>
+<td><p>‘b’, ‘a’, ‘d’</p></td>
+</tr>
+</tbody>
+</table></div>
+<p>The Uevar(B1) and Varkill(B1) above are very straightforward. The
+variable <code class="docutils literal notranslate"><span class="pre">c</span></code> is being referenced but there is no definition of that
+variable in the block, which <code class="docutils literal notranslate"><span class="pre">c</span></code> must be coming from definition in
+previous blocks. This will result in <code class="docutils literal notranslate"><span class="pre">c</span></code> contained in Uevar(B1). But
+<code class="docutils literal notranslate"><span class="pre">b</span></code> is not, even though it is being referenced since <code class="docutils literal notranslate"><span class="pre">b</span></code> is been
+redefined in the block before it’s being referenced.</p>
+<p>In the last statement of the block, variable <code class="docutils literal notranslate"><span class="pre">d</span></code> that been referenced
+is coming from the definition on previous block , thus <code class="docutils literal notranslate"><span class="pre">d</span></code> is added
+into Uevar(B1) sets. But because of <code class="docutils literal notranslate"><span class="pre">d</span></code> is being redefined as well,
+<code class="docutils literal notranslate"><span class="pre">d</span></code> will also added in Varkill(B1) sets.</p>
+<p>The Varkill(B1) is <code class="docutils literal notranslate"><span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
+</div>
+<div class="section" id="liveout">
+<h4>1.6.3.2. LIVEOUT<a class="headerlink" href="#liveout" title="Permalink to this headline">¶</a></h4>
+<p><strong>Liveout(n)</strong> set of variables of block <code class="docutils literal notranslate"><span class="pre">n</span></code> that live on exit of that
+block. The formal definition of Liveout is shown below.</p>
+<p><img alt="liveoutEQ" src="_images/liveoutEQ.png"/></p>
+<p>Basically, the equation can be broken down to 2 parts, <strong>Uevar(m)</strong>, and
+<strong>(Liveout(m) ∩ ~Varkill(m))</strong>. Consider the following example.</p>
+<p><img alt="liveoutsimpleex" src="_images/liveoutsimpleex.png"/></p>
+<p>It is obvious that the variable <code class="docutils literal notranslate"><span class="pre">a</span></code> used in <strong>B2</strong> is required from
+the parent, <strong>B1</strong>. hence <code class="docutils literal notranslate"><span class="pre">a</span></code> is included in <strong>Uevar(B2)</strong>. Therefore
+<strong>Liveout</strong> of <strong>B1</strong> includes <code class="docutils literal notranslate"><span class="pre">a</span></code> since it lives beyond block <strong>B1</strong>.
+In this example, only 1 child is demonstrated. However, in general,
+<em>Liveout of the current block includes the union of all Uevar of the
+successor/child blocks</em>, as described in the first part of the equation.</p>
+<img alt="_images/liveoutsimpleexWlo.svg.png" src="_images/liveoutsimpleexWlo.svg.png"/>
+<p>To explain the second part of the equation, consider the following
+slightly modifed code of the previous example.</p>
+<p><img alt="liveoutcomplexex" src="_images/liveoutcomplexex.png"/></p>
+<p>The variable <code class="docutils literal notranslate"><span class="pre">c</span></code> is required in block <strong>B3</strong> because it is used in the
+statement <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">c</span></code>, and therefore <code class="docutils literal notranslate"><span class="pre">c</span></code> is included in Uevar(B3) set.
+But <code class="docutils literal notranslate"><span class="pre">c</span></code> is defined in <strong>B1</strong>, which is not a direct parent of <strong>B3</strong>.
+So the variable <code class="docutils literal notranslate"><span class="pre">c</span></code> has to be pass from block <strong>B1</strong> to <strong>B3</strong>. Hence
+<strong>Liveout(B1) = Uevar(B2) ∪ Liveout(B2) = {a, c}</strong>, where Uevar(B2) =
+‘a’, Liveout(B2) = ‘c’.</p>
+<img alt="_images/liveoutcomplexexRes.svg.png" src="_images/liveoutcomplexexRes.svg.png"/>
+<p>But it’s not always the liveout of the child block is the liveout of the
+current block. This has something to do with <strong>~Varkill</strong> which will be
+explained now. The following diagram on the left side is the modified
+example with an extra statement <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">10</span> <span class="pre">+</span> <span class="pre">b</span></code> added into block <strong>B2</strong>,
+and the diagram at the right is the original for comparison.</p>
+<p><img alt="liveoutcomplexvarkillex" src="_images/liveoutcomplexvarkillex.png"/></p>
+<p>In the left diagram, the variable <code class="docutils literal notranslate"><span class="pre">c</span></code> referenced in block <strong>B3</strong> comes
+from block <strong>B2</strong> instead of <strong>B1</strong> because it has been redefined. In
+<strong>B2</strong>, unlike the variable <code class="docutils literal notranslate"><span class="pre">a</span></code>, the variable <code class="docutils literal notranslate"><span class="pre">c</span></code> is never <strong>used</strong>,
+but being killed in the statement <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">10</span> <span class="pre">+</span> <span class="pre">b</span></code>, therefore
+<code class="docutils literal notranslate"><span class="pre">Liveout(B1)</span> <span class="pre">=</span> <span class="pre">{a}</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> is excluded. This explained the Varkill
+part, <code class="docutils literal notranslate"><span class="pre">Liveout(B1)</span> <span class="pre">=</span> <span class="pre">Uevar(B2)</span> <span class="pre">∪</span> <span class="pre">(Liveout(B2)</span> <span class="pre">∩</span> <span class="pre">~Varkill(B2))</span> <span class="pre">=</span> <span class="pre">{a}</span></code>,
+where Uevar(B2) = {a} and Liveout(B2) ∩ ~Varkill(B2) = {}.</p>
+<p>That makes the final form of equation for second part to be:</p>
+<p><em>Liveout of the current block has to include the union of all Liveout of
+the successor/child blocks and not killed by the successor/child
+blocks.</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>v ∈ LiveOut(m) ∩ ~VarKill(m).
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="the-algorithm-for-computing-live-variable">
+<h3>1.6.4. The algorithm for computing live variable<a class="headerlink" href="#the-algorithm-for-computing-live-variable" title="Permalink to this headline">¶</a></h3>
+<p>The algorithm for computing UEVar and VarKILL is very straightforward.
+For every statement that can be represented in the form of x = y + z,
+the algorithm checks if the variable <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> do not exist in the
+VarKILL set, then add them in the UEVar set. Variable <code class="docutils literal notranslate"><span class="pre">x</span></code> will be
+added in VarKILL set.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>// assume block b has k operations
+// of form ‘‘x ← y op z’’
+for each block b
+    Init(b)
+
+Init(b)
+UEVar(b) ← ∅
+VarKill(b) ← ∅
+for i ← 1 to k   //for every operation in this block
+if y ∉ VarKill(b)
+    then add y to UEVar(b)
+if z ∉ VarKill(b)
+    then add z to UEVar(b)
+add x to VarKill(b)
+</pre></div>
+</div>
+<p>For computing Liveout, however, needed an iterative fixed-point method.
+Using back the example previously,</p>
+<p><img alt="liveoutcomplexex" src="_images/liveoutcomplexex.png"/></p>
+<p>On the first iteration, all the liveout is initialized to empty. Liveout
+of block <strong>B1</strong> is empty since <strong>B2</strong> doesn’t have any UEVar. It will
+need the second iteration to update the Liveout of <strong>B2</strong>, only then,
+the liveout of <strong>B1</strong> will update to include variable <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
+<p>The algorithm is given below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>// assume CFG has N blocks
+// numbered 0 to N - 1
+for i ← 0 to N - 1
+    LiveOut( i ) ← ∅
+changed ← true
+while (changed)
+    changed ← false
+    for i ← 0 to N - 1
+        recompute LiveOut( i )
+        if LiveOut( i ) changed then
+            changed ← true
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">recompute</span> <span class="pre">LIVEOUT</span></code> is simply solving the equation.</p>
+<p><img alt="liveoutEQ" src="_images/liveoutEQ.png"/></p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">succ(n)</span></code> means <strong>successors/child</strong> of block <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</div>
+<div class="section" id="testing-for-live-variable-analysis">
+<h3>1.6.5. Testing for Live Variable Analysis<a class="headerlink" href="#testing-for-live-variable-analysis" title="Permalink to this headline">¶</a></h3>
+<p><strong>Note</strong>: In file <code class="docutils literal notranslate"><span class="pre">test_live_variable.py</span></code>.</p>
+<p>The first type is an AST type. AST is the actual input of the CFG class
+and can be built like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ast</span>
+<span class="n">as_tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">            a = 3</span>
+<span class="s2">            if c &lt; 3:</span>
+<span class="s2">                y = a + b</span>
+<span class="s2">                x, y = a, b</span>
+<span class="s2">            """</span><span class="p">)</span>
+                            <span class="p">)</span>
+<span class="n">cfg_real</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">as_tree</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>the following method will build a more complex structure of basic blocks
+with code associate to them. After it has been built, the Cfg object
+needed to create and assign the parameters returned by
+<code class="docutils literal notranslate"><span class="pre">build_blocks_arb</span></code> to respective attributes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""</span>
+<span class="sd">        Note: '|' with no arrows means pointing down</span>
+
+<span class="sd">          A</span>
+<span class="sd">        /   \</span>
+<span class="sd">       B     C</span>
+<span class="sd">        \   /</span>
+<span class="sd">          D</span>
+<span class="sd">"""</span>
+<span class="n">blocks</span><span class="p">,</span> \
+<span class="n">as_tree</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">build_blocks_arb</span><span class="p">(</span><span class="n">block_links</span><span class="o">=</span><span class="p">{</span><span class="s1">'A'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'B'</span><span class="p">,</span> <span class="s1">'C'</span><span class="p">],</span> <span class="s1">'B'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'D'</span><span class="p">],</span> <span class="s1">'C'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'D'</span><span class="p">],</span> <span class="s1">'D'</span><span class="p">:</span> <span class="p">[]},</span>
+                              <span class="n">code</span><span class="o">=</span><span class="p">{</span><span class="s1">'A'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                                         temp = a + b</span>
+<span class="s2">                                         """</span><span class="p">),</span>
+                                    <span class="s1">'B'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                                         temp_1 = 34</span>
+<span class="s2">                                         """</span><span class="p">),</span>
+                                    <span class="s1">'C'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                                         if a &lt; 3:</span>
+<span class="s2">                                             pass</span>
+<span class="s2">                                         """</span><span class="p">),</span>
+                                    <span class="s1">'D'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                                         temp = a + b</span>
+<span class="s2">                                         """</span><span class="p">)</span>
+                                    <span class="p">})</span>
+<span class="n">as_tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">ast_string</span><span class="p">)</span>
+<span class="n">cfg_real</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">()</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">block_list</span> <span class="o">=</span> <span class="n">blocks</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">as_tree</span> <span class="o">=</span> <span class="n">as_tree</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">cfg_real</span><span class="o">.</span><span class="n">block_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To gather the initial information (UEVAR, VARKILL), use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg_real</span><span class="o">.</span><span class="n">gather_initial_info</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To fill the liveout of all the blocks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg_real</span><span class="o">.</span><span class="n">compute_live_out</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To print the information of live variable,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg_real</span><span class="o">.</span><span class="n">print_live_variable</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Console should display relevant informations.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">block</span> <span class="n">L1</span><span class="p">:</span> <span class="n">UEVAR</span><span class="p">:</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">},</span> <span class="n">VARKILL</span> <span class="p">:</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">},</span> <span class="n">LIVEOUT</span> <span class="p">:</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">block</span> <span class="n">L3</span><span class="p">:</span> <span class="n">UEVAR</span><span class="p">:</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">},</span> <span class="n">VARKILL</span> <span class="p">:</span> <span class="p">{</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">},</span> <span class="n">LIVEOUT</span> <span class="p">:</span> <span class="nb">set</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="insertion-of-function">
+<h2>1.7. Insertion of φ-function<a class="headerlink" href="#insertion-of-function" title="Permalink to this headline">¶</a></h2>
+<p>Insertion of φ-function is a very important phase during the
+transformation to SSA form. <strong>Minimal SSA</strong> will inserts φ-function at
+any joint points where two definitions of variables meet, but some of
+these φ-function may be dead, or in other words, not being used in
+subsequents blocks.</p>
+<p>To further minimize dead φ-function, information of variables(live
+variable analysis) may be used. There are 2 flavors of SSA that consider
+the liveness of variables, namely <strong>pruned SSA</strong> and <strong>semipruned SSA</strong>.</p>
+<p>Construction of <strong>pruned ssa</strong> will add a liveness test to the CFG to
+avoid adding dead φ-function. To perform liveness test, the algorithm
+must compute <strong>LIVEOUT</strong> sets, which will result in the cost of building
+pruned SSA to be higher than <strong>Minimal SSA</strong>.</p>
+<p><strong>Semipruned SSA</strong> is a compromise between <strong>minimal SSA</strong> and <strong>pruned
+SSA</strong>. By only considering <em>UEVAR</em> and <em>VARKILL</em>, this will eliminates
+some dead φ-function in minimal SSA, but could potentially generate dead
+φ-function as well. By avoiding the computation of <strong>LIVEOUT</strong>, the
+execution time will be faster compared to pruned SSA.</p>
+<p>Below shows all the different ways to insert φ-function.</p>
+<div class="section" id="trivial-ssa">
+<h3>1.7.1. Trivial SSA<a class="headerlink" href="#trivial-ssa" title="Permalink to this headline">¶</a></h3>
+<p>Trivial SSA is the naive and primitive way to insert a φ-function.
+Trivial SSA will insert φ-function for all variables at every joint
+points. To demonstrate why it could generate excess φ-function, consider
+CFG below:</p>
+<p><img alt="trivialex" src="_images/trivial_ex.svg"/></p>
+<p>Trivial SSA will insert φ-function for all variables that declared in
+all joint points blindly. In the example shown above, the φ-function for
+<code class="docutils literal notranslate"><span class="pre">b</span></code> is necessary since <code class="docutils literal notranslate"><span class="pre">b</span></code> is declared in B2 and B3. The φ-function
+for <code class="docutils literal notranslate"><span class="pre">a</span></code> however is compeletely useless since <code class="docutils literal notranslate"><span class="pre">a</span></code> had only been
+declared in B1. Doesn’t matter which path the program takes, B2 path or
+B3 path, the variable <code class="docutils literal notranslate"><span class="pre">a</span></code> in B4 will still be the variable that
+declared in B1. Declaration of variable in B1 will not force φ-functions
+in B4 since B1 dominates B4. Dominance frontier is used to eliminates
+these redundant φ-function. SSA form that relies on Dominance frontier
+only for inserting φ-function is called <strong>Minimal SSA</strong>.</p>
+<p>Eventhough live variable analysis can helps to determine the redundant
+φ-function, but that will comes after the insertion of φ-function.
+Without algorithm to reduce excess φ-function, it could take up quite a
+lot of memory space.</p>
+</div>
+<div class="section" id="id5">
+<h3>1.7.2. Minimal SSA<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>To recall, Minimal SSA had been discussed in <a href="#id7"><span class="problematic" id="id8">`section 1.4 &lt;&gt;`__</span></a>. Minimal
+SSA would not requires live variable analysis. By using only the fact of
+dominance frontiers, the algorithm can eliminate some useless φ-function
+based on only the structures of CFG. Recall the diagrams in section
+above.</p>
+<p><img alt="minimalex" src="_images/minimal_ex.svg"/></p>
+<p>Because of the Dominance frontier(DF) of block B1 is empty, the
+declaration of <code class="docutils literal notranslate"><span class="pre">a</span></code> would not requires a φ-function anywhere, or
+specifically in B4. <strong>Minimal SSA</strong> will produced CFG shown in diagram
+above.</p>
+</div>
+<div class="section" id="pruning-ssa">
+<h3>1.7.3. Pruning SSA<a class="headerlink" href="#pruning-ssa" title="Permalink to this headline">¶</a></h3>
+<p><img alt="pruningex" src="_images/pruning_ex.svg"/></p>
+<p>Now, taking a closer look at the example above. Is <code class="docutils literal notranslate"><span class="pre">b</span></code> φ-function
+declared in B4 really required? So far the algorithm only considered the
+structure of CFG, but not the liveness of variables. <code class="docutils literal notranslate"><span class="pre">b</span></code> declared by
+φ-function in B4 does not liveout of the block, or <code class="docutils literal notranslate"><span class="pre">b</span></code> had not been
+used in the subsequent blocks, hence the φ-function for <code class="docutils literal notranslate"><span class="pre">b</span></code> will not
+be required.</p>
+<p>SSA form that takes liveness of variables into accounts is called
+pruning of SSA and it has 2 forms, <strong>Pruned SSA</strong> and <strong>Semipruned
+SSA</strong>.</p>
+<div class="section" id="semipruned-ssa">
+<h4>1.7.3.1. Semipruned SSA<a class="headerlink" href="#semipruned-ssa" title="Permalink to this headline">¶</a></h4>
+<p>The semipruned SSA will eliminates any names that are not live across a
+block boundary. To compute the semi-pruned SSA, the program can compute
+the <strong>globals set</strong> of variables, which in other words taking the union
+of all UEVAR of all blocks. φ-function will only need to be inserted for
+these global variables since if a variable was not included in Uevar of
+any blocks, that variable can be said that it was only declared but not
+used anywhere else. This means that φ-function for that variable was not
+necessary.</p>
+<p>In the process of computing the globals set, it also constructs, for
+each variable, a list of all blocks that contain a definition of that
+name, and it’s called <strong>Blocks Set</strong>.</p>
+<p>Example:</p>
+<p><img alt="globblockex" src="_images/semipruned_ex.svg"/></p>
+<p>Globals</p>
+<blockquote>
+<div><p>[‘d’, ‘e’, ‘c’, ‘a’, ‘f’]</p>
+</div></blockquote>
+<p>Blocks set</p>
+<div class="table-wrapper"><table class="docutils align-default">
+<colgroup>
+<col style="width: 22%"/>
+<col style="width: 16%"/>
+<col style="width: 16%"/>
+<col style="width: 16%"/>
+<col style="width: 16%"/>
+<col style="width: 16%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>‘c’</p></th>
+<th class="head"><p>‘a’</p></th>
+<th class="head"><p>‘b’</p></th>
+<th class="head"><p>‘f’</p></th>
+<th class="head"><p>‘z’</p></th>
+<th class="head"><p>‘d’</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>B1, B3</p></td>
+<td><p>B1</p></td>
+<td><p>B2</p></td>
+<td><p>B2</p></td>
+<td><p>B3</p></td>
+<td><p>B3</p></td>
+</tr>
+</tbody>
+</table></div>
+<p>In very brief explanation of inserting φ-function in semi-pruned SSA
+form, the program will only insert the φ-function for the variables in
+the globals set. For each variable in globals set, it will then use the
+information in Blocks set to identify the location for inserting the
+φ-function. I.e., say variable <code class="docutils literal notranslate"><span class="pre">d</span></code> in globals needed a φ-function, it
+will then look at the blocks set, and identify that block <strong>B3</strong> has a
+definition of <code class="docutils literal notranslate"><span class="pre">d</span></code>, it will then insert φ-function in Dominance
+frontier of B3, DF(B3).</p>
+</div>
+<div class="section" id="pruned-ssa">
+<h4>1.7.3.2. Pruned SSA<a class="headerlink" href="#pruned-ssa" title="Permalink to this headline">¶</a></h4>
+<p>To answer the question on why pruned SSA can further minimize the
+φ-function required from semi-pruned SSA, consider examples below.</p>
+<p><img alt="prunedssaex" src="_images/pruned_ssa_diff_ex.svg"/></p>
+<p>In semi-pruned SSA, because of the <code class="docutils literal notranslate"><span class="pre">a</span></code> is being referenced in B2, so
+<code class="docutils literal notranslate"><span class="pre">a</span></code> will be a member of globals. The definition of <code class="docutils literal notranslate"><span class="pre">a</span></code> in block
+<strong>B3</strong> will force a φ-function in block <strong>B4</strong>. But the φ-function in
+block <strong>B4</strong> may be redundant since <code class="docutils literal notranslate"><span class="pre">a</span></code> does not being referenced in
+that block, nor does not liveout of the block. So pruned SSA will
+combine the information of liveout of the blocks to determine the
+insertion of φ-function, which in this case, the φ-function for <code class="docutils literal notranslate"><span class="pre">a</span></code>
+will <strong>not</strong> get inserted.</p>
+<p><img alt="prunedssadiffexsol" src="_images/pruned_ssa_diff_ex_sol.svg"/></p>
+<p>The actual algorithm for inserting φ-function in pruned SSA form is more
+or less the same as semi-pruned. The only additional step is, a
+verification is required just before the φ-function is inserted. Recall
+from above, just before the insertion of φ-function in dominance
+frontier of B3, a verification is needed to determine whether or not to
+insert the φ-function, and it is represented below:</p>
+<p>Say variable <code class="docutils literal notranslate"><span class="pre">a</span></code> is the φ-function that needed to be inserted in block
+<code class="docutils literal notranslate"><span class="pre">B</span></code>, then</p>
+<p><code class="docutils literal notranslate"><span class="pre">a</span></code> must be a member of Uevar(B) ∪ (Liveout(B) ∩ ~Varkill(B)), or</p>
+<p><code class="docutils literal notranslate"><span class="pre">a</span></code> must be a member of Liveout(any parent(B))</p>
+<p>Which in other words, if <code class="docutils literal notranslate"><span class="pre">a</span></code> does not liveout from any of the parent
+blocks, <code class="docutils literal notranslate"><span class="pre">a</span></code> variable can be said useless in this current block. Thus,
+φ-function is not needed.</p>
+</div>
+</div>
+<div class="section" id="worklist-algorithm-for-inserting-function">
+<h3>1.7.4. Worklist algorithm for inserting φ-function.<a class="headerlink" href="#worklist-algorithm-for-inserting-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="basic-concept">
+<h4>1.7.4.1. Basic concept<a class="headerlink" href="#basic-concept" title="Permalink to this headline">¶</a></h4>
+<p>Recall from above, to insert the φ-function, either pruned or
+semi-pruned SSA form, we need to gather 2 information, which is
+<strong>Globals</strong> and <strong>BlockSet</strong>. Apart from that, <strong>WorkList</strong> is
+introduced to represent all the block that defines the variable that is
+currently working on. To illustrate the importance of worklist, consider
+following example:</p>
+<p><img alt="worklistimportanceexample" src="_images/worklist_importance_example.svg.png"/></p>
+<p>Definition of <code class="docutils literal notranslate"><span class="pre">a</span></code> in block <strong>B3</strong> will force a φ-function for <code class="docutils literal notranslate"><span class="pre">a</span></code> in
+block <strong>B4</strong>. The φ-function that inserted in block <strong>B4</strong> will in turn
+force a φ-function in block <strong>B5</strong>. Worklist is used to simplify the
+process of inserting φ-function. The <strong>blocksets</strong> and <strong>worklist</strong> for
+example above is shown below.</p>
+<p>Globals</p>
+<blockquote>
+<div><p>[‘a’]</p>
+</div></blockquote>
+<p>Blocks set</p>
+<div class="table-wrapper"><table class="docutils align-default">
+<colgroup>
+<col style="width: 23%"/>
+<col style="width: 32%"/>
+<col style="width: 23%"/>
+<col style="width: 23%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>‘a’</p></th>
+<th class="head"><p>‘b’</p></th>
+<th class="head"><p>‘f’</p></th>
+<th class="head"><p>‘g’</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>B3</p></td>
+<td><p>B2, B4</p></td>
+<td><p>B5</p></td>
+<td><p>B1</p></td>
+</tr>
+</tbody>
+</table></div>
+<p>The algorithm will initialize the worklist to blocks in blockset(‘a’),
+which contains <strong>B3</strong>. The definition in <strong>B3</strong> causes it to insert a
+φ-function at the start of each block in DF(B3) = B4. This insertion in
+B4 also places B4 in the worklist and B3 will be removed from the
+worklist. This process will continue for the rest of the blocks in the
+worklist. This is the basic concept of how the worklist is used to place
+the φ-function.</p>
+<p>In the case where DF(B1) is equal to B1, it will cause an infinite loop
+of inserting φ-function. So the algorithm will be responsible for:</p>
+<ul class="simple">
+<li><p><strong>Semipruned SSA</strong> - stop the insertion of φ-function once the
+φ-function of that variable has already existed inside the block, or</p></li>
+<li><p><strong>Pruned SSA</strong> - each block has only 1 attempt of inserting the
+φ-function for a variable, whether the φ-function has inserted or
+not. (The condition in semi-pruned SSA cannot be used in pruned SSA
+since φ-function may not be inserted in pruned SSA, while in
+semi-pruned SSA, φ-function will definitely be inserted to the DF of
+all the block in the block list.)</p></li>
+</ul>
+<p>The next section will provide the pseudocode for placement of φ-function
+based on the flavor of SSA.</p>
+</div>
+<div class="section" id="the-algorithm">
+<h4>1.7.4.2. The algorithm<a class="headerlink" href="#the-algorithm" title="Permalink to this headline">¶</a></h4>
+<p>The algorithm behaves quite similar between <em>pruned SSA</em> and <em>semi
+pruned SSA</em>. The differences are pruned required an additional check
+before placing φ-function, and the stopping condition may be different
+which are discussed above.</p>
+<p>The algorithm for insertion of φ-function for semi-pruned SSA.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>for each name x in Globals
+    WorkList ← Blocks(x)
+    for each block b in WorkList
+        for each block d in df(b)
+            if d has no φ-function for x then
+                insert a φ-function for x in d
+                WorkList ← WorkList + {d}
+</pre></div>
+</div>
+<p>The algorithm for insertion of φ-function for pruned SSA.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>for each name x in Globals
+    WorkList ← Blocks(x)
+    for each block b in WorkList
+        for each block d in df(b)
+            if d has not been visited by x then
+                if need_phi(b, x) then
+                    insert a φ-function for x in d
+                    WorkList ← WorkList + {d}
+</pre></div>
+</div>
+<p>Where the algorithm for the additional check(need_phi) is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Assume block and variable of the φ-function to be inserted is represented by blk, var
+
+need_phi(blk, var):
+    total_liveout ← {}
+    for parent_blk in blk.parents:
+        total_liveout ← total_liveout + (liveout of parent_blk)
+
+    if var is in total_liveout then
+        return True
+    else:
+        return False
+</pre></div>
+</div>
+<p><strong>Note</strong>: the φ-function inserted is just an indication to that block
+that the φ-function for that variable exist. The actual parameters is
+waiting to be filled in the next section, renaming of SSA.</p>
+<p>Once the φ-function is in place, it is time to renaming all the SSA to
+complete the formation of SSA.</p>
+</div>
+</div>
+</div>
+<div class="section" id="renaming-of-ssa">
+<h2>1.8. Renaming of SSA<a class="headerlink" href="#renaming-of-ssa" title="Permalink to this headline">¶</a></h2>
+<p>In the final SSA form, each global name becomes a base name, and
+individual definitions of that base name are distinguished by the
+addition of a numerical subscript.</p>
+<p><img alt="introrenaming" src="_images/intro_to_renaming.svg"/></p>
+<p>While renaming of SSA in a within a single block is straightforward, but
+the complexity arise when there are multiple basic blocks connected not
+forgetting that φ-function will contributes some of the problem too. The
+remaining of the sections below will focusing on ways to rename SSA
+across multiple blocks.</p>
+<p>On side notes, renaming is actually the last step of transforming a code
+into SSA form, which means that it comes after inserting φ-function.
+φ-function inserted from section above is merely just an indication for
+φ-function of some variable, which can be a list that holds variable
+that <strong>need</strong> φ-function.</p>
+<p><img alt="showindication" src="_images/show_indication.svg"/></p>
+<div class="section" id="role-of-stack-and-counter">
+<h3>1.8.1. Role of stack and counter<a class="headerlink" href="#role-of-stack-and-counter" title="Permalink to this headline">¶</a></h3>
+<p><strong>Counter</strong> is used to keep track of the latest version of a particular
+variable. Normally used when the target of the SSA statement needed to
+rename, and it will refer to the counter to get the specific version.</p>
+<p><strong>Stack</strong> stores the latest version of a particular variable. It is used
+when a variable is being referred in an SSA statement, and the version
+number of that variable can then be found in the stack.</p>
+<p>Take for example a single block with some code below:</p>
+<p><img alt="image25" src="_images/stack_and_counter.png"/></p>
+<p>At first statement, the algorithm will rename the operands first. Since
+3 is a number, it will then rename the target, ‘a’. It will refer to the
+counter to get the respective version. Because of the counter is empty
+initially, it will create an entry of ‘a’, and the target ‘a’ will hold
+the version number <code class="docutils literal notranslate"><span class="pre">0</span></code>. The counter for <code class="docutils literal notranslate"><span class="pre">'a'</span></code> will then increment to
+<code class="docutils literal notranslate"><span class="pre">1</span></code>. The variable <code class="docutils literal notranslate"><span class="pre">'a_0'</span></code> will the push to the stack.</p>
+<p>The second statement is more or less the same as the first one.</p>
+<p>At the third statement, it will check the operand ‘a’ in the stack and
+retrieve the version of ‘a’, which is <code class="docutils literal notranslate"><span class="pre">0</span></code> in this case. It will do the
+same for ‘b’ and will update the counter of ‘z’.</p>
+<p>The resulting ssa:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a_0</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">b_0</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">z_0</span> <span class="o">=</span> <span class="n">a_0</span> <span class="o">+</span> <span class="n">b_0</span>
+</pre></div>
+</div>
+<p>The use of these 2 data structures may seem not necessary in this case,
+but it is useful when dealing with multiple basic blocks. The example
+below will demonstrate that.</p>
+<p><img alt="stackcounterex" src="_images/stack_counter_multi_block.png"/></p>
+<p>After converting all the SSA in block <strong>B1</strong>, it will then pass the
+counter and the stack to the subsequent block, <strong>B2</strong> and <strong>B3</strong>. In
+block <strong>B2</strong>, the first statement will rename the variable <code class="docutils literal notranslate"><span class="pre">a</span></code> to
+<code class="docutils literal notranslate"><span class="pre">a_1</span></code> based on the counter, and push <code class="docutils literal notranslate"><span class="pre">a_1</span></code> to the stack. The <code class="docutils literal notranslate"><span class="pre">a</span></code>
+that get referenced in the second statement will get the latest <code class="docutils literal notranslate"><span class="pre">a</span></code> in
+the stack. At the end of the operation for block <strong>B2</strong>, the algorithm
+need to pop all the variable that was created in this block out of the
+stack, namely <code class="docutils literal notranslate"><span class="pre">'a_1'</span></code> and <code class="docutils literal notranslate"><span class="pre">'b_0'</span></code>. This is to ensure that the
+<code class="docutils literal notranslate"><span class="pre">'a'</span></code> that get referenced in block <strong>B3</strong> will get the value <code class="docutils literal notranslate"><span class="pre">'a_0'</span></code>
+and not <code class="docutils literal notranslate"><span class="pre">'a_1'</span></code>. But the counter will not change across multiple
+blocks. This means that the variable ‘a’ created in block <strong>B3</strong> will
+rename to <code class="docutils literal notranslate"><span class="pre">'a_2'</span></code>.</p>
+</div>
+<div class="section" id="id6">
+<h3>1.8.2. The algorithm<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>To summarizes the algorithm, assume the method for renaming is called
+<code class="docutils literal notranslate"><span class="pre">Rename</span></code>, the algorithm will call <code class="docutils literal notranslate"><span class="pre">Rename</span></code> on the root of the
+dominator tree. <code class="docutils literal notranslate"><span class="pre">Rename</span></code> will rewrite the blocks and recurs on the
+child of the block in the dominator tree. To finish it, <code class="docutils literal notranslate"><span class="pre">Rename</span></code> pops
+all the variable that was pushed onto the stacks during processing of
+this block.</p>
+<p>One detail to complete it is, just before popping out the variable, the
+<code class="docutils literal notranslate"><span class="pre">Rewrite</span></code> must rewrite φ-function parameters in each of the block’s
+successors in <strong>CFG tree</strong> (Not Dominator tree).</p>
+<p><em>Algorithm for renaming</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Rename(b)
+    for each φ-function in b, ‘‘x ← φ(· · · )’’
+        rewrite x as NewName(x)
+    for each operation ‘‘x ← y op z’’ in b
+        rewrite y with subscript top(stack[y])
+        rewrite z with subscript top(stack[z])
+        rewrite x as NewName(x)
+    for each successor of b in the cfg
+        fill in φ-function parameters
+    for each successor s of b in the dominator tree
+        Rename(s)
+    for each operation ‘‘x ← y op z’’ in b
+        and each φ-function ‘‘x ← φ(· · · )’’
+        pop(stack[x])
+</pre></div>
+</div>
+</div>
+<div class="section" id="why-dominator-tree">
+<h3>1.8.3. Why dominator tree?<a class="headerlink" href="#why-dominator-tree" title="Permalink to this headline">¶</a></h3>
+<p>A question may arise on why do the algorithm recurs on the successors of
+the <strong>dominator tree</strong> but not <strong>CFG tree</strong>? The example below may clear
+things up.</p>
+<p><img alt="renamingwhydomex" src="_images/renaming_why_dom_ex.png"/></p>
+<p>The algorithm will recur on the child of the dominator tree. This may
+raise a question like the information in <strong>B2</strong> (stack) will not pass to
+<strong>B4</strong>, which is the child of <strong>B2</strong>. In other words, the algorithm will
+pop every variable created in <strong>B2</strong>, which may potentially causing
+<strong>B4</strong> to not notified all those variables.</p>
+<p>To answer the question above, the algorithm will not pass the stack
+information from B2 to B4 simply because <strong>B2 doesn’t dominate B4</strong>.
+This means that if B4 is referencing a variable that created in B2,
+<strong>all the variable created in B2 must have a φ-function in B4</strong>,
+regardless of the form of the SSA (naive, pruned, sempruned). Recall
+that the algorithm will rewrite the φ-function parameters in each of the
+block’s successors in <strong>CFG tree</strong>, so that process is enough to pass
+along all the relevant information from <strong>B2</strong> to <strong>B4</strong>.</p>
+</div>
+<div class="section" id="testing-for-complete-ssa-generation">
+<h3>1.8.4. Testing for complete SSA generation<a class="headerlink" href="#testing-for-complete-ssa-generation" title="Permalink to this headline">¶</a></h3>
+<p><em>Note: Example can be found in
+`test_renaming.py &lt;../../test/test_tools/test_renaming.py#L87&gt;`__</em></p>
+<p>The whole SSA of a string can be generated by:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">as_tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                    a = 3           # 1st</span>
+<span class="s2">                    if a &gt; 3:       #  |</span>
+<span class="s2">                        a = 3       # 2nd</span>
+<span class="s2">                        a = 98</span>
+<span class="s2">                    else:           # 3rd</span>
+<span class="s2">                        z = 4       #  |</span>
+<span class="s2">                    # expected phi func for 'a' here</span>
+<span class="s2">                    y = a           # 4th</span>
+<span class="s2">                    a = 4</span>
+<span class="s2">                    """</span><span class="p">)</span>
+                            <span class="p">)</span>
+<span class="n">cfg_real</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">as_tree</span><span class="p">)</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">fill_df</span><span class="p">()</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">gather_initial_info</span><span class="p">()</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">ins_phi_function_semi_pruned</span><span class="p">()</span>     <span class="c1"># pruned will require liveout analysis</span>
+<span class="n">cfg_real</span><span class="o">.</span><span class="n">rename_to_ssa</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The result can be verified by:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">assertBlockSsaList</span><span class="p">(</span><span class="n">cfg_real</span><span class="o">.</span><span class="n">block_list</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s1">'L1'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                              a_0 = 3</span>
+<span class="s2">                              If a_0 &gt; 3</span>
+<span class="s2">                              """</span><span class="p">),</span>
+                         <span class="s1">'L3'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                              a_1 = 3</span>
+<span class="s2">                              a_2 = 98</span>
+<span class="s2">                              """</span><span class="p">),</span>
+                         <span class="s1">'L6'</span><span class="p">:</span> <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                              z_0 = 4</span>
+<span class="s2">                              """</span><span class="p">),</span>
+                         <span class="s1">'L8'</span><span class="p">:</span> <span class="p">[</span><span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                              a_3 = a_2 Phi a_0</span>
+<span class="s2">                                """</span><span class="p">),</span>
+                                <span class="n">ms</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2">                              y_0 = a_3</span>
+<span class="s2">                              a_4 = 4</span>
+<span class="s2">                                 """</span><span class="p">)]</span>
+                         <span class="p">})</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>1.9. References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Torczon, L. and Cooper, M. ed., (2012). Ch9 - Data-Flow Analysis. In:
+Engineering a compiler, 2nd ed. Texas: Elsevier, Inc, pp.495-519.</p></li>
+<li><p>Torczon, L. and Cooper, M. ed., (2012). Ch8 - Introduction to
+optimization. In: Engineering a compiler, 2nd ed. Texas: Elsevier,
+Inc, pp.445-457.</p></li>
+<li><p>Braun, M., Buchwald, S., Hack, S., Leißa, R., Mallon, C., &amp; Zwinkau,
+A. (2013). Simple and efficient construction of static single
+assignment form. Lecture Notes in Computer Science (Including
+Subseries Lecture Notes in Artificial Intelligence and Lecture Notes
+in Bioinformatics), 7791 LNCS(March), 102–122.
+<a class="reference external" href="https://doi.org/10.1007/978-3-642-37051-9_6">https://doi.org/10.1007/978-3-642-37051-9_6</a></p></li>
+<li><p>Cytron, R., Ferrante, J., Rosen, B. K., Wegman, M. N., &amp; Zadeck, F.
+K. (1991). Efficiently computing static single assignment form and
+the control dependence graph. ACM Transactions on Programming
+Languages and Systems, 13(4), 451–490.
+<a class="reference external" href="https://doi.org/10.1145/115372.115320">https://doi.org/10.1145/115372.115320</a></p></li>
+</ul>
+</div>
+</div>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="api.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">API</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="how_does_it_works.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">How Does It Work?</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2021, usagitoneko97 |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>. |
+            <a class="muted-link" href="_sources/cfg_ssa.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Python ast transformation</a><ul>
+<li><a class="reference internal" href="#introduction">1.1. Introduction</a></li>
+<li><a class="reference internal" href="#basic-blocks">1.2. Basic blocks</a><ul>
+<li><a class="reference internal" href="#introduction-to-control-flow-graph-cfg-and-basic-blocks">1.2.1. Introduction to Control Flow Graph (CFG) and Basic Blocks</a></li>
+<li><a class="reference internal" href="#transforming-ssa-to-cfg">1.2.2. Transforming SSA to CFG</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#revisiting-ssa">1.3. Revisiting SSA</a></li>
+<li><a class="reference internal" href="#minimal-ssa">1.4. Minimal SSA</a><ul>
+<li><a class="reference internal" href="#terminology">1.4.1. Terminology</a></li>
+<li><a class="reference internal" href="#dominance">1.4.2. Dominance</a><ul>
+<li><a class="reference internal" href="#id1">1.4.2.1. Introduction</a></li>
+<li><a class="reference internal" href="#algorithm">1.4.2.2. Algorithm</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dominator-tree">1.4.3. Dominator Tree</a><ul>
+<li><a class="reference internal" href="#id2">1.4.3.1. Introduction</a></li>
+<li><a class="reference internal" href="#id3">1.4.3.2. Algorithm</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dominance-frontier">1.4.4. Dominance Frontier</a></li>
+<li><a class="reference internal" href="#placing-functions">1.4.5. Placing φ-Functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-a-test">1.5. Creating a test</a><ul>
+<li><a class="reference internal" href="#generate-test-inputs">1.5.1. Generate test inputs</a></li>
+<li><a class="reference internal" href="#asserting-test-output">1.5.2. Asserting test output</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#live-variable-analysis">1.6. Live Variable Analysis</a><ul>
+<li><a class="reference internal" href="#uses-for-live-variables">1.6.1. Uses for Live Variables</a><ul>
+<li><a class="reference internal" href="#improve-ssa-construction">1.6.1.1. Improve SSA construction</a></li>
+<li><a class="reference internal" href="#finding-uninitialized-variables">1.6.1.2. Finding uninitialized variables</a></li>
+<li><a class="reference internal" href="#dead-code-elimination">1.6.1.3. Dead code elimination</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id4">1.6.2. Terminology</a></li>
+<li><a class="reference internal" href="#the-basic-concept-of-live-variable-analysis">1.6.3. The basic concept of Live Variable Analysis</a><ul>
+<li><a class="reference internal" href="#uevar-and-varkill">1.6.3.1. UEVAR and VARKILL</a></li>
+<li><a class="reference internal" href="#liveout">1.6.3.2. LIVEOUT</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-algorithm-for-computing-live-variable">1.6.4. The algorithm for computing live variable</a></li>
+<li><a class="reference internal" href="#testing-for-live-variable-analysis">1.6.5. Testing for Live Variable Analysis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#insertion-of-function">1.7. Insertion of φ-function</a><ul>
+<li><a class="reference internal" href="#trivial-ssa">1.7.1. Trivial SSA</a></li>
+<li><a class="reference internal" href="#id5">1.7.2. Minimal SSA</a></li>
+<li><a class="reference internal" href="#pruning-ssa">1.7.3. Pruning SSA</a><ul>
+<li><a class="reference internal" href="#semipruned-ssa">1.7.3.1. Semipruned SSA</a></li>
+<li><a class="reference internal" href="#pruned-ssa">1.7.3.2. Pruned SSA</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#worklist-algorithm-for-inserting-function">1.7.4. Worklist algorithm for inserting φ-function.</a><ul>
+<li><a class="reference internal" href="#basic-concept">1.7.4.1. Basic concept</a></li>
+<li><a class="reference internal" href="#the-algorithm">1.7.4.2. The algorithm</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#renaming-of-ssa">1.8. Renaming of SSA</a><ul>
+<li><a class="reference internal" href="#role-of-stack-and-counter">1.8.1. Role of stack and counter</a></li>
+<li><a class="reference internal" href="#id6">1.8.2. The algorithm</a></li>
+<li><a class="reference internal" href="#why-dominator-tree">1.8.3. Why dominator tree?</a></li>
+<li><a class="reference internal" href="#testing-for-complete-ssa-generation">1.8.4. Testing for complete SSA generation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">1.9. References</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/main.js"></script>
+    </body>
+</html>

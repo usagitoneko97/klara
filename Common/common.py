@@ -1,60 +1,86 @@
-import textwrap
-import ast
+from collections import OrderedDict
+from collections.abc import Callable
 
 OPERATOR_VARIABLE = 0
 LEFT_OPERATOR_CONSTANT = 1
 RIGHT_OPERATOR_CONSTANT = 2
 
 
-ms = textwrap.dedent
+operator_dict = {
+    "Add": "+",
+    "Sub": "-",
+    "Mult": "*",
+    "Div": "/",
+    "BitOr": "|",
+    "BitXor": "^",
+    "BitAnd": "&",
+    "Lt": "<",
+    "Gt": ">",
+    "FloorDiv": "//",
+    "Mod": "%",
+    "Pow": "^",
+    "LShift": "<<",
+    "RShift": ">>",
+    "Eq": "==",
+    "NotEq": "!=",
+    "LtE": "<=",
+    "GtE": ">=",
+    "Is": "is",
+    "IsNot": "is not",
+    "In": "in",
+    "NotIn": "not in",
+    "Phi": "Phi",
+    "USub": "-",
+    "UAdd": "+",
+}
 
-operator_dict = {'Add': '+', 'Sub': '-', 'Mult': '*', 'Div': '/', 'BitOr': '|', 'BitXor': '^', 'BitAnd': '&',
-                 'Lt': '<', 'Gt': '>', 'FloorDiv': '//', 'Mod': '%', 'Pow': '^', 'LShift': '<<', 'RShift': '>>',
-                 'Eq': '==', 'NotEq': '!=', 'LtE': '<=', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not', 'In': 'in',
-                 'NotIn': 'not in', 'Phi': 'Phi', 'USub': '-', 'UAdd': '+'}
 
+class DefaultOrderedDict(OrderedDict):
+    # Source: http://stackoverflow.com/a/6190500/562769
+    def __init__(self, default_factory=None, *a, **kw):
+        if default_factory is not None and not isinstance(default_factory, Callable):
+            raise TypeError("first argument must be callable")
+        OrderedDict.__init__(self, *a, **kw)
+        self.default_factory = default_factory
 
-def is_num(s):
-    if isinstance(s, int) or isinstance(s, float):
-        return True
-    return False
+    def __getitem__(self, key):
+        try:
+            return OrderedDict.__getitem__(self, key)
+        except KeyError:
+            return self.__missing__(key)
 
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = value = self.default_factory()
+        return value
 
-def get_var_or_num(value):
-    if isinstance(value, ast.Name):
-        return value.id
-    else:
-        return value.n
-
-
-def value_list_get_op_type(val_list):
-    return val_list[1]
-
-def value_list_get_var(val_list):
-    return val_list[0]
-
-
-class Stack:
-    def __init__(self, i=None):
-        if i is not None:
-            self.items = [i]
+    def __reduce__(self):
+        if self.default_factory is None:
+            args = tuple()
         else:
-            self.items = []
+            args = (self.default_factory,)
+        return type(self), args, None, None, self.items()
 
-    def isEmpty(self):
-        return self.items == []
+    def copy(self):
+        return self.__copy__()
 
-    def push(self, item):
-        self.items.append(item)
+    def __copy__(self):
+        return type(self)(self.default_factory, self)
 
-    def pop(self):
-        return self.items.pop()
+    def __deepcopy__(self, memo):
+        import copy
 
-    def peek(self):
-        return self.items[len(self.items) - 1]
+        return type(self)(self.default_factory, copy.deepcopy(self.items()))
 
-    def size(self):
-        return len(self.items)
+    def __repr__(self):
+        return "OrderedDefaultDict(%s, %s)" % (self.default_factory, OrderedDict.__repr__(self))
 
-    def remove(self, item):
-        self.items.remove(item)
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]

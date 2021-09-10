@@ -1,0 +1,223 @@
+================
+PY-SCA CHANGELOG
+================
+
+v0.6.0 Release Notes (09/10/21)
+* implemented bool(), __bool__ by wrapping implicit boolean context (e.g. if (x)), so that during inferring, proper
+    dunder method will be called.
++ convert z3 expression building from ast node, to directly using InferProxy, and relevant dunder method to build the expression
++ added contract module to generate test module.
++ added icontract pre/post condition support.
+* clean up the API, and only expose relevant functions to users.
+
+v0.5.0 Release Notes (03/22/21)
+* implemented call chain based caching instead of call context, see 4x improvement.
++ filter same structure of assembly after expanded using hash()
+* implemented more efficient selected_operand comparing
++ filter out uninferable assembly
++ added --output-leaf-cells to output all used leaf cells of the results
+Minor fixes:
+    * fixed infer_sequence not checking selected_operand in extract_const
+    * fixed z3.ToReal/ToInt missing exception check, disable conditions_mode in extract_const
+    * simplified conditions in elif branches by adding it in inverted_conds
+    * fixed phi function has repeated variable with same version
+    * fixed container binop with right=0 will only yield one result
+
+v0.4.0 Release Notes (02/18/21)
++ change assumption based z3 solver to z3.SimpleSolver that is faster on average on larger input.
++ applying limit_inference that is control by --limit-inference
++ implemented precise bound conditions for statement that is getting replaced.
++ With --limit-inference set to 300, full python file can be completed in sub 10.
+* more bugs fixes and stability fixes.
+
+v0.3.0 Release Notes (01/07/21)
+* fixed major bugs in accumulating and evaluating bound conditions. It can gather more conditions now.
+* fixed z3 solving bugs involving id(obj) having the same due to GC.
++ implemented html server for real time on demand inference of variable.
+* reduce the return amount of itertools.product by avoiding yielding different result for the same operand
++ added MARCO algorithm for MSS calculation that offers better runtime and memory to our
+    existing implementation that use z3.optimize
+* Moved check() of execution path to a central solver, using assumption based solver reused.
++ Add sat checking to all `infer()` by default, do it earlier will reduce potential product explosion at later stage.
++ fixed more check selected operand, fixed more duplicated result due to some logic.
+* Enhanced check_selected_operand algorithm, cache hashing of InferenceResult
+
+v0.2.1 Release Notes (11/08/20)
++ added bound_conditions for list inferring. Even uninferable list can now get all possible bound conditions
++ enabled infer caching during z3 solving. This will greatly help inference time in theory.
++ enabled result caching, this will filtered out similar result, and improve infer that involved itertools.product.
++ various run time enhancement, full fcf run on big file will now used < 1 min. Prepare to scale cov_analysis to have
+    product of all possible assembly combinations.
+
+v0.2.0 Release Notes (10/26/20)
++ Introducing new SMT solver - Z3, to replace google's or-tools.
++ All the existing cov analysis tests are passing, plus some more complex test cases.
++ added `bound_conditions` in inference systems. This will provide the conditions needed to be True in-order to
+    yield that particular result.
++ a lot more inference support and cleaning up inference plugins architecture
++ biggest changes among all release
+
+v0.1.10 Release Notes (12/20/19)
+* optimize overall runtime for fcf by removing live out calculation>
+* major fixes for class instance constructor and attribute assignment handling.
+* method that call another method of the same class will now update the instance respectively.
+* renamed and linked the `bases` of ClassDef node.
+* full support of inheritance using python's new class mro.
+* generalized fcf_solver into py_checker, added --checks flag to select types of checker.
++ added cache system for inference. Will speed up the front-end analysis considerably.
++ [COV] replaced scipy.minimize() with or-tools SAT solver that is able to output all the result combination.
++ [COV] implemented instance grouping via tree structure that is allowed to scale.
++ [COV] implemented top level instances generator by looking at the tree.
++ [COV} implemented boolean support by converting it to integer check, since boolean in python inherits int.
+
+
+v0.1.9 Release Notes (11/08/19)
++ added somewhat usable logging message.
++ added phi function for attributes support.
+* fixed infer substitution of attribute when the attribute is equal to the arg.
+* fixed infer_attribute using LocalsDictNode attribute without checking the return instance
+* removed dunder method exception in inference. All infer() method shouldn't throw any exceptions.
+* Loaded properly all `self` attribute for all class method using value from __init__ method and class defined attributes.
+* Added nested if expr support and merge with current mechanism of selecting multiple values.
+* split the original executable with sub commands into two completely different commands. (fcf and cov)
+* added synmake support.
+* added '<' and '>' support by adding/subtracting with --lowest-unit flag supplied.
+* result will be rounded also based on --lowest-unit's flag decimal places.
+* added --min-bound and --max-bound for scipy optimize solver.
+* properly handled `or` operator by using the individual or's element instead of treating it as `and` node.
+* converted != boolean operator to > and <.
+
+v0.1.8 Release Notes (10/18/19)
++ added prototype of auto test suite generation
++ added if sys.version_info check in stubs
++ added @overload handling in stubs.
+* fixed default stubs didn't get loaded.
+* fixed inheritance solving in stub tree missing a check.
+* added bool op inference support (or, and), including empty container, None and 0 assumption. Class that define
+	non zero or __len__ is not supported yet.
+
+v0.1.7 Release Notes (07/09/19)
++ added mixed arithmetic support e.g. int + float = float
++ added default value for int, str and float() call without argument.
++ added builtins' @property inferring
++ added all typeshed module type inference. Optional selection via --typeshed-select math time ...
+  --typeshed-select ALL to select all. Run time will get affected up to 3 seconds for ALL modules.
++ added user defined stub via --stubs arguments.
+
+v0.1.6 Release Notes (06/26/19)
+* purged all unused function and class, format code based on flake8, black and isort.
++ infer support for invoking method in constant. e.g. "{}".format(s)
++ parse python ast using typed_ast to enable full python 2 syntax support
+* added comprehension node and Bytes node in tree-rewriter.
++ implemented multiple file as input arg in CLI.
++ added round() inferring in builtins_inference.
++ moved tools and float_comparison into module called python_sca
++ added loaded extension displaying before start of analysing.
+
+v0.1.5 Release Notes (06/13/19)
+* fixed terminal formatting in result spanning multiple lines.
+* added -py 2 flag to specify analysing code as python 2, this includes __div__ behaviour in python 2 and 3.
++ added builtins inference support as a plugin that include len, int, str, float and abs call
++ added ini file support that can be overwrite by CLI arguments
+* fixed result printing of fcf included unwanted artifact.
+
+v0.1.4 Release Notes (05/29/19)
+* added decorator support including chaining of decorator
+```python
+@times_2
+@add_1
+def foo(a, b):
+    return a + b
+z = foo(1, 2)   # (3 + 1) * 2
+```
+
+* added dictionary support with subscript accessing the content. Does not include updating of dictionary.
+```python
+class Foo:
+    x = 4
+    pass
+var = 5
+t = {'a': 2.1, 'b': 3, var: Foo()}
+s = t['a'] + t['b'] + t[var].x
+s = t[var].x + s    # inferred as 13.1
+```
+
+* added `for` node support only for value that doesn't change in the loop.
+```python
+for i in z:
+    y = i
+    res = 2
+f = y   # InferenceError
+f = res # inferred as 2
+```
+
+* added augassign node support in inference system.
+```python
+t = 1
+t *= 3
+t /= 3
+z = t   # inferred as 1.0
+```
+
+* added memory usage stat and total execution time in -vv flag
+* modified renaming algorithm from recursive to iterative to allow longer amount of code to analyze
+* changed InferenceError being raised when value/type is unknown to yield NonInference. Also fixed various bugs.
+
+v0.1.3 Release Notes (15/5/2019)
+* added type inference support for builtins function and class methods. E.g.
+```python
+len(a)  # inferred as type int
+a = "str"
+a.count()   # int
+# etc...
+```
+
+* added assignment and return value unpacking/packing support. E.g.
+```python
+z = [1, 2, 5.5, 7, 8]
+(a, b, *c, d), e, f = z, 1, 3
+res = c[0] + c[1] + e + f   # res will be inferred as 16.5
+```
+
+* improve the structure of building cfg, refactored all unused files.
+
+* added if expression support in inference system
+```python
+def foo(a):
+    return a + 4
+x = 1
+x, y = (2 if False else foo(x)), (4 if x else 5)
+y = x * y   # inferred as 8, 10, 20, 25
+```
+
+v0.1.2 Release Notes (7/5/2019)
+* added dunder method support for comparison node
+* added support for global tag, which includes replacing global variables in a func/method
+* fixed `self` param not filled with instance when calling a method
+* fixed offset error in args in method calling.
+* added interprocedural data flow with global tag and instance
+* added must alias support in `node.instance()` call.
+* re-implement cfg partitioning using more flexible approach (by directly using node) rather than by line number.
+* implemented traversing into dunder method in comparison solver
+
+v0.1.1 Release Notes (16/4/2019)
+* added list support
+* fixed bugs where tree_rewriter can't differentiate _ast.list and list
+* added set support and bin op between sets
+* added Tuple support and bin op between sets
+* update infer_compare algorithm to more resembles python actual compare
+* added subscript assignment support for integer index
+* added Unary operator support
+* improve the speed of dominator calculation
+* added binary operation dunder method support
+* nodes.BinOp and nodes.Compare now support type inference
+* Inference result for Container (e.g List, Set) is now more consistent that others
+
+v0.1.0 Release Notes (1/4/2019)
+* Added test suite for every features in SCA library
+* Added terminal handling/displaying for Float Comparison Application
+
+v0.0.1 Release Notes (28/3/2019)
+* First release version for python-ast library. Some frequently used nodes has been rewritten to add more features to the node.
+* sufficient unittest to cover most use cases. Unit test for some specific part is missing though.
+* infer() interface to statically analyze the possible value

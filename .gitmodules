@@ -1,0 +1,3 @@
+[submodule "tools/typeshed"]
+	path = klara/core/typeshed
+	url = https://github.com/python/typeshed.git

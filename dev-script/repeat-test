@@ -1,0 +1,14 @@
+#!/bin/sh
+
+while true; do
+    status="$(pytest --random-order --random-order-bucket class "$1")"
+    if [ $? != 0 ]; then
+        echo "test run failure"
+        seed=$(echo "$status" | grep "random-order-seed")
+        echo "$status"
+        echo "test seed is: $seed"
+        break
+    else
+        echo "test passing"
+    fi
+done

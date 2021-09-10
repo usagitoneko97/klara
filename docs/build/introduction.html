@@ -1,0 +1,492 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Quick Start" href="quick_start.html" /><link rel="prev" title="Welcome to klara’s documentation!" href="index.html" />
+
+    <meta name="generator" content="sphinx-4.1.2, furo 2021.09.08"/>
+        <title>Klara - klara 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=c7c65a82b42f6b978e58466c1e9ef2509836d916" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=16fb25fabf47304eee183a5e9af80b1ba98259b1" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  body[data-theme="dark"] {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+</style></head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" />
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">klara 0.1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">klara 0.1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Klara</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending Klara</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending_user_type.html">Extending Inference with User defined type</a></li>
+<li class="toctree-l1"><a class="reference internal" href="customize_coverage_strategy.html">Customize Coverage Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="limitation.html">Limitation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_does_it_works.html">How Does It Work?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cfg_ssa.html">Python ast transformation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="section" id="klara">
+<h1>Klara<a class="headerlink" href="#klara" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Klara is still in early experimental stage, notable features missing are loop, comprehension, module import and many more.
+See <a class="reference external" href="limitation.html">limitation</a> for full list.</p>
+</div>
+<p>Klara is a static analysis tools to automatic generate test case, based on SMT (z3) solver, with a powerful ast
+level inference system. Klara will take python file as input and generate corresponding test file in pytest format, that attempt to cover all
+return values. For example, following function in file <code class="docutils literal notranslate"><span class="pre">test.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">triangle</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"Equilateral triangle"</span>
+    <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">==</span> <span class="n">z</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"Isosceles triangle"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"Scalene triangle"</span>
+</pre></div>
+</div>
+<p>will generate:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">test</span>
+
+
+<span class="k">def</span> <span class="nf">test_triangle_0</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">test</span><span class="o">.</span><span class="n">triangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Equilateral triangle'</span>
+    <span class="k">assert</span> <span class="n">test</span><span class="o">.</span><span class="n">triangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Isosceles triangle'</span>
+    <span class="k">assert</span> <span class="n">test</span><span class="o">.</span><span class="n">triangle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Scalene triangle'</span>
+</pre></div>
+</div>
+<div class="section" id="installing">
+<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<p>Klara can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code> tool by using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">klara</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>We can invoke <code class="docutils literal notranslate"><span class="pre">klara</span></code> on any python source file, and it will generate a corresponding pytest test file.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ cat source.py
+def foo<span class="o">(</span>x: int, y: int, z: str<span class="o">)</span>:
+    <span class="k">if</span> x + y &gt; <span class="m">2</span>:
+        <span class="k">return</span> x + y + <span class="m">12</span>
+    <span class="k">elif</span> x &lt; y:
+        <span class="k">return</span> x + y
+    <span class="k">elif</span> <span class="o">(</span>z + <span class="s2">"me"</span><span class="o">)</span> <span class="o">==</span> <span class="s2">"some"</span>:
+        <span class="k">return</span> z + <span class="s2">"thing"</span>
+    <span class="k">else</span>:
+        <span class="k">return</span> x - y
+
+$ klara source.py
+$ cat test_source.py
+import contract_test
+
+
+def test_foo_0<span class="o">()</span>:
+    assert contract_test.foo<span class="o">(</span><span class="m">0</span>, <span class="m">3</span>, <span class="se">\'\'</span><span class="o">)</span> <span class="o">==</span> <span class="m">15</span>
+    assert contract_test.foo<span class="o">(</span><span class="m">0</span>, <span class="m">1</span>, <span class="se">\'\'</span><span class="o">)</span> <span class="o">==</span> <span class="m">1</span>
+    assert contract_test.foo<span class="o">(</span><span class="m">0</span>, <span class="m">0</span>, <span class="se">\'</span>so<span class="se">\'</span><span class="o">)</span> <span class="o">==</span> <span class="se">\'</span>sothing<span class="se">\'</span>
+    assert contract_test.foo<span class="o">(</span><span class="m">0</span>, <span class="m">0</span>, <span class="se">\'\'</span><span class="o">)</span> <span class="o">==</span> <span class="m">0</span>
+</pre></div>
+</div>
+<p>Consult the <a class="reference external" href="quick_start.html">quick start</a> manual for more examples and guidance. To use it as a static
+analysis library, go to <a class="reference external" href="inference.html">Inference</a>.</p>
+</div>
+<div class="section" id="why-klara">
+<h2>Why Klara?<a class="headerlink" href="#why-klara" title="Permalink to this headline">¶</a></h2>
+<p>Klara works on ast level and it doesn’t execute user code in any way, which is a very important difference
+compared to similar tool
+like <a class="reference external" href="https://github.com/pschanely/CrossHair">Crosshair</a> and <a class="reference external" href="https://github.com/se2p/pynguin">Pynguin</a>  that utilize
+concolic symbolic execution that required user code execution that might cause side effects.
+Klara work on ast level, combine with data flow analysis
+that utilize CFG, SSA, use-def chain, SMT solver etc… to build a powerful python inference system that leverages
+Z3-solver for constraints solving and path feasibility check. Because of this, Klara is able to operate on
+both python2/3 source code with the help of <a class="reference external" href="https://github.com/python/typed_ast">typed_ast</a>.
+To specify the source code is in python 2, pass in <code class="docutils literal notranslate"><span class="pre">-py</span> <span class="pre">2</span></code> argument. It’s python 3 by default.</p>
+<p>Klara can also be used as a static analysis tool, allow user to define custom rule to identify programming bugs, error
+or enforcing coding standard. With SMT solver support, analysis will be more accurate and greatly reduce false-positive
+case. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">klara</span> <span class="kn">import</span> <span class="n">parse</span>
+
+<span class="n">tree</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="s2">"""</span>
+<span class="s2">    if cond():</span>
+<span class="s2">        x = 1</span>
+<span class="s2">        y = 10</span>
+<span class="s2">    else:</span>
+<span class="s2">        x = 2</span>
+<span class="s2">        y = 20</span>
+<span class="s2">    s = (x + y) + (x + y)</span>
+<span class="s2">"""</span><span class="p">)</span>
+<span class="n">variable_s</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">variable_s</span><span class="o">.</span><span class="n">infer</span><span class="p">()))</span>
+</pre></div>
+</div>
+<p>Will print out:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The inference system architecture and api is largely inspired by <a class="reference external" href="https://github.com/PyCQA/astroid">Astroid</a>,
+a static inference library used by <a class="reference external" href="https://github.com/PyCQA/pylint">Pylint</a>.</p>
+<p>Klara utilize the inference system to generate test case, in other words, it <strong>generate test case for all possible return values of the function</strong>,
+instead of generate test case for all control path of the function.</p>
+<p>To illustrate the point, consider the function below, with <cite>divide by zero</cite> vulnerabilities at line 3:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">v1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">v2</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">v1</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">v1</span> <span class="o">/</span> <span class="mi">0</span>  <span class="c1"># unused statement</span>
+    <span class="k">if</span> <span class="n">v1</span> <span class="o">&gt;</span> <span class="n">v2</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">v1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">v2</span>
+    <span class="k">return</span> <span class="n">s</span>
+</pre></div>
+</div>
+<p>Klara will generate test inputs below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">contract_test</span>
+
+
+<span class="k">def</span> <span class="nf">test_foo_0</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">foo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">foo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>It doesn’t generate input <code class="docutils literal notranslate"><span class="pre">v1</span> <span class="pre">&gt;</span> <span class="pre">10000</span></code>, so the test case would not be able to find out the exceptions. This is
+because the <cite>s</cite> at line 3 is unused in the return value.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If we modify the second if statement to <cite>elif</cite>, which we’ll be able to return the <cite>s</cite> at line 3, klara will
+generate test inputs that cover <code class="docutils literal notranslate"><span class="pre">v1</span> <span class="pre">&gt;</span> <span class="pre">10000</span></code> case.</p>
+</div>
+<p>This is an important distinction with other automatic test case generation available now, because by only
+generate test case for return values, we can generate a minimal test case, and it’s easier to customize how do Klara
+cover the function.</p>
+<p>For example, say we are composing a complex system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cm</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">wn</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">wn</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">wn</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">wn</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">mc</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mc</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">nnn</span> <span class="o">=</span> <span class="n">number</span> <span class="o">*</span> <span class="n">cm</span>
+    <span class="k">if</span> <span class="n">cm</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">num_incr</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num_incr</span> <span class="o">=</span> <span class="n">cm</span>
+    <span class="n">n_num_incr</span> <span class="o">=</span> <span class="n">nnn</span> <span class="o">/</span> <span class="n">num_incr</span>
+    <span class="n">nnn_left</span> <span class="o">=</span> <span class="n">dc</span> <span class="o">*</span> <span class="n">num_incr</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_num_incr</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n_num_incr</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">nnn_right</span> <span class="o">=</span> <span class="n">nnn</span> <span class="o">-</span> <span class="n">nnn_left</span>
+    <span class="n">is_flag</span> <span class="o">=</span> <span class="n">nnn_right</span>
+    <span class="k">if</span> <span class="n">is_flag</span><span class="p">:</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">nnn_right</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="n">mc</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">nnn_right</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cell</span>
+</pre></div>
+</div>
+<p>It isn’t immediately clear to us how many possible return values there are. But we can
+utilize Klara to generate inputs instantly, below is the generated test:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">contract_test</span>
+
+
+<span class="k">def</span> <span class="nf">test_main_0</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>Above generated 10 total results, which is product of <cite>pc_right</cite> which have 2 possibilities and <cite>mc</cite> which have 5 possibilities.</p>
+<p>Suppose that 10 tests input is too much, and we have determine that the <cite>options</cite> argument to <code class="docutils literal notranslate"><span class="pre">Component</span></code> is
+redundant to test, we can use Klara’s custom plugin to selectively determine which part to ignore in test
+generation. Go to <a class="reference external" href="customize_coverage_strategy.html">customize coverage strategy</a> for more information.</p>
+<p>After we have setup the plugin, Klara will generate following test:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">contract_test</span>
+
+
+<span class="k">def</span> <span class="nf">test_main_0</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mf">3.0</span>
+    <span class="k">assert</span> <span class="n">contract_test</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>Which is only 2 combinations of <code class="docutils literal notranslate"><span class="pre">pc_right</span></code></p>
+<p>Klara will also provide extension to specify how to infer unknown ast node or user defined type to make Klara
+‘smarter’.
+It’s described in <a class="reference external" href="extending.html">extending</a>,
+<a class="reference external" href="extending_user_type.html">extending user type</a> and
+<a class="reference external" href="customize_coverage_strategy.html">customize coverage strategy</a>.</p>
+</div>
+<div class="section" id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h2>
+<p>We use <a class="reference external" href="https://python-poetry.org/docs/">Poetry</a> to manage dependencies. After poetry is installed, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ poetry shell
+$ poetry install
+</pre></div>
+</div>
+<p>To run the test case, do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ poetry run pytest test
+</pre></div>
+</div>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>This project is licensed under the terms of the GNU Lesser General Public License.</p>
+</div>
+</div>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="quick_start.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Quick Start</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Home</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2021, usagitoneko97 |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>. |
+            <a class="muted-link" href="_sources/introduction.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Klara</a><ul>
+<li><a class="reference internal" href="#installing">Installing</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#why-klara">Why Klara?</a></li>
+<li><a class="reference internal" href="#contributing">Contributing</a></li>
+<li><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/main.js"></script>
+    </body>
+</html>

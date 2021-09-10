@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "klara"
+version = "0.6.0"
+description = "Automatic test case generation and static analysis library"
+authors = ["usagitoneko <hogouxian@gmail.com>"]
+license = "LGPL-3.0-or-later"
+readme = "readme.md"
+
+[tool.poetry.dependencies]
+python = ">=3.6.2,<4.0"
+typed-ast = "^1.4.3"
+ConfigArgParse = "^1.5.2"
+z3-solver = "^4.8.12"
+astor = "^0.8.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+coverage = "^5.5"
+Sphinx = "^4.1.2"
+flake8 = "^3.9.2"
+sphinx-autodoc-typehints = "^1.12.0"
+isort = "^5.9.3"
+black = "^21.8b0"
+icontract = "^2.5.4"
+
+[tool.poetry.scripts]
+klara = "klara.contract.__main__:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+exclude = '''
+/(
+ \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | .*venv.*
+  | tools/typeshed/)
+'''

@@ -1,0 +1,2 @@
+[run]
+omit = venv*/*, .tox/*, dev-script/*, test/*, setup.py, test_demo.py

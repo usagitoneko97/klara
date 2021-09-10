@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    {# IE8 rounds line-height incorrectly, and adding this emulateIE7 line makes it right! #}
+    {# http://social.msdn.microsoft.com/Forums/en-US/iewebdevelopment/thread/7684445e-f080-4d8f-8529-132763348e21 #}
+    <meta http-equiv="X-UA-Compatible" content="IE=emulateIE7" />
+    <title>Floating point comparison checker for {{relative_filename|escape}}:</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
+    {% if extra_css %}
+    <link rel="stylesheet" href="{{ extra_css }}" type="text/css">
+    {% endif %}
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="jquery.isonscreen.js"></script>
+    <script src="popper.min.js"></script>
+
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="coverage_html.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(coverage.pyfile_ready);
+    </script>
+</head>
+<body class="pyfile">
+
+<div class="fixed-top" id="header">
+    <div class="content">
+        <h1>Floating point comparison checker for <b>{{relative_filename|escape}}</b> :
+        </h1>
+        <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
+        <div class="stats d-flex">
+            <div class="p-2 flex-grow-1">
+                <button type="button" data-toggle="tooltip" class="clear infer-btn-clear" title="Clear all highlighted infer path">clear</button>
+                <button type="button" data-toggle="tooltip" id="next_violating" class="clear" title="Go to next violating line">Next</button>
+                <button type="button" data-toggle="tooltip" id="prev_violating" class="clear" title="Go to previous violating line">Prev</button>
+                <button type="button" data-toggle="tooltip" class="collapse clear infer-btn-next" title="go to next infer path"><img src="up.png" alt="go up"></button>
+                <button type="button" data-toggle="tooltip" class="collapse clear infer-btn-prev flex-grow-1" title="go to previous infer path"><img src="down.png" alt="go down"></button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">New message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                The end of infer path
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="help_panel">
+    <img id="panel_icon" src="keybd_open.png" alt="Hide keyboard shortcuts" />
+    <p class="legend">Hot-keys on this page</p>
+    <div>
+        <p class="keyhelp">
+            <span class="key">r</span>
+            <span class="key">m</span>
+            <span class="key">x</span>
+            <span class="key">p</span> &nbsp; toggle line displays
+        </p>
+        <p class="keyhelp">
+            <span class="key">j</span>
+            <span class="key">k</span> &nbsp; next/prev highlighted chunk
+        </p>
+        <p class="keyhelp">
+            <span class="key">0</span> &nbsp; (zero) top of page
+        </p>
+        <p class="keyhelp">
+            <span class="key">1</span> &nbsp; (one) first highlighted chunk
+        </p>
+    </div>
+</div>
+
+<div id="source">
+    {% for line in lines -%}
+    {% joined %}
+    <p id="t{{line.number}}" class="{{line.css_class}}">
+        <span class="n"><a href="#t{{line.number}}">{{line.number}}</a></span>
+        <span class="t">{{line.html}}&nbsp;</span>
+        <span class="r">
+                {% if line.annotate %}
+                    <span class="annotate short">{{line.annotate}}</span>
+                    <span class="annotate long">{{line.annotate_long}}</span>
+                {% endif %}
+            </span>
+    </p>
+    {% endjoined %}
+    {% endfor %}
+</div>
+
+<div id="footer">
+    <div class="content">
+        <p>
+            <a class="nav">&#xab; index</a> &nbsp; &nbsp; py_check v{{__version__}}</a>, created at {{ time_stamp }}
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--prm version="1.0"-->
+<param_list description="base-level xxx">
+    <parameter
+            name="var1"
+            type="INT"
+            description="bla bla bla"
+            comment="a comment"
+            level_edit="CLSJ"
+            parameter_group="SOME_OPTIONS"
+    />
+    <parameter
+            name="var2"
+            type="REAL"
+            description="another"
+            comment="another comment"
+            level_edit="LAJD:LKJ"
+            parameter_group="SOME_OPTIONS"
+    />
+    <parameter
+            name="no_type"
+            description="another"
+            comment="another comment"
+            level_edit="LAJD:LKJ"
+            parameter_group="SOME_OPTIONS"
+    />
+</param_list>
