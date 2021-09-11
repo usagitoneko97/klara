@@ -1,4 +1,4 @@
-from Common import common
+from ...common import common
 from klara.core import exceptions, manager, nodes, protocols
 from klara.core.cfg import ParentScopeBlock
 from klara.core.context_mod import InferenceContext

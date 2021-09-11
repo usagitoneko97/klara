@@ -1,4 +1,4 @@
-from Common.cfg_common import GraphWalker
+from klara.common.cfg_common import GraphWalker
 from test.helper.base_test import BaseTest
 
 

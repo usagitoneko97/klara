@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from Common import cfg_common
+from klara.common import cfg_common
 from klara.core.cfg import TEMP_ASSIGN, Cfg, GetBlocks, RawBasicBlock
 from klara.core.tree_rewriter import AstBuilder
 from test.helper.base_test import BaseTest

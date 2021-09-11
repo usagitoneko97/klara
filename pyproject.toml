@@ -1,10 +1,34 @@
 [tool.poetry]
 name = "klara"
-version = "0.6.0"
+version = "0.6.1"
 description = "Automatic test case generation and static analysis library"
-authors = ["usagitoneko <hogouxian@gmail.com>"]
+authors = ["Ho Guo Xian <hogouxian@gmail.com>"]
+documentation = "https://klara-py.readthedocs.io"
+keywords = [
+    "unit test",
+    "test generation",
+    "static analysis"
+]
+repository = "https://github.com/usagitoneko97/klara"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Education :: Testing",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Testing :: Unit",
+    "Typing :: Typed",
+]
+
 license = "LGPL-3.0-or-later"
-readme = "readme.md"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<4.0"

@@ -2,7 +2,7 @@
 PY-SCA CHANGELOG
 ================
 
-v0.6.0 Release Notes (09/10/21)
+v0.6.1 Release Notes (09/10/21)
 * implemented bool(), __bool__ by wrapping implicit boolean context (e.g. if (x)), so that during inferring, proper
     dunder method will be called.
 + convert z3 expression building from ast node, to directly using InferProxy, and relevant dunder method to build the expression

@@ -2,8 +2,8 @@ import copy
 from collections import deque
 from typing import Dict, List, Tuple
 
-import Common.common as common
-from Common.cfg_common import find_blocks_involved
+import klara.common.common as common
+from klara.common.cfg_common import find_blocks_involved
 
 from . import exceptions, manager, nodes, utilities
 from .decorators import deprecated
