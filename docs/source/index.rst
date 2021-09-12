@@ -40,7 +40,7 @@ The sections here will explain how to install and use Klara, and include steps f
 .. toctree::
    :maxdepth: 2
 
-   introduction.rst
+   introduction.md
    quick_start.rst
    inference.rst
    extending.rst

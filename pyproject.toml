@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "klara"
-version = "0.6.1"
+version = "0.6.2"
 description = "Automatic test case generation and static analysis library"
 authors = ["Ho Guo Xian <hogouxian@gmail.com>"]
 documentation = "https://klara-py.readthedocs.io"
