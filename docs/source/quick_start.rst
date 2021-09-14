@@ -1,7 +1,7 @@
 Quick Start
 ===========
 
-The quickest way to start is to run klara on a python file containing python function that is annotated with type
+The quickest way to start is to run klara on a python file containing a python function that is annotated with type
 hints. E.g. we have a file called ``foo.py``::
 
     def foo(x: int, y: int, z: str):
