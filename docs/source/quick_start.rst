@@ -1,8 +1,8 @@
 Quick Start
 ===========
 
-The quickest way to start is to run klara on a python file containing python function that is annotated with type
-hits. E.g. we have a file called ``foo.py``::
+The quickest way to start is to run klara on a python file containing a python function that is annotated with type
+hints. E.g. we have a file called ``foo.py``::
 
     def foo(x: int, y: int, z: str):
         if x + y > 2:
@@ -29,8 +29,8 @@ And it will generate a test file ``test_foo.py`` in the same directory, filled w
         assert contract_test.foo(0, 0, \'so\') == \'sothing\'
         assert contract_test.foo(0, 0, \'\') == 0
 
-In order to fine tuned test inputs generation, Klara integrate well with `icontract <https://github.com/Parquery/icontract>`_.
-It will statically read icontract decorator
+In order to fine tune test inputs generation, Klara integrates well with `icontract <https://github.com/Parquery/icontract>`_.
+It will statically read the icontract decorator::
 
 
 .. code-block:: python
@@ -51,9 +51,9 @@ It will statically read icontract decorator
             return x - y
 
 
-Which will require that `x` argument is more than 100, and return result is more than 200. Note that `return z + "thing"`
-at line 11 is returning string, thus the constraint `result > 200` is invalid. Klara is fault tolerant by design,
-thus constraint that is invalid will be skipped with warnings. This will result in test case::
+Which will require that `x` argument is more than 100, and that the returned result is more than 200. Note that `return z + "thing"`
+at line 11 is returning a string, thus the constraint `result > 200` is invalid. Klara is fault tolerant by design,
+thus any constraint that is invalid will be skipped with warnings. This will result in the following test case::
 
     import foo
 
