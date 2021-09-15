@@ -517,6 +517,132 @@ class TestInferenceIntra(BaseTestInference):
         result = [val.result.value for val in as_tree.body[-1].targets[0].infer()]
         assert result == ["1_a_string" * 10, "2_a_string" * 10]
 
+    def test_repr(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            s = "something"
+            repr(s)     #@ s(value)
+            
+            class C:
+                def __init__(self, x):
+                    self.x = x
+                    
+                def __repr__(self):
+                    return repr(self.x) + "test"
+            c = C(12345)
+            repr(c)     #@ cl(value)
+        """
+        )
+        result = [val.result.value for val in as_tree.s.infer()]
+        assert result == ["'something'"]
+        result = [val.result.value for val in as_tree.cl.infer()]
+        assert result == ["12345test"]
+
+    def test_ascii(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            s = "Pythön is interesting"
+            ascii(s)     #@ s(value)
+            
+            class C:
+                def __init__(self, x):
+                    self.x = x
+                    
+                def __repr__(self):
+                    return repr(self.x) + "test"
+            c = C("Pythön is interesting")
+            ascii(c)     #@ cl(value)
+        """
+        )
+        result = [val.result.value for val in as_tree.s.infer()]
+        assert result == ["'Pyth\\xf6n is interesting'"]
+        result = [val.result.value for val in as_tree.cl.infer()]
+        assert result == ["'Pyth\\xf6n is interesting'test"]
+
+    def test_joined_str(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            x = "a"
+            y = "b"
+            s = f"{x} + {y} = {x+y} => {3} {'constant'}"
+        """
+        )
+        result = [val.result.value for val in as_tree.body[-1].targets[0].infer()]
+        assert result[0] == "a + b = ab => 3 constant"
+
+    def test_joined_str_extra(self):
+        inputs = [
+            """
+            name = "Fred"
+            f"He said his name is {name!r}."
+            """,
+            """
+            name = "Fred"
+            f"He said his name is {repr(name)}."
+            """,
+            """
+            width = 10
+            precision = 4
+            value = 12.34567
+            f"result: {value:{width}.{precision}}"  # nested fields
+            """,
+            """
+            number = 1024
+            f"{number:#0x}"  # using integer format specifier
+            """,
+            """
+            line = "The mill's closed"
+            f"{line:20}"
+            """,
+            """
+            line = "The mill's closed"
+            f"{line!r:20}"
+            """
+        ]
+        expected = [
+            "He said his name is 'Fred'.",
+            "He said his name is 'Fred'.",
+            'result:      12.35',
+            '0x400',
+            "The mill's closed   ",
+            '"The mill\'s closed" ',
+        ]
+        for inp, exp in zip(inputs, expected):
+            as_tree, _ = self.build_tree_cfg(
+                inp
+            )
+            result = [val.result.value for val in as_tree.body[-1].value.infer()]
+            assert result[0] == exp
+
+    def test_joined_str_multiple(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            x = "a" if cond() else "b"
+            y = "c" if s() else "d"
+            s = f"{x} + {y} = {x+y} => {3} {'constant'}"
+            num = 1 if cond() else 2
+            result = 12.1323 if cond() else 13.123123
+            f"{result:.{num}f}"
+        """
+        )
+        result = [val.result.value for val in as_tree.body[-4].targets[0].infer()]
+        assert result == ['a + c = ac => 3 constant', 'a + d = ad => 3 constant', 'b + c = bc => 3 constant', 'b + d = bd => 3 constant']
+        result = [val.result.value for val in as_tree.body[-1].value.infer()]
+        assert result == ['12.1', '12.13', '13.1', '13.12']
+
+    def test_joined_str_uninferable(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            y = "c" if s() else "d"
+            s = f"{xxx} + {y} = {x+y} => {3} {'constant'}"
+            s = f"{3}:.{xxx}f"
+        """
+        )
+        result = [val.result for val in as_tree.body[-2].targets[0].infer()]
+        assert type(result[0]) is nodes.Uninferable
+        result = [val.result for val in as_tree.body[-1].targets[0].infer()]
+        assert type(result[0]) is nodes.Uninferable
+
 
 class TestContainer(BaseTestInference):
     # ------------------LIST TESTS--------------------

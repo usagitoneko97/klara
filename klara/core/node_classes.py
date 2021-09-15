@@ -2,7 +2,7 @@ import abc
 import ast as ast_mod
 import copy
 from functools import lru_cache
-from typing import List as L, Union
+from typing import List as L, Union, Optional
 
 from . import base_manager, exceptions, utilities
 from .bases import BaseContainer, BaseInstance, BaseNode, LocalsDictNode, MultiLineBlock, Sequence
@@ -1645,3 +1645,58 @@ class TypeStub(BaseNode):
     def postinit(self, _type: Union[Name, Attribute], value):
         self.type = _type
         self.value = value
+
+
+class JoinedStr(BaseNode):
+    """Representing list of string expression to join"""
+    _fields = ("values",)
+    _other_fields = ("lineno", "col_offset", "parent")
+
+    def __init__(self, lineno: Optional[int] = None, col_offset: Optional[int] = None,
+                 parent: Optional[BaseNode] = None):
+        super(JoinedStr, self).__init__(lineno, col_offset, parent)
+        self.values: L[BaseNode] = []
+        """The list of string expression to be join"""
+
+    def postinit(self, values: L[BaseNode]) -> None:
+        """
+        post initialization
+        :param values: The list of string expression to be join
+        """
+        self.values = values
+
+
+class FormattedValue(BaseNode):
+    """Class representing an :class:`ast.FormattedValue` node.
+    Represents a :pep:`498` format string.
+    """
+    _fields = ("value", "conversion", "format_spec")
+    _other_fields = ("lineno", "col_offset", "parent")
+    CONVERSION = {-1: "", 115: "str", 114: "repr", 97: "ascii"}
+
+    def __init__(self, lineno: Optional[int] = None, col_offset: Optional[int] = None,
+                 parent: Optional[BaseNode] = None) -> None:
+        """
+        :param lineno: The line that this node appears on in the source code.
+        :param col_offset: The column that this node appears on in the
+            source code.
+        :param parent: The parent node in the syntax tree.
+        """
+        self.value: BaseNode = None
+        """Any expression node that will format to string"""
+        self.conversion: int = -1
+        """The type of formatting."""
+        self.format_spec: JoinedStr = None
+        """Representing the formatting of the value, """
+        """refer to `python doc <https://docs.python.org/3/library/string.html#format-specification-mini-language>`_ """
+        super(FormattedValue, self).__init__(lineno, col_offset, parent)
+
+    def postinit(self, value: BaseNode, conversion: int, format_spec: JoinedStr) -> None:
+        """Post initialization
+        :param value: Any expression node that will format to string
+        :param conversion: The type of formatting.
+        :param format_spec: Representing the formatting of the value
+        """
+        self.value = value
+        self.conversion = conversion
+        self.format_spec = format_spec

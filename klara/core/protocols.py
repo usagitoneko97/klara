@@ -158,6 +158,8 @@ COMP_METHOD = {
     "not in": lambda a, b: a not in b,
 }
 
+BUILTIN_DUNDER = ("__abs__", "__int__", "__float__", "__str__", "__repr__", "__len__", "__round__", "__bool__")
+
 
 def py2_div(a, b):
     if any(type(i) is float for i in (a, b)):

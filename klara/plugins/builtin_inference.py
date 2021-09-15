@@ -5,7 +5,7 @@ from functools import partial
 
 import math
 
-from klara.core import exceptions, inference, manager, nodes, utilities
+from klara.core import exceptions, inference, manager, nodes, utilities, decorators
 
 MANAGER = manager.AstManager()
 
@@ -153,11 +153,40 @@ def _py2_round(x: typing.Union[int, float], d: int = 0) -> float:
         return float(math.ceil((x * p) - 0.5)) / p
 
 
+@decorators.yield_at_least_once(lambda x: inference.InferenceResult.load_result(nodes.Uninferable(x)))
+def _infer_ascii(node, context, inferred_attr=None):
+    if len(node.args) != 1:
+        raise inference.UseInferenceDefault()
+    arg = node.args[0]
+    for arg_res in arg.infer(context):
+        yielded = False
+        if arg_res.status:
+            if isinstance(arg_res.result, (nodes.Const, nodes.NameConstant)):
+                for res in inference.const_factory(ascii(arg_res.result)):
+                    res += arg_res
+                    yielded = True
+                    yield res
+            elif isinstance(arg_res.result, nodes.ClassInstance):
+                infer_method = getattr(arg_res.result, "_infer_builtins")
+                for res in infer_method("repr", context):
+                    if res.status and isinstance(res.result, nodes.Const):
+                        for ascii_res in inference.const_factory(ascii(res.strip_inference_result())):
+                            # calling ascii(repr(value)) will have extra wrapping single quote, remove it
+                            ascii_res.result.value = ascii_res.result.value[1:-1]
+                            ascii_res = ascii_res + arg_res + res
+                            yielded = True
+                            yield ascii_res
+        if not yielded:
+            raise inference.UseInferenceDefault()
+
+
 def register():
     register_builtin_transform("abs", partial(_infer_single_arg, builtin_func_repr="abs"))
     register_builtin_transform("int", partial(_infer_single_arg, builtin_func_repr="int"))
     register_builtin_transform("float", partial(_infer_single_arg, builtin_func_repr="float"))
     register_builtin_transform("str", partial(_infer_single_arg, builtin_func_repr="str"))
+    register_builtin_transform("repr", partial(_infer_single_arg, builtin_func_repr="repr"))
     register_builtin_transform("len", partial(_infer_single_arg, builtin_func_repr="len"))
+    register_builtin_transform("ascii", _infer_ascii)
     register_builtin_transform("round", _infer_round)
     register_builtin_transform("bool", _infer_bool)

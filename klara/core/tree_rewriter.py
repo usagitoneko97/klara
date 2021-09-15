@@ -499,6 +499,16 @@ class TreeRewriter:
             BASE_MANAGER.logger.error("AST", 'Error decoding "{}" in line: {}', node.s, node.lineno)
             raise e
 
+    def visit_formattedvalue(self, node: ast.FormattedValue, parent):
+        n = nodes.FormattedValue(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n.postinit(self.visit(node.value, n), node.conversion, self.visit(node.format_spec, n))
+        return n
+
+    def visit_joinedstr(self, node: ast.JoinedStr, parent):
+        n = nodes.JoinedStr(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n.postinit([self.visit(v, n) for v in node.values])
+        return n
+
 
 class AstBuilder:
     def __init__(self, py2=False, tree_rewriter=None):

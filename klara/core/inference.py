@@ -19,6 +19,7 @@ from .protocols import (
     UNARY_METHOD,
     UNARY_OP_DUNDER_METHOD,
     COMP_REFLECTED_OP,
+    BUILTIN_DUNDER,
 )
 
 MANAGER = manager.AstManager()
@@ -1251,14 +1252,21 @@ def infer_const_comp_op(self, op, other, _, context=None, self_result=None):
 
 @contextlib.contextmanager
 def _make_call_from_dunder_method(instance, dunder_method, context, *args):
-    call_node = nodes.Call()
+    call_node = _make_call_from_func(dunder_method, *args)
     # TODO: handle the scope of the function call
     call_node.locals["scope"] = {}
     context.bound_instance = instance
-    call_node.postinit(func=dunder_method, args=args)
-    MANAGER.add_weak_ref(call_node)
     yield call_node
     context.bound_instance = None
+
+
+def _make_call_from_func(function, *args):
+    call_node = nodes.Call()
+    call_node.locals["scope"] = {}
+    call_node.postinit(func=function, args=list(args), keywords=[])
+    MANAGER.add_weak_ref(call_node)
+    MANAGER.apply_transform(call_node)
+    return call_node
 
 
 def infer_inst_comp_op(self, _, other, method_name, context=context_mod.context_ins, self_result=None):
@@ -1342,6 +1350,7 @@ def infer_const_builtins(self: nodes.Const, builtin_func: str, context):
 
 def infer_inst_builtins(self: nodes.ClassInstance, builtin_func: str, context):
     builtin_dunder_func_repr = "__" + builtin_func + "__"
+
     yielded = False
     try:
         method = self.dunder_lookup(builtin_dunder_func_repr)
@@ -1559,6 +1568,51 @@ def infer_sequence(
 nodes.Sequence._infer = infer_sequence
 # FIXME infer definition specifically for dict as it can't be shared with sequence
 nodes.Dict._infer = infer_end
+
+
+@decorators.yield_at_least_once(lambda x: InferenceResult.load_result(nodes.Uninferable(x)))
+def infer_formattedvalue(node: nodes.FormattedValue, context=context_mod.context_ins, inferred_attr=None):
+    inferred = node.prepare_inferred_value(inferred_attr, ("value", "format_spec"), context)
+    for value, format_spec in utilities.infer_product(inferred["value"], inferred["format_spec"]):
+        yielded = False
+        conversion = nodes.FormattedValue.CONVERSION[node.conversion]
+        if value.status and (not format_spec or (format_spec.status and isinstance(format_spec.result, nodes.Const) and isinstance(format_spec.result.value, str))):
+            if format_spec:
+                result = "{{:{}}}".format(format_spec.result.value)
+            else:
+                result = "{}"
+            if conversion != "":
+                conversion_name = nodes.Name.quick_build(id=conversion)
+                call_node = _make_call_from_func(conversion_name, value.result)
+                for str_val in call_node.infer(context):
+                    if str_val.status:
+                        val = str_val.strip_inference_result()
+                        for res in const_factory(result.format(val)):
+                            res = res + value + format_spec if format_spec is not None else res + value
+                            yielded = True
+                            yield res
+            else:
+                for res in const_factory(result.format(value.strip_inference_result())):
+                    res = res + value + format_spec if format_spec is not None else res + value
+                    yielded = True
+                    yield res
+        if not yielded:
+            inference_results = (value, format_spec) if format_spec else (value,)
+            yield InferenceResult.load_result(nodes.Uninferable(), inference_results=inference_results)
+
+
+@decorators.yield_at_least_once(lambda x: InferenceResult.load_result(nodes.Uninferable(x)))
+def infer_joinedstr(node: nodes.JoinedStr, context=context_mod.context_ins, inferred_attr=None):
+    for values in utilities.infer_product(*(n.infer(context) for n in node.values)):
+        if all((v.status and isinstance(v.result, nodes.Const) and type(v.result.value) is str for v in values)):
+            for res in const_factory("".join(v.strip_inference_result() for v in values)):
+                for v in values:
+                    res += v
+                yield res
+
+
+nodes.FormattedValue._infer = infer_formattedvalue
+nodes.JoinedStr._infer = infer_joinedstr
 
 
 # ----------------type stub area---------------------
