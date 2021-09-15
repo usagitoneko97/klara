@@ -67,9 +67,9 @@ def test_foo_0():
     assert contract_test.foo(0, 0, \'\') == 0
 ```
 
-Consult the [quick start](quick_start.html) manual for more examples and
+Consult the [quick start](https://klara-py.readthedocs.io/en/latest/quick_start.html) manual for more examples and
 guidance. To use it as a static analysis library, go to
-[Inference](inference.html).
+[Inference](https://klara-py.readthedocs.io/en/latest/inference.html).
 
 ## Why Klara?
 
