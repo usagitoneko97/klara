@@ -178,7 +178,7 @@ class BaseTestPatchCondResult(BaseTest):
         """Assert arg with a lambda. Assert all the ledgers instead of just covered_blk2ledger.
         The lambda will pass a dictionary of the argument
         """
-        results = self.collector.use_mss_marco()
+        results = self.collector.use_z3_check()
         if cond_func is None:
             # passed None, expect no result recorded
             assert not self.collector.all_ledgers
