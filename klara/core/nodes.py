@@ -21,8 +21,11 @@ from .node_classes import (  # noqa: F401
     AssignAttribute,
     AssignName,
     AssignStarred,
+    AsyncWith,
+    AsyncFor,
     Attribute,
     AugAssign,
+    Await,
     BinOp,
     Bool,
     BoolOp,
@@ -80,6 +83,7 @@ from .node_classes import (  # noqa: F401
     With,
 )
 from .scoped_node_classes import (  # noqa: F401
+    AsyncFunctionDef,
     ClassDef,
     DictComp,
     FunctionDef,

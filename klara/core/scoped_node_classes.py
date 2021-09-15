@@ -257,6 +257,10 @@ class FunctionDef(LocalsDictNode, MultiLineBlock, Statement, ScopeSsaMixin, Func
             self.mock_args()
 
 
+class AsyncFunctionDef(FunctionDef):
+    pass
+
+
 class Lambda(LocalsDictNode, FunctionMixin):
     _fields = ("args", "body")
     _other_fields = ("lineno", "col_offset", "parent")

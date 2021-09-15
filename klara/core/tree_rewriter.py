@@ -509,6 +509,38 @@ class TreeRewriter:
         n.postinit([self.visit(v, n) for v in node.values])
         return n
 
+    def visit_asyncfunctiondef(self, node: ast.AsyncFunctionDef, parent):
+        n = nodes.AsyncFunctionDef(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n.postinit(
+            node.name,
+            self.visit(node.args, n),
+            [self.visit(body, n) for body in node.body],
+            [self.visit(dec, parent) for dec in node.decorator_list],
+            self.visit(node.returns, n),
+        )
+        n.parent.scope().containing_scope.append(n)
+        return n
+
+    def visit_await(self, node: ast.Await, parent):
+        n = nodes.Await(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n.postinit(self.visit(node.value, n))
+        return n
+
+    def visit_asyncfor(self, node: ast.AsyncFor, parent):
+        n = nodes.AsyncFor(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n.postinit(
+            self.visit(node.target, n),
+            self.visit(node.iter, n),
+            [self.visit(b, n) for b in node.body],
+            [self.visit(b, n) for b in node.orelse],
+        )
+        return n
+
+    def visit_asyncwith(self, node: ast.AsyncFor, parent):
+        n = nodes.AsyncWith(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n.postinit([self.visit(i, n) for i in node.items], [self.visit(b, n) for b in node.body])
+        return n
+
 
 class AstBuilder:
     def __init__(self, py2=False, tree_rewriter=None):

@@ -2236,3 +2236,15 @@ class TestImpossiblInference(BaseTestInference):
         )
         res = [r.result.value for r in as_tree.body[-1].targets[0].infer()]
         assert res == [4]
+
+    def test_async(self):
+        """Test lambda call"""
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            async def f():
+                x = 1 + 2
+                z = x   #@ s(value)
+        """
+        )
+        res = [r.result.value for r in as_tree.s.infer()]
+        assert res == [3]

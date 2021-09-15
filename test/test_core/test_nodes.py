@@ -85,6 +85,18 @@ class TestParentInfo:
         node = new_tree.body[0].value.left.left
         assert node.statement() == new_tree.body[0]
 
+    def test_async(self):
+        as_tree = AstBuilder().string_build(
+            """\
+            async def f():
+                async with something():
+                    async for i in range(3):
+                        await g()
+            """
+        )
+        s = as_tree.body[0].body[0].body[0].body[0].value.scope()
+        assert s == as_tree.body[0]
+
 
 class TestBaseNode:
     def test_get_parent_of_type(self):

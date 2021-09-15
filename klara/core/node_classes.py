@@ -1700,3 +1700,20 @@ class FormattedValue(BaseNode):
         self.value = value
         self.conversion = conversion
         self.format_spec = format_spec
+
+
+class AsyncFor(For):
+    pass
+
+
+class AsyncWith(With):
+    pass
+
+
+class Await(BaseNode):
+    _fields = ("value",)
+
+    def postinit(self, value: BaseNode) -> None:
+        """
+        :param value: the value it awaits
+        """

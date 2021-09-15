@@ -895,6 +895,9 @@ class GetBlocks(object):
         block_list_generated.append(function_block)
         return block_list_generated
 
+    def visit_AsyncFunctionDef(self, ast_node):
+        return self.visit_FunctionDef(ast_node)
+
     def visit_Assign(self, ast_node):
         return self.visit(ast_node.value)
 
