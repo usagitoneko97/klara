@@ -28,6 +28,10 @@ def test_triangle_0():
 
 See the Klara\'s documentation at <https://klara-py.readthedocs.io>
 
+**Note**: Klara is still in early experimental stage, notable missing features are loop, comprehension, module import, exceptions and many more.
+See [limitations](https://klara-py.readthedocs.io/en/latest/limitation.html) for full list. It probably will not run on real world projects, so it's best
+to cherry-pick a few interesting functions to generate the corresponding test case.
+
 ## Installing
 
 Klara can be installed via `pip` tool by using:

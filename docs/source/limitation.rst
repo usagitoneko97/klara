@@ -14,6 +14,9 @@ All comprehensions are not supported.
 Python data structure (list, set, tuple, dict) is supported in inference system, but it's not supported
 when it's used as a constraint, e.g. checking ``len()`` or testing membership.
 
+**Exceptions** is not supported now and will simply get ignored. In the future, Klara will be able to generate
+inputs to trigger exceptions, with contract support.
+
 Uninferable
 -----------
 
@@ -26,7 +29,12 @@ the value can't be determined, but it will still contain bound conditions. Consi
 
 The function can return the number 3, or the invalid variable ``xxx``. Even though we can't determine
 the value of ``xxx``, it will still contain the bound: ``not(v1 > 2)``, so Klara still be able to generate
-2 test cases for this function.
+2 test cases for this function, using ``is not None`` as test.::
+
+    def test_foo_0():
+        assert foo(3) == 3
+        assert foo(0) is not None
+
 
 There will be a lot of undocumented cases of uninferable that doesn't contain the expected bound. One example
 is where binary operation with list, the bound for the element of the list will not include in the uninferable

@@ -7,8 +7,9 @@ Welcome to klara's documentation!
 =================================
 
 .. note::
-    Klara is still in early experimental stage, notable missing features are loop, comprehension, module import and many more.
-    See `limitation <limitation.html>`_ for full list.
+    Klara is still in early experimental stage, notable missing features are loop, comprehension, module import, exceptions and many more.
+    See `limitation <limitation.html>`_ for full list. It probably will not run on real world projects, so it's best
+    to cherry-pick a few interesting functions to generate the corresponding test case.
 
 Klara is a static analysis tools to automatically generate test cases, based on an SMT solver (`z3 <https://github.com/Z3Prover/z3`), with a powerful `AST <https://en.wikipedia.org/wiki/Abstract_syntax_tree>`
 level inference system. Klara will take a python file as input and generate a corresponding test file in pytest format, that attempts to cover all
