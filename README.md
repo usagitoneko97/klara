@@ -225,8 +225,8 @@ After we have setup the plugin, Klara will generate following test
 ``` python
 import contract_test
 def test_main_0():
-    assert contract_test.main(1, 3, 0, 0) == 3.0
-    assert contract_test.main(0, 0, 0, 0) == 0.0
+    assert contract_test.main(1, 3, 0, 0) is not None
+    assert contract_test.main(0, 0, 0, 0) is not None
 ```
 
 Which is only 2 combinations of `nnn_right`
