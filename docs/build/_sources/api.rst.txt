@@ -1,4 +1,0 @@
-API
-===
-.. automodule:: klara
-    :members:

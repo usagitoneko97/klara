@@ -119,3 +119,4 @@ venv.bak/
 
 *.exe
 .idea/
+docs/build/
