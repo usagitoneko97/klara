@@ -11,7 +11,7 @@ Welcome to klara's documentation!
     See `limitation <limitation.html>`_ for full list. It probably will not run on real world projects, so it's best
     to cherry-pick a few interesting functions to generate the corresponding test case.
 
-Klara is a static analysis tools to automatically generate test cases, based on an SMT solver (`z3 <https://github.com/Z3Prover/z3`), with a powerful `AST <https://en.wikipedia.org/wiki/Abstract_syntax_tree>`
+Klara is a static analysis tools to automatically generate test cases, based on an SMT solver (`z3 <https://github.com/Z3Prover/z3>`_), with a powerful `AST <https://en.wikipedia.org/wiki/Abstract_syntax_tree>`_
 level inference system. Klara will take a python file as input and generate a corresponding test file in pytest format, that attempts to cover all
 return values of the input file's functions. For example, the following function in file ``test.py``::
 

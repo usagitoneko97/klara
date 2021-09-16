@@ -30,8 +30,7 @@ And it will generate a test file ``test_foo.py`` in the same directory, filled w
         assert contract_test.foo(0, 0, \'\') == 0
 
 In order to fine tune test inputs generation, Klara integrates well with `icontract <https://github.com/Parquery/icontract>`_.
-It will statically read the icontract decorator::
-
+It will statically read the icontract decorator
 
 .. code-block:: python
     :linenos:
