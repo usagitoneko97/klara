@@ -197,7 +197,7 @@ class RawBasicBlock(object):
             # will be rename first.
             queue.extendleft(reversed(blk.idom))
 
-    def get_conditions_from_prev(self) -> set:
+    def get_conditions_from_prev(self, analyzed_blocks) -> set:
         """Return the conditions from the immediate predecessor.
             A
            / \
@@ -208,7 +208,7 @@ class RawBasicBlock(object):
         results = set()
         for prev in self.prev_block_list:
             try:
-                if len(prev.nxt_block_list) == 2:
+                if prev in analyzed_blocks and len(prev.nxt_block_list) == 2:
                     if prev.nxt_block_list.index(self) == 0:
                         results.add(prev.ssa_code.code_list[-1])
                     else:
@@ -364,6 +364,7 @@ class ParentScopeBlock(RawBasicBlock):
         3. Intersect the list and add with the leftover.
         """
         changed = True
+        analyzed_block = set()
         while changed:
             changed = False
             for blk in self.blocks:
@@ -372,12 +373,13 @@ class ParentScopeBlock(RawBasicBlock):
                     intersected_conditions = set.intersection(*(prev.conditions for prev in blk.prev_block_list))
                 else:
                     conditions = intersected_conditions = set()
-                valid_condition = blk.get_conditions_from_prev()
+                valid_condition = blk.get_conditions_from_prev(analyzed_block)
                 valid_condition = utilities.is_subset(valid_condition, conditions)
                 conditions = intersected_conditions | valid_condition
                 if blk.conditions != conditions:
                     blk.conditions = conditions
                     changed = True
+                analyzed_block.add(blk)
 
         if self.ast_node:
             for scope in self.ast_node.containing_scope:

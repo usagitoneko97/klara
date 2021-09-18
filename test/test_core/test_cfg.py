@@ -380,7 +380,10 @@ class TestCondition(BaseTest):
         )
         cfg_real = Cfg(as_tree)
         l3 = cfg_real.block_list.get_block_by_name("L3")
-        assert str(l3.get_conditions_from_prev()) == "{x > 1}"
+        l1 = cfg_real.block_list.get_block_by_name("L1")
+        l2 = cfg_real.block_list.get_block_by_name("L2")
+        analyzed_block = {l1, l2}
+        assert str(l3.get_conditions_from_prev(analyzed_block)) == "{x > 1}"
         l5 = cfg_real.block_list.get_block_by_name("L5")
-        results = {str(s) for s in l5.get_conditions_from_prev()}
+        results = {str(s) for s in l5.get_conditions_from_prev(analyzed_block)}
         assert results == {"not(x > 1)"}
