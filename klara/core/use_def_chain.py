@@ -46,6 +46,9 @@ class DefUseLinker(AstVisitor):
             def_stmt = node.instance().locals.get(node.get_var_repr())
             node.links = def_stmt
 
+    def visit_delname(self, node):
+        self.visit_name(node)
+
     def visit_subscript(self, node):
         self.generic_visit(node)
         if node.is_load_var():

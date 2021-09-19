@@ -2274,3 +2274,16 @@ class TestImpossiblInference(BaseTestInference):
         )
         res = [r.result.value for r in as_tree.s.infer()]
         assert res == [3]
+
+    def test_del(self):
+        """Test lambda call"""
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            queue = [1.2]
+            x = [1.2]
+            a = x
+            del queue   #@ d
+        """
+        )
+        res = [r for r in as_tree.d.targets[0].infer()]
+        assert str(res[0]) == "[1.2]"

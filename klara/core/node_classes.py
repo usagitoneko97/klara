@@ -1299,26 +1299,25 @@ class Store(BaseNode):
     _fields = tuple()
     _other_fields = ("lineno", "col_offset", "parent")
 
-    def __init__(self, lineno=None, col_offset=None, parent=None):
-        super(Store, self).__init__(lineno, col_offset, parent)
-
 
 class Load(BaseNode):
     _fields = tuple()
     _other_fields = ("lineno", "col_offset", "parent")
 
-    def __init__(self, lineno=None, col_offset=None, parent=None):
-        super(Load, self).__init__(lineno, col_offset, parent)
-
 
 class Del(BaseNode):
+    _fields = tuple()
+    _other_fields = ("lineno", "col_offset", "parent")
+
+
+class Delete(BaseNode):
     _fields = ("targets",)
     _other_fields = ("lineno", "col_offset", "parent")
 
     def __init__(self, lineno=None, col_offset=None, parent=None):
-        super(Del, self).__init__(lineno, col_offset, parent)
+        super(Delete, self).__init__(lineno, col_offset, parent)
 
-    def postinit(self, targets):
+    def postinit(self, targets: L[BaseNode]):
         self.targets = targets
 
 

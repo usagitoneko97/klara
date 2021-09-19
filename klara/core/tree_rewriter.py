@@ -373,6 +373,10 @@ class TreeRewriter:
         n = nodes.Load(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
         return n
 
+    def visit_del(self, node, parent):
+        n = nodes.Del(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        return n
+
     def visit_global(self, node, parent):
         n = nodes.Global(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
         n.postinit(node.names)
@@ -415,7 +419,7 @@ class TreeRewriter:
         return n
 
     def visit_delete(self, node, parent):
-        n = nodes.Del(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
+        n = nodes.Delete(getattr(node, "lineno", None), getattr(node, "col_offset", None), parent)
         n.postinit([self.visit(t, n) for t in node.targets])
         return n
 

@@ -129,6 +129,9 @@ class AttributeEnumerator(AstVisitor):
             return None  # delete the whole stmt if any of the node is None
         self.var_to_update.append(node)
 
+    def visit_delattribute(self, node):
+        self.visit_attribute(node)
+
     def visit_name(self, node):
         # the first name of the attr
         node.convert_to_ssa()
@@ -136,6 +139,9 @@ class AttributeEnumerator(AstVisitor):
 
     def visit_assignname(self, node):
         self.var_to_update.append(node)
+
+    def visit_delname(self, node):
+        self.visit_name(node)
 
     def visit_subscript(self, node):
         self.generic_visit(node)
