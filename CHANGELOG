@@ -2,7 +2,7 @@
 PY-SCA CHANGELOG
 ================
 
-<unreleased> Release Notes (date pending)
+v0.6.3 Release Notes (09/19/21)
 * Fixed conditions in loop causing conflicting conditions propagation (#7)
 + implemented identity (is, is not) comparison for const and instance (#7)
 * fixed Del and Delete shared the same node, and caused fields error (#7)

@@ -23,7 +23,7 @@ copyright = "2021, usagitoneko97"
 author = "usagitoneko97"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.2"
+release = "0.6.3"
 
 
 # -- General configuration ---------------------------------------------------
