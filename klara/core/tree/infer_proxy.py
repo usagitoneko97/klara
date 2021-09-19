@@ -80,7 +80,7 @@ class InferProxy(nodes.Const):
         :return: ast node
         """
         return super(InferProxy, self).to_ast()
-        
+
     @staticmethod
     def _convert_dunder(dunder: str):
         """

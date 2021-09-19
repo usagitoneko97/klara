@@ -2,6 +2,13 @@
 PY-SCA CHANGELOG
 ================
 
+<unreleased> Release Notes (date pending)
+* Fixed conditions in loop causing conflicting conditions propagation (#7)
++ implemented identity (is, is not) comparison for const and instance (#7)
+* fixed Del and Delete shared the same node, and caused fields error (#7)
++ added AsyncFunctionDef, Await, AsyncFor, AsyncWith ast support
++ implemented repr, ascii builtin call, and JoinedStr, FormattedValue inference (#7, #8)
+
 v0.6.2 Release Notes (09/10/21)
 * implemented bool(), __bool__ by wrapping implicit boolean context (e.g. if (x)), so that during inferring, proper
     dunder method will be called.

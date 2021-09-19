@@ -623,20 +623,18 @@ class TestInferenceIntra(BaseTestInference):
             """
             line = "The mill's closed"
             f"{line!r:20}"
-            """
+            """,
         ]
         expected = [
             "He said his name is 'Fred'.",
             "He said his name is 'Fred'.",
-            'result:      12.35',
-            '0x400',
+            "result:      12.35",
+            "0x400",
             "The mill's closed   ",
             '"The mill\'s closed" ',
         ]
         for inp, exp in zip(inputs, expected):
-            as_tree, _ = self.build_tree_cfg(
-                inp
-            )
+            as_tree, _ = self.build_tree_cfg(inp)
             result = [val.result.value for val in as_tree.body[-1].value.infer()]
             assert result[0] == exp
 
@@ -652,9 +650,14 @@ class TestInferenceIntra(BaseTestInference):
         """
         )
         result = [val.result.value for val in as_tree.body[-4].targets[0].infer()]
-        assert result == ['a + c = ac => 3 constant', 'a + d = ad => 3 constant', 'b + c = bc => 3 constant', 'b + d = bd => 3 constant']
+        assert result == [
+            "a + c = ac => 3 constant",
+            "a + d = ad => 3 constant",
+            "b + c = bc => 3 constant",
+            "b + d = bd => 3 constant",
+        ]
         result = [val.result.value for val in as_tree.body[-1].value.infer()]
-        assert result == ['12.1', '12.13', '13.1', '13.12']
+        assert result == ["12.1", "12.13", "13.1", "13.12"]
 
     def test_joined_str_uninferable(self):
         as_tree, _ = self.build_tree_cfg(

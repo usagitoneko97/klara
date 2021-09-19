@@ -1581,7 +1581,14 @@ def infer_formattedvalue(node: nodes.FormattedValue, context=context_mod.context
     for value, format_spec in utilities.infer_product(inferred["value"], inferred["format_spec"]):
         yielded = False
         conversion = nodes.FormattedValue.CONVERSION[node.conversion]
-        if value.status and (not format_spec or (format_spec.status and isinstance(format_spec.result, nodes.Const) and isinstance(format_spec.result.value, str))):
+        if value.status and (
+            not format_spec
+            or (
+                format_spec.status
+                and isinstance(format_spec.result, nodes.Const)
+                and isinstance(format_spec.result.value, str)
+            )
+        ):
             if format_spec:
                 result = "{{:{}}}".format(format_spec.result.value)
             else:

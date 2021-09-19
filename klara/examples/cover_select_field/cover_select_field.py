@@ -13,9 +13,9 @@ class ComponentProxy(klara.InferProxy):
         super(ComponentProxy, self).__init__(value)
 
     def to_ast(self):
-        return ast.Call(func=ast.Name(id="Component", ctx=ast.Load()),
-                        args=[ast.Constant(value=self.value.val1)],
-                        keywords=[])
+        return ast.Call(
+            func=ast.Name(id="Component", ctx=ast.Load()), args=[ast.Constant(value=self.value.val1)], keywords=[]
+        )
 
 
 @klara.inference.inference_transform_wrapper
@@ -24,8 +24,9 @@ def _infer_call(node: klara.Call, context):
     for first_val_result in first_arg.infer(context):
         first_val = first_val_result.strip_inference_result()
         component = Component(first_val)
-        yield klara.inference.InferenceResult.load_result(ComponentProxy(component),
-                                                          inference_results=(first_val_result,))
+        yield klara.inference.InferenceResult.load_result(
+            ComponentProxy(component), inference_results=(first_val_result,)
+        )
 
 
 def _is_component_call(node: klara.Call):

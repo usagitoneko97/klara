@@ -1648,11 +1648,13 @@ class TypeStub(BaseNode):
 
 class JoinedStr(BaseNode):
     """Representing list of string expression to join"""
+
     _fields = ("values",)
     _other_fields = ("lineno", "col_offset", "parent")
 
-    def __init__(self, lineno: Optional[int] = None, col_offset: Optional[int] = None,
-                 parent: Optional[BaseNode] = None):
+    def __init__(
+        self, lineno: Optional[int] = None, col_offset: Optional[int] = None, parent: Optional[BaseNode] = None
+    ):
         super(JoinedStr, self).__init__(lineno, col_offset, parent)
         self.values: L[BaseNode] = []
         """The list of string expression to be join"""
@@ -1669,12 +1671,14 @@ class FormattedValue(BaseNode):
     """Class representing an :class:`ast.FormattedValue` node.
     Represents a :pep:`498` format string.
     """
+
     _fields = ("value", "conversion", "format_spec")
     _other_fields = ("lineno", "col_offset", "parent")
     CONVERSION = {-1: "", 115: "str", 114: "repr", 97: "ascii"}
 
-    def __init__(self, lineno: Optional[int] = None, col_offset: Optional[int] = None,
-                 parent: Optional[BaseNode] = None) -> None:
+    def __init__(
+        self, lineno: Optional[int] = None, col_offset: Optional[int] = None, parent: Optional[BaseNode] = None
+    ) -> None:
         """
         :param lineno: The line that this node appears on in the source code.
         :param col_offset: The column that this node appears on in the
