@@ -411,6 +411,32 @@ class TestInferenceIntra(BaseTestInference):
         result = [val.result.value for val in as_tree.body[-1].targets[0].infer()]
         assert result == [True, True]
 
+    def test_compare_identity(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            y = 2
+            x = 2
+            y is x #@ t(value)
+            class C:
+                def __init__(self, x):
+                    self.x = x
+            c1 = C(1)
+            c2 = C(1)
+            c1_1 = c1
+            c1_1 is c1  #@ cl(value)
+            c2 is c1  #@ not_cl(value)
+            c2 is not c1 #@ not_cl_true(value)
+        """
+        )
+        result = [val.result.value for val in as_tree.t.infer()]
+        assert result == [True]
+        result = [val.result.value for val in as_tree.cl.infer()]
+        assert result == [True]
+        result = [val.result.value for val in as_tree.not_cl.infer()]
+        assert result == [False]
+        result = [val.result.value for val in as_tree.not_cl_true.infer()]
+        assert result == [True]
+
     def test_ifexp_no_nested(self):
         as_tree, _ = self.build_tree_cfg(
             """\

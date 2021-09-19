@@ -1269,14 +1269,19 @@ def _make_call_from_func(function, *args):
     return call_node
 
 
-def infer_inst_comp_op(self, _, other, method_name, context=context_mod.context_ins, self_result=None):
+def infer_inst_comp_op(self, op, other, method_name, context=context_mod.context_ins, self_result=None):
     # create a `Call` node and infer it from there
-    method = self.dunder_lookup(method_name)
-    if method:
-        with _make_call_from_dunder_method(self, method, context, other.result) as call_node:
-            yield from call_node.infer(context)
+    if method_name is None:
+        # it's identity test. Just compare the identity of ClassInstance
+        method = COMP_METHOD[op]
+        yield from const_factory(method(self, other.result))
     else:
-        yield InferenceResult.load_result(nodes.Uninferable(self))
+        method = self.dunder_lookup(method_name)
+        if method:
+            with _make_call_from_dunder_method(self, method, context, other.result) as call_node:
+                yield from call_node.infer(context)
+        else:
+            yield InferenceResult.load_result(nodes.Uninferable(self))
 
 
 nodes.Const._infer_comp_op = infer_const_comp_op

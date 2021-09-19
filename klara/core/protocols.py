@@ -102,6 +102,8 @@ COMP_OP_DUNDER_METHOD = {
     "!=": "__ne__",
     "in": "__contains__",
     "not in": "__contains__",
+    "is": None,
+    "is not": None,
 }
 
 COMP_REFLECTED_OP = {
@@ -156,6 +158,8 @@ COMP_METHOD = {
     "!=": lambda a, b: a != b,
     "in": lambda a, b: a in b,
     "not in": lambda a, b: a not in b,
+    "is": lambda a, b: a is b,
+    "is not": lambda a, b: a is not b,
 }
 
 BUILTIN_DUNDER = ("__abs__", "__int__", "__float__", "__str__", "__repr__", "__len__", "__round__", "__bool__")

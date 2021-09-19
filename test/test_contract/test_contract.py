@@ -660,3 +660,16 @@ class TestContractRequireEnsure(KlaraBaseTest):
         ret = run(test_case, self._TEST_MODULE_NAME)
         self.assert_test_ran(test_case, ret)
         self.assert_num_of_assert(ret, 3)
+
+    def test_identity_comparison(self):
+        test_case = dedent(
+            """\
+            def Top(pp_en: bool, cm: int, mc: int):
+                if cm == 2 and cm is mc and type(cm) is int:
+                    return 3
+                else:
+                    return 4
+        """
+        )
+        ret = run(test_case, self._TEST_MODULE_NAME)
+        self.assert_num_of_assert(ret, 2)

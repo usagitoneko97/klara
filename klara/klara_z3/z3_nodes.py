@@ -108,11 +108,12 @@ class Z3Proxy(infer_proxy.InferProxy):
                 functools.partial(self._binop_dunder_operation, op, protocols.BIN_OP_METHOD[op], True),
             )
         for compop, dunder in protocols.COMP_OP_DUNDER_METHOD.items():
-            setattr(
-                self,
-                self._convert_dunder(dunder),
-                functools.partial(self._compop_dunder_operation, protocols.COMP_METHOD[compop]),
-            )
+            if dunder:
+                setattr(
+                    self,
+                    self._convert_dunder(dunder),
+                    functools.partial(self._compop_dunder_operation, protocols.COMP_METHOD[compop]),
+                )
         for unary_op, dunder in protocols.UNARY_OP_DUNDER_METHOD.items():
             if dunder:
                 setattr(
