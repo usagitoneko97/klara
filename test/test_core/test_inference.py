@@ -543,6 +543,23 @@ class TestInferenceIntra(BaseTestInference):
         result = [val.result.value for val in as_tree.body[-1].targets[0].infer()]
         assert result == ["1_a_string" * 10, "2_a_string" * 10]
 
+    def test_divmod(self):
+        as_tree, _ = self.build_tree_cfg(
+            """\
+            a = 1
+            b = 33
+            divmod(a, b)    #@ dm(value)
+            divmod(1)       #@ uninf(value)
+            divmod(1, 2, 3) #@ uninf2(value)
+        """
+        )
+        result = [val.result.value for val in as_tree.dm.infer()]
+        assert result == [divmod(1, 33)]
+        result = [val for val in as_tree.uninf.infer()]
+        assert type(result[0]) is nodes.Uninferable
+        result = [val.result for val in as_tree.uninf2.infer()]
+        assert type(result[0]) is nodes.Uninferable
+
     def test_repr(self):
         as_tree, _ = self.build_tree_cfg(
             """\

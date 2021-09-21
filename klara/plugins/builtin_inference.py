@@ -61,6 +61,23 @@ def _infer_single_arg(node, builtin_func_repr, context=None, inferred_attr=None)
             raise inference.UseInferenceDefault()
 
 
+def _infer_divmod(node: nodes.Call, context, inferred_attr=None):
+    if len(node.args) != 2:
+        raise inference.UseInferenceDefault()
+    for args in utilities.infer_product(*(arg.infer(context) for arg in node.args)):
+        if all(arg.status and isinstance(arg.result, nodes.Const) for arg in args):
+            try:
+                result = divmod(*(arg.strip_inference_result() for arg in args))
+                for res in inference.const_factory(result):
+                    for a in args:
+                        res += a
+                    yield res
+            except TypeError:
+                yield inference.InferenceResult.load_result(nodes.Uninferable(), inference_results=args)
+        else:
+            yield inference.InferenceResult.load_result(nodes.Uninferable(), inference_results=args)
+
+
 def _infer_round(node, context=None):
     """
     Interesting note in python 2 round function:
@@ -190,3 +207,4 @@ def register():
     register_builtin_transform("ascii", _infer_ascii)
     register_builtin_transform("round", _infer_round)
     register_builtin_transform("bool", _infer_bool)
+    register_builtin_transform("divmod", _infer_divmod)

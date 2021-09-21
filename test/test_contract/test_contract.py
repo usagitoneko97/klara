@@ -673,3 +673,16 @@ class TestContractRequireEnsure(KlaraBaseTest):
         )
         ret = run(test_case, self._TEST_MODULE_NAME)
         self.assert_num_of_assert(ret, 2)
+
+    def test_divmod(self):
+        test_case = dedent(
+            """\
+            def Top(pp_en: bool, cm: int, mc: int):
+                if divmod(cm, mc)[0] == 2:
+                    return 3
+                else:
+                    return 4
+        """
+        )
+        ret = run(test_case, self._TEST_MODULE_NAME)
+        self.assert_num_of_assert(ret, 2)
