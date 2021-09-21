@@ -555,7 +555,7 @@ class TestInferenceIntra(BaseTestInference):
         )
         result = [val.result.value for val in as_tree.dm.infer()]
         assert result == [divmod(1, 33)]
-        result = [val for val in as_tree.uninf.infer()]
+        result = [val.result for val in as_tree.uninf.infer()]
         assert type(result[0]) is nodes.Uninferable
         result = [val.result for val in as_tree.uninf2.infer()]
         assert type(result[0]) is nodes.Uninferable

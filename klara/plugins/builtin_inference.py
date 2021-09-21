@@ -63,7 +63,7 @@ def _infer_single_arg(node, builtin_func_repr, context=None, inferred_attr=None)
 
 def _infer_divmod(node: nodes.Call, context, inferred_attr=None):
     if len(node.args) != 2:
-        raise inference.UseInferenceDefault()
+        yield inference.InferenceResult.load_result(nodes.Uninferable())
     for args in utilities.infer_product(*(arg.infer(context) for arg in node.args)):
         if all(arg.status and isinstance(arg.result, nodes.Const) for arg in args):
             try:
