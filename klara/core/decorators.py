@@ -175,3 +175,43 @@ def yield_at_least_once(node_class):
         return wrapper
 
     return _w
+
+
+def _patch_cls(*cls, callback_func: str):
+    def _wrapper(f):
+        for c in cls:
+            setattr(c, callback_func, f)
+        return f
+    return _wrapper
+
+
+def register_infer(*cls):
+    return _patch_cls(*cls, callback_func="_infer")
+
+
+def register_binop_handler(*cls):
+    return _patch_cls(*cls, callback_func="_infer_binop")
+
+
+def register_compop_handler(*cls):
+    return _patch_cls(*cls, callback_func="_infer_comp_op")
+
+
+def register_unary_handler(*cls):
+    return _patch_cls(*cls, callback_func="_infer_unaryop")
+
+
+def register_bool_handler(*cls):
+    return _patch_cls(*cls, callback_func="_infer_bool")
+
+
+def register_builtin_handler(*cls):
+    return _patch_cls(*cls, callback_func="_infer_builtins")
+
+
+def register_return_value_handler(*cls):
+    return _patch_cls(*cls, callback_func="infer_return_value")
+
+
+def register_extract_const_handler(*cls):
+    return _patch_cls(*cls, callback_func="_extract_const")

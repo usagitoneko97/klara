@@ -369,21 +369,25 @@ def infer(self, context=context_mod.context_ins, inferred_attr=None):
         yield from self._infer(context, inferred_attr)
 
 
+@decorators.register_infer(nodes.BaseNode)
 def base_infer(self, context=context_mod.context_ins, inferred_attr=None):
     """using use_def chain info to infer the value"""
     if not hasattr(self, "links"):
         yield InferenceResult.load_result(nodes.Uninferable(self))
 
 
-nodes.BaseNode._infer = base_infer
 nodes.BaseNode.infer = infer
 
 
+@decorators.register_infer(nodes.Const, nodes.NameConstant, nodes.Lambda,
+                           nodes.ClassDef, nodes.ClassInstance, nodes.LocalsDictNode,
+                           nodes.Dict, nodes.OverloadedFunc)
 def infer_end(self, context=context_mod.context_ins, inferred_attr=None):
     yield InferenceResult.load_result(self)
 
 
-def infer_function_def(self, context=context_mod.context_ins, inferred_attr=None):
+@decorators.register_infer(nodes.FunctionDef)
+def infer_function_def(self: nodes.FunctionDef, context=context_mod.context_ins, inferred_attr=None):
     if self.is_property():
         yield from self.infer_return_value(context)
         return
@@ -416,6 +420,7 @@ def infer_function_def(self, context=context_mod.context_ins, inferred_attr=None
     yield from wrapped_decorator
 
 
+@decorators.register_return_value_handler(nodes.FunctionDef)
 def infer_return_value(self, context=context_mod.context_ins, inferred_attr=None):
     if self.refer_to_block is None:
         # FIXME: quick hack for any typestub file not being Cfg'd
@@ -430,19 +435,9 @@ def infer_return_value(self, context=context_mod.context_ins, inferred_attr=None
                 yield from val.infer(context=context)
 
 
+@decorators.register_return_value_handler(nodes.Lambda)
 def infer_lambda_return_value(self, context=context_mod.context_ins, inferred_attr=None):
     yield from self.body.infer(context)
-
-
-nodes.Const._infer = infer_end
-nodes.NameConstant._infer = infer_end
-nodes.FunctionDef._infer = infer_function_def
-nodes.Lambda._infer = infer_end
-nodes.FunctionDef.infer_return_value = infer_return_value
-nodes.Lambda.infer_return_value = infer_lambda_return_value
-nodes.ClassDef._infer = infer_end
-nodes.ClassInstance._infer = infer_end
-nodes.LocalsDictNode._infer = infer_end
 
 
 def extract_const(self, context=None):
@@ -458,11 +453,13 @@ def extract_const(self, context=None):
 nodes.BaseNode.extract_const = extract_const
 
 
+@decorators.register_extract_const_handler(nodes.BaseNode)
 def extract_const_base(self, context=None):
     for res in self.infer(context):
         yield res
 
 
+@decorators.register_extract_const_handler(nodes.ClassInstance)
 def extract_const_end(self, context=context_mod.context_ins):
     yield InferenceResult.load_result(self)
 
@@ -476,22 +473,15 @@ def extract_const_sequence(self, context=None, ctype=list):
             yield InferenceResult.load_result(nodes.Uninferable(), inference_results=vals)
 
 
-def extract_const_const(self, context=None):
-    yield InferenceResult.load_result(self.value)
-
-
+@decorators.register_extract_const_handler(nodes.Dict)
 def extract_const_dict(self, context=None):
     # no reason to yield a constant version of dict, since it
     # can't be used with any bin op method
     yield from ()
 
 
-nodes.ClassInstance._extract_const = extract_const_end
-nodes.BaseNode._extract_const = extract_const_base
-nodes.List._extract_const = functools.partialmethod(extract_const_sequence, ctype=list)
-nodes.Set._extract_const = functools.partialmethod(extract_const_sequence, ctype=set)
-nodes.Tuple._extract_const = functools.partialmethod(extract_const_sequence, ctype=tuple)
-nodes.Dict._extract_const = extract_const_dict
+for ctype, node_type in zip((list, set, tuple), (nodes.List, nodes.Set, nodes.Tuple)):
+    decorators.register_extract_const_handler(node_type)(functools.partialmethod(extract_const_sequence, ctype=ctype))
 
 
 def _infer_unaryop(op: str, val: InferenceResult, context=None):
@@ -511,6 +501,7 @@ def _infer_unaryop(op: str, val: InferenceResult, context=None):
             )
 
 
+@decorators.register_infer(nodes.UnaryOp)
 def infer_unaryop(self, context=context_mod.context_ins, inferred_attr=None):
     inferred = self.prepare_inferred_value(inferred_attr, "operand", context)
     for val in self.get_inferred(inferred["operand"]):
@@ -519,6 +510,7 @@ def infer_unaryop(self, context=context_mod.context_ins, inferred_attr=None):
             yield res
 
 
+@decorators.register_unary_handler(nodes.Const, nodes.NameConstant)
 def infer_const_unaryop(self, op, _, context):
     func = UNARY_METHOD.get(op)
     if func:
@@ -527,6 +519,7 @@ def infer_const_unaryop(self, op, _, context):
     yield InferenceResult.load_result(nodes.Uninferable())
 
 
+@decorators.register_unary_handler(nodes.ClassInstance)
 def infer_inst_unaryop(self, _, method_name, context=context_mod.context_ins):
     method = self.dunder_lookup(method_name)
     if method:
@@ -536,12 +529,7 @@ def infer_inst_unaryop(self, _, method_name, context=context_mod.context_ins):
     yield InferenceResult.load_result(nodes.Uninferable())
 
 
-nodes.Const._infer_unaryop = infer_const_unaryop
-nodes.NameConstant._infer_unaryop = infer_const_unaryop
-nodes.ClassInstance._infer_unaryop = infer_inst_unaryop
-nodes.UnaryOp._infer = infer_unaryop
-
-
+@decorators.register_infer(nodes.BoolOp)
 def infer_boolop(self: nodes.BoolOp, context=context_mod.context_ins, inferred_attr=None):
     """
     - 'and' and 'or' evaluates expression from left to right.
@@ -598,19 +586,14 @@ def infer_boolop(self: nodes.BoolOp, context=context_mod.context_ins, inferred_a
             yield res
 
 
-nodes.BoolOp._infer = infer_boolop
-
-
+@decorators.register_infer(nodes.AssignName, nodes.AssignAttribute)
 def infer_assignment(self, context=context_mod.context_ins, inferred_attr=None):
     """infer variable that is being assigned (AssignName and AssignAttribute"""
     stmt = self.statement()
     yield from stmt.value.infer(context=context)
 
 
-nodes.AssignName._infer = infer_assignment
-nodes.AssignAttribute._infer = infer_assignment
-
-
+@decorators.register_infer(nodes.AugAssign)
 def infer_augassign(self: nodes.AugAssign, context=context_mod.context_ins, inferred_attr=None):
     """
     E.g.
@@ -630,9 +613,7 @@ def infer_augassign(self: nodes.AugAssign, context=context_mod.context_ins, infe
             yield res
 
 
-nodes.AugAssign._infer = infer_augassign
-
-
+@decorators.register_infer(nodes.BinOp)
 def infer_binop(self, context=context_mod.context_ins, inferred_attr=None):
     inferred = self.prepare_inferred_value(inferred_attr, ("left", "right"), context)
     for lhs, rhs in utilities.infer_product(inferred["left"], inferred["right"]):
@@ -755,6 +736,7 @@ def _invoke_op_inference(
                 )
 
 
+@decorators.register_binop_handler(nodes.Const, nodes.NameConstant)
 def infer_const_bin_op(self, op, other, _, context=None, self_result=None):
     def fail():
         yield InferenceResult.load_result(
@@ -773,6 +755,7 @@ def infer_const_bin_op(self, op, other, _, context=None, self_result=None):
         return fail()
 
 
+@decorators.register_binop_handler(nodes.ClassInstance)
 def infer_inst_bin_op(self, _, other, method_name, context=context_mod.context_ins, self_result=None):
     method = self.dunder_lookup(method_name)
     context.map_args_to_func(self, other.result, func_node=method)
@@ -781,6 +764,7 @@ def infer_inst_bin_op(self, _, other, method_name, context=context_mod.context_i
         yield res
 
 
+@decorators.register_binop_handler(nodes.BaseContainer)
 def infer_container_bin_op(self, op, other, _, context=context_mod.context_ins, self_result=None):
     func = BIN_OP_METHOD[op]
     for left, right in utilities.infer_product(self.extract_const(context), other.result.extract_const(context)):
@@ -812,13 +796,6 @@ def infer_container_bin_op(self, op, other, _, context=context_mod.context_ins, 
                     yield InferenceResult.load_result(
                         nodes.Uninferable(self), inference_results=(self_result, other, left, right)
                     )
-
-
-nodes.BinOp._infer = infer_binop
-nodes.Const._infer_binop = infer_const_bin_op
-nodes.NameConstant._infer_binop = infer_const_bin_op
-nodes.BaseContainer._infer_binop = infer_container_bin_op
-nodes.ClassInstance._infer_binop = infer_inst_bin_op
 
 
 def infer_global_name(self, context=context_mod.context_ins, inferred_attr=None):
@@ -853,7 +830,8 @@ def infer_global_name(self, context=context_mod.context_ins, inferred_attr=None)
             )
 
 
-def infer_name(self, context=context_mod.context_ins, inferred_attr=None):
+@decorators.register_infer(nodes.Name)
+def infer_name(self: nodes.Name, context=context_mod.context_ins, inferred_attr=None):
     if self.links is None:
         # might be referring to globals
         for global_name in infer_global_name(self, context):
@@ -870,6 +848,7 @@ def infer_name(self, context=context_mod.context_ins, inferred_attr=None):
             yield InferenceResult.from_other(res, bound_conditions=bound_conditions)
 
 
+@decorators.register_infer(nodes.Attribute)
 def infer_attribute(self, context=context_mod.context_ins, inferred_attr=None):
     def _infer(ins, _linked_res):
         context.instance_mode = old_instance_mode
@@ -925,10 +904,7 @@ def infer_attribute(self, context=context_mod.context_ins, inferred_attr=None):
     context.instance_mode = old_instance_mode
 
 
-nodes.Name._infer = infer_name
-nodes.Attribute._infer = infer_attribute
-
-
+@decorators.register_infer(nodes.Phi)
 def infer_phi(self: nodes.Phi, context=context_mod.context_ins, inferred_attr=None):
     # hash the ifexp as well because phi and ifexp is served as the pivot point
     # for variable having different value. Different phi/ifexp will have different
@@ -971,9 +947,7 @@ def infer_phi(self: nodes.Phi, context=context_mod.context_ins, inferred_attr=No
             )
 
 
-nodes.Phi._infer = infer_phi
-
-
+@decorators.register_infer(nodes.Call)
 def infer_call(self: nodes.Call, context=context_mod.context_ins, inferred_attr=None):
     try:
         ins = next(self.get_target_instance()).instance_dict.get(self)
@@ -1083,9 +1057,7 @@ def infer_call(self: nodes.Call, context=context_mod.context_ins, inferred_attr=
                     )
 
 
-nodes.Call._infer = infer_call
-
-
+@decorators.register_infer(nodes.Arg)
 def infer_arg(self, context=context_mod.context_ins, inferred_attr=None):
     def _get_type(ins):
         if hasattr(ins.annotation, "infer"):
@@ -1129,9 +1101,7 @@ def infer_arg(self, context=context_mod.context_ins, inferred_attr=None):
             yield from arg.infer(context)
 
 
-nodes.Arg._infer = infer_arg
-
-
+@decorators.register_infer(nodes.Compare)
 def infer_compare(self, context=context_mod.context_ins, inferred_attr=None):
     inferred = self.prepare_inferred_value(inferred_attr, ("left", "comparators"), context)
     for comp in utilities.infer_product(*(inferred["left"], *(comp for comp in inferred["comparators"]))):
@@ -1217,6 +1187,7 @@ def calc_compare(comp_list, op_list, context):
     yield from result.infer(context)
 
 
+@decorators.register_compop_handler(nodes.Const, nodes.NameConstant)
 def infer_const_comp_op(self, op, other, _, context=None, self_result=None):
     meth = COMP_METHOD[op]
     try:
@@ -1269,6 +1240,7 @@ def _make_call_from_func(function, *args):
     return call_node
 
 
+@decorators.register_compop_handler(nodes.ClassInstance)
 def infer_inst_comp_op(self, op, other, method_name, context=context_mod.context_ins, self_result=None):
     # create a `Call` node and infer it from there
     if method_name is None:
@@ -1284,12 +1256,7 @@ def infer_inst_comp_op(self, op, other, method_name, context=context_mod.context
             yield InferenceResult.load_result(nodes.Uninferable(self))
 
 
-nodes.Const._infer_comp_op = infer_const_comp_op
-nodes.NameConstant._infer_comp_op = infer_const_comp_op
-nodes.ClassInstance._infer_comp_op = infer_inst_comp_op
-nodes.Compare._infer = infer_compare
-
-
+@decorators.register_infer(nodes.Bool)
 def infer_bool(self: nodes.Bool, context=context_mod.context_ins, inferred_attr=None):
     for val in self.value.infer(context):
         try:
@@ -1305,10 +1272,12 @@ def infer_bool(self: nodes.Bool, context=context_mod.context_ins, inferred_attr=
             )
 
 
+@decorators.register_bool_handler(nodes.Const, nodes.NameConstant)
 def infer_const_bool(self: nodes.Const, context=context_mod.context_ins):
     yield from const_factory(bool(self.value))
 
 
+@decorators.register_bool_handler(nodes.ClassInstance)
 def infer_inst_bool(self: nodes.ClassInstance, context=context_mod.context_ins):
     """
     reference: https://docs.python.org/3/reference/datamodel.html#object.__bool__
@@ -1331,28 +1300,24 @@ def infer_inst_bool(self: nodes.ClassInstance, context=context_mod.context_ins):
         yield InferenceResult.load_result(nodes.Const(True))
 
 
+@decorators.register_bool_handler(nodes.Sequence)
 def infer_sequence_bool(self: nodes.Sequence, context=context_mod.context_ins):
     yield InferenceResult.load_result(bool(self.elts))
 
 
+@decorators.register_bool_handler(nodes.Dict)
 def infer_dict_bool(self: nodes.Dict, context=context_mod.context_ins):
     yield InferenceResult.load_result(bool(self.keys))
 
 
-nodes.Const._infer_bool = infer_const_bool
-nodes.NameConstant._infer_bool = infer_const_bool
-nodes.ClassInstance._infer_bool = infer_inst_bool
-nodes.Sequence._infer_bool = infer_sequence_bool
-nodes.Dict._infer_bool = infer_dict_bool
-nodes.Bool._infer = infer_bool
-
-
+@decorators.register_builtin_handler(nodes.Const, nodes.NameConstant)
 def infer_const_builtins(self: nodes.Const, builtin_func: str, context):
     builtin = getattr(builtins, builtin_func)
     result = builtin(self.value)
     yield from const_factory(result)
 
 
+@decorators.register_builtin_handler(nodes.ClassInstance)
 def infer_inst_builtins(self: nodes.ClassInstance, builtin_func: str, context):
     builtin_dunder_func_repr = "__" + builtin_func + "__"
 
@@ -1369,25 +1334,19 @@ def infer_inst_builtins(self: nodes.ClassInstance, builtin_func: str, context):
         yield InferenceResult.load_result(nodes.Uninferable(self))
 
 
+@decorators.register_builtin_handler(nodes.BaseContainer)
 def infer_container_builtins(self: nodes.BaseContainer, builtin_func: str, context):
     builtin = getattr(builtins, builtin_func)
     result = builtin(self)
     yield from const_factory(result)
 
 
-nodes.Const._infer_builtins = infer_const_builtins
-nodes.NameConstant._infer_bulitins = infer_const_builtins
-nodes.ClassInstance._infer_builtins = infer_inst_builtins
-nodes.BaseContainer._infer_builtins = infer_container_builtins
-
-
+@decorators.register_infer(nodes.Index)
 def infer_index(self, context=context_mod.context_ins, inferred_attr=None):
     yield from self.value.infer(context)
 
 
-nodes.Index._infer = infer_index
-
-
+@decorators.register_infer(nodes.Slice)
 def infer_slice(self, context=context_mod.context_ins, inferred_attr=None):
     lower = self.lower.infer(context) if self.lower is not None else (None,)
     upper = self.upper.infer(context) if self.upper is not None else (None,)
@@ -1401,9 +1360,7 @@ def infer_slice(self, context=context_mod.context_ins, inferred_attr=None):
             yield res
 
 
-nodes.Slice._infer = infer_slice
-
-
+@decorators.register_infer(nodes.Subscript)
 def infer_subscript(self, context=context_mod.context_ins, inferred_attr=None):
     if self.links is None:
         # take the default value from the list
@@ -1424,9 +1381,6 @@ def infer_subscript(self, context=context_mod.context_ins, inferred_attr=None):
     else:
         # there exist new assignment to this node
         yield from self.links.infer(context=context)
-
-
-nodes.Subscript._infer = infer_subscript
 
 
 def getitem_sequence(self, index, context=context_mod.context_ins):
@@ -1457,6 +1411,7 @@ nodes.Sequence.getitem = getitem_sequence
 nodes.Dict.getitem = getitem_dict
 
 
+@decorators.register_infer(nodes.KillVarCall)
 def infer_killvarcall(self, context=context_mod.context_ins, inferred_attr=None):
     """Infer the latest KILL variable of the func that is called"""
     # get the latest stmt associate with the variable
@@ -1478,9 +1433,7 @@ def infer_killvarcall(self, context=context_mod.context_ins, inferred_attr=None)
     context.remove_call_chain(self)
 
 
-nodes.KillVarCall._infer = infer_killvarcall
-
-
+@decorators.register_infer(nodes.TempInstance)
 def infer_temp_instance(self, context=context_mod.context_ins, inferred_attr=None):
     """
     try to get the instance from arg that passed in.
@@ -1505,9 +1458,7 @@ def infer_temp_instance(self, context=context_mod.context_ins, inferred_attr=Non
             yield InferenceResult.load_result(ins)
 
 
-nodes.TempInstance._infer = infer_temp_instance
-
-
+@decorators.register_infer(nodes.IfExp)
 def infer_ifexp(self, context=context_mod.context_ins, inferred_attr=None):
     """
     running:
@@ -1528,9 +1479,7 @@ def infer_ifexp(self, context=context_mod.context_ins, inferred_attr=None):
         )
 
 
-nodes.IfExp._infer = infer_ifexp
-
-
+@decorators.register_infer(nodes.Import, nodes.ImportFrom)
 def infer_import(self, context=context_mod.context_ins, inferred_attr=None):
     ins = self.scope().instance_dict.get(self)
     if ins:
@@ -1539,9 +1488,7 @@ def infer_import(self, context=context_mod.context_ins, inferred_attr=None):
         yield InferenceResult.load_result(nodes.Uninferable(self))
 
 
-nodes.ImportFrom._infer = nodes.Import._infer = infer_import
-
-
+@decorators.register_infer(nodes.Sequence)
 def infer_sequence(
     self: Union[nodes.List, nodes.Set, nodes.Tuple], context=context_mod.context_ins, inferred_attr=None
 ):
@@ -1570,11 +1517,7 @@ def infer_sequence(
         yield from infer_end(self, context, inferred_attr)
 
 
-nodes.Sequence._infer = infer_sequence
-# FIXME infer definition specifically for dict as it can't be shared with sequence
-nodes.Dict._infer = infer_end
-
-
+@decorators.register_infer(nodes.FormattedValue)
 @decorators.yield_at_least_once(lambda x: InferenceResult.load_result(nodes.Uninferable(x)))
 def infer_formattedvalue(node: nodes.FormattedValue, context=context_mod.context_ins, inferred_attr=None):
     inferred = node.prepare_inferred_value(inferred_attr, ("value", "format_spec"), context)
@@ -1613,6 +1556,7 @@ def infer_formattedvalue(node: nodes.FormattedValue, context=context_mod.context
             yield InferenceResult.load_result(nodes.Uninferable(), inference_results=inference_results)
 
 
+@decorators.register_infer(nodes.JoinedStr)
 @decorators.yield_at_least_once(lambda x: InferenceResult.load_result(nodes.Uninferable(x)))
 def infer_joinedstr(node: nodes.JoinedStr, context=context_mod.context_ins, inferred_attr=None):
     for values in utilities.infer_product(*(n.infer(context) for n in node.values)):
@@ -1623,11 +1567,8 @@ def infer_joinedstr(node: nodes.JoinedStr, context=context_mod.context_ins, infe
                 yield res
 
 
-nodes.FormattedValue._infer = infer_formattedvalue
-nodes.JoinedStr._infer = infer_joinedstr
-
-
 # ----------------type stub area---------------------
+@decorators.register_infer(nodes.TypeStub)
 def infer_typestub(self: nodes.TypeStub, context=context_mod.context_ins, inferred_attr=None):
     if self.value:
         yield from self.value.infer(context)
@@ -1635,8 +1576,6 @@ def infer_typestub(self: nodes.TypeStub, context=context_mod.context_ins, inferr
         yield InferenceResult.load_type(self.type.get_built_in_type())
 
 
-nodes.TypeStub._infer = infer_typestub
-nodes.OverloadedFunc._infer = infer_end
 # ----------------end type stub are---------------------
 CONST_MAP = {
     int: nodes.Const,
