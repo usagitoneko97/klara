@@ -36,7 +36,9 @@ to cherry-pick a few interesting functions to generate the corresponding test ca
 
 Klara can be installed via `pip` tool by using:
 
+```shell
     pip install klara
+```
 
 ## Usage
 
@@ -111,7 +113,9 @@ with klara.MANAGER.initialize_z3_var_from_func(tree.body[0]):
 
 Will print out:
 
+``` python
     [2, 3]
+```
 
 Because `z = 1` is not possible due to `v1 > 4` and `v1 < 3` is unsatisfiable
 
@@ -231,7 +235,7 @@ def test_main_0():
 
 Which is only 2 combinations of `nnn_right`
 
-Because Klara can't dynamically execute the code, it will provide extension to specify how to infer 
+Because Klara can't dynamically execute the code, it will provide extension to specify how to infer
 specific ast node or user defined type to make Klara \'smarter\'. It\'s described in
 [extending](https://klara-py.readthedocs.io/en/latest/extending.html), [extending user
 type](https://klara-py.readthedocs.io/en/latest/extending_user_type.html) and [customize coverage
@@ -242,17 +246,21 @@ strategy](https://klara-py.readthedocs.io/en/latest/customize_coverage_strategy.
 We use [Poetry](https://python-poetry.org/docs/) to manage dependencies.
 After poetry is installed, run:
 
-    $ poetry shell
-    $ poetry install
+```shell
+    poetry shell
+    poetry install
+```
 
 To run the test case, do:
 
-    $ poetry run pytest test
+```shell
+    poetry run pytest test
+```
 
 ## Acknowledgements
+
 - The architecture of the inference system is largely inspired by [Astroid](https://github.com/PyCQA/astroid).
 - Special thanks to Dr. Poh for guiding the early stages of the project.
-
 
 ## License
 

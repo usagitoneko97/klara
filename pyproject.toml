@@ -31,8 +31,7 @@ license = "LGPL-3.0-or-later"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.6.2,<4.0"
-typed-ast = "^1.4.3"
+python = ">=3.8.0,<4.0"
 ConfigArgParse = "^1.5.2"
 z3-solver = "^4.8.12"
 astor = "^0.8.1"

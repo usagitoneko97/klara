@@ -529,19 +529,6 @@ class TestSolverWithConfig(BaseTest):
             in result
         )
 
-    def test_py_version(self):
-        source_str = dedent(
-            """\
-                    y = 1 / 1
-                    y == 1
-                    z = int(1)
-                    y == (z/1)
-                    print "something"
-                        """
-        )
-        config = self.setup_fcf_config(py_version=2)
-        result = solve(source_str, file_path="test.py", float_config=config)
-        assert result == ""
 
     def test_call_append(self):
         source_str = dedent(
